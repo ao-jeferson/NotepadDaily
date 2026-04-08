@@ -19,3 +19,7 @@ contextBridge.exposeInMainWorld("sessionBridge", {
   saveToMain: session =>
     ipcRenderer.invoke("session:save-from-renderer", session),
 });
+contextBridge.exposeInMainWorld("editorAPI", {
+  onFormatDocument: cb =>
+    ipcRenderer.on("editor:format-document", cb)
+});

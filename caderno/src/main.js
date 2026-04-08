@@ -5,8 +5,7 @@ const fs = require("fs");
 let win;
 let isClosing = false;
 
-const sessionFile = () =>
-  path.join(app.getPath("userData"), "session.json");
+const sessionFile = () => path.join(app.getPath("userData"), "session.json");
 
 function createWindow() {
   win = new BrowserWindow({
@@ -27,12 +26,38 @@ function createWindow() {
     {
       label: "File",
       submenu: [
-        { label: "New Tab", accelerator: "Ctrl+T", click: () => win.webContents.send("tab:new") },
-        { label: "Open", accelerator: "Ctrl+O", click: () => win.webContents.send("file:open") },
-        { label: "Save", accelerator: "Ctrl+S", click: () => win.webContents.send("file:save") },
-        { label: "Close Tab", accelerator: "Ctrl+W", click: () => win.webContents.send("tab:close") },
+        {
+          label: "New Tab",
+          accelerator: "Ctrl+T",
+          click: () => win.webContents.send("tab:new"),
+        },
+        {
+          label: "Open",
+          accelerator: "Ctrl+O",
+          click: () => win.webContents.send("file:open"),
+        },
+        {
+          label: "Save",
+          accelerator: "Ctrl+S",
+          click: () => win.webContents.send("file:save"),
+        },
+        {
+          label: "Close Tab",
+          accelerator: "Ctrl+W",
+          click: () => win.webContents.send("tab:close"),
+        },
         { type: "separator" },
-        { label: "Quit", accelerator: "Alt+F4", click: () => win.close() }
+        { label: "Quit", accelerator: "Alt+F4", click: () => win.close() },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        {
+          label: "Format Document",
+          accelerator: "Ctrl+K Ctrl+D",
+          click: () => win.webContents.send("editor:format-document"),
+        },
       ],
     },
   ]);
