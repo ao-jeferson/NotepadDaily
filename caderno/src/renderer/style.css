@@ -27,7 +27,7 @@ body {
 
 #tabs {
   height: 30px;
-  background: #f3f3f3;                 /* FUNDO CLARO */
+  background: #f3f3f3; /* FUNDO CLARO */
   color: #333;
   display: flex;
   align-items: center;
@@ -41,7 +41,7 @@ body {
 .tab {
   position: relative;
   padding: 6px 20px 6px 10px;
-  font-size: 11px;                     /* FONTE MENOR */
+  font-size: 11px; /* FONTE MENOR */
   font-weight: 500;
   cursor: pointer;
   color: #444;
@@ -112,4 +112,23 @@ body {
 
 #status-bar span {
   opacity: 0.95;
+}
+
+.tab {
+  position: relative;
+  padding: 6px 24px 6px 10px;
+  cursor: pointer;
+}
+
+.tab-close {
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  font-size: 14px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.tab-close:hover {
+  color: #fff;
 }

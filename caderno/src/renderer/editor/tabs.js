@@ -40,19 +40,47 @@ define(["editor/state"], function (state) {
       createTab();
     }
   }
+function renderTabs() {
+  const tabsDiv = document.getElementById("tabs");
+  tabsDiv.innerHTML = "";
 
-  function renderTabs() {
-    const tabsDiv = document.getElementById("tabs");
-    tabsDiv.innerHTML = "";
+  state.tabs.forEach(tab => {
+    const el = document.createElement("div");
+    el.className = "tab" + (tab === state.activeTab ? " active" : "");
+    el.textContent = tab.name;
 
-    state.tabs.forEach(tab => {
-      const el = document.createElement("div");
-      el.className = "tab" + (tab === state.activeTab ? " active" : "");
-      el.textContent = tab.name;
-      el.onclick = () => activateTab(tab);
-      tabsDiv.appendChild(el);
+    /* =====================
+       BOTÃO X
+    ===================== */
+    const closeBtn = document.createElement("span");
+    closeBtn.className = "tab-close";
+    closeBtn.textContent = "×";
+
+    closeBtn.onclick = (e) => {
+      e.stopPropagation(); // 🔑 não ativa a aba
+      closeTab(tab);
+    };
+
+    el.appendChild(closeBtn);
+
+    /* =====================
+       CLIQUE NORMAL → ATIVAR ABA
+    ===================== */
+    el.onclick = () => activateTab(tab);
+
+    /* =====================
+       BOTÃO DO MEIO DO MOUSE → FECHAR ABA
+    ===================== */
+    el.addEventListener("mousedown", (e) => {
+      if (e.button === 1) { // 1 = botão do meio
+        e.preventDefault();
+        closeTab(tab);
+      }
     });
-  }
+
+    tabsDiv.appendChild(el);
+  });
+}
 
   return {
     createTab,
