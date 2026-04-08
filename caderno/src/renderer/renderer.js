@@ -1,11 +1,9 @@
 require.config({ paths: { vs: "./monaco/vs" } });
 
 require(["vs/editor/editor.main"], function () {
-
   const editor = monaco.editor.create(document.getElementById("editor"), {
-    theme: "vs-dark",
+    theme: "vs-white",
     automaticLayout: true,
-    language: "javascript",
   });
 
   const cursorPosEl = document.getElementById("cursor-pos");
@@ -39,13 +37,15 @@ require(["vs/editor/editor.main"], function () {
     if (!model) return;
 
     const lang = model.getLanguageId();
-    languageEl.textContent =
-      lang.charAt(0).toUpperCase() + lang.slice(1);
+    languageEl.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
   }
 
   // ligar eventos corretos
   editor.onDidChangeCursorPosition(updateCursorPosition);
   editor.onDidChangeCursorSelection(updateSelectionCount);
+  editor.onDidChangeModelContent(() => {
+    updateFileSize();
+  });
 
   // =========================
   // GERENCIADOR DE ABAS
@@ -54,8 +54,34 @@ require(["vs/editor/editor.main"], function () {
   let activeTab = null;
   const tabsDiv = document.getElementById("tabs");
 
+  const fileSizeEl = document.getElementById("filesize");
+  const encodingEl = document.getElementById("encoding");
+
   function nowName() {
     return new Date().toLocaleString();
+  }
+
+  function updateFileSize() {
+    const model = editor.getModel();
+    if (!model) {
+      fileSizeEl.textContent = "0 B";
+      return;
+    }
+    const text = model.getValue();
+    // UTF-8 aproximado: 1 char ASCII ≈ 1 byte
+    const bytes = new TextEncoder().encode(text).length;
+    fileSizeEl.textContent = formatBytes(bytes);
+  }
+
+  function updateEncoding() {
+    encodingEl.textContent = "UTF-8";
+  }
+
+  function formatBytes(bytes) {
+    if (bytes === 0) return "0 B";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   function renderTabs() {
@@ -90,6 +116,8 @@ require(["vs/editor/editor.main"], function () {
     updateCursorPosition();
     updateSelectionCount();
     updateLanguage();
+    updateFileSize();
+    updateEncoding();
   }
 
   function createTab(name, content, path) {
@@ -101,6 +129,8 @@ require(["vs/editor/editor.main"], function () {
     };
     tabs.push(tab);
     activateTab(tab);
+    updateFileSize();
+    updateEncoding();
   }
 
   function closeActiveTab() {
@@ -157,6 +187,7 @@ require(["vs/editor/editor.main"], function () {
       activeTab.path = path;
       activeTab.name = path.split(/[\\/]/).pop();
       renderTabs();
+      updateFileSize();
     }
   });
 
@@ -170,9 +201,11 @@ require(["vs/editor/editor.main"], function () {
     }
     if (e.ctrlKey && e.key === "o") {
       e.preventDefault();
-      window.api.openFile().then(
-        (r) => r && createTab(r.path.split(/[\\/]/).pop(), r.content, r.path)
-      );
+      window.api
+        .openFile()
+        .then(
+          (r) => r && createTab(r.path.split(/[\\/]/).pop(), r.content, r.path),
+        );
     }
     if (e.ctrlKey && e.key === "s") {
       e.preventDefault();
@@ -196,4 +229,9 @@ require(["vs/editor/editor.main"], function () {
   // ABA INICIAL
   // =========================
   createTab(null, "// Nova aba\n");
+  updateCursorPosition();
+  updateSelectionCount();
+  updateLanguage();
+  updateFileSize();
+  updateEncoding();
 });
