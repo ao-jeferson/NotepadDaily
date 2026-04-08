@@ -1,11 +1,10 @@
 require.config({
   paths: {
-    vs: "./monaco/vs"
-  }
+    vs: "./monaco/vs",
+  },
 });
 
 require(["vs/editor/editor.main"], function () {
-
   /*********************************************************
    * ESTADO GLOBAL
    *********************************************************/
@@ -37,7 +36,7 @@ require(["vs/editor/editor.main"], function () {
       cs: "csharp",
       java: "java",
       sql: "sql",
-      xml: "xml"
+      xml: "xml",
     };
     return map[ext] || null;
   }
@@ -46,7 +45,8 @@ require(["vs/editor/editor.main"], function () {
     const t = text.trim();
     if (/^<!DOCTYPE html>|<\/html>/i.test(t)) return "html";
     if (/^\s*[{[]/.test(t) && /"\s*:/.test(t)) return "json";
-    if (/\b(function|const|let|var|=>|import|export)\b/.test(t)) return "javascript";
+    if (/\b(function|const|let|var|=>|import|export)\b/.test(t))
+      return "javascript";
     if (/\b(def |import |from )/i.test(t)) return "python";
     if (/\b(public class|static void main)\b/i.test(t)) return "java";
     if (/\bSELECT\b.*\bFROM\b/i.test(t)) return "sql";
@@ -63,7 +63,7 @@ require(["vs/editor/editor.main"], function () {
     formatOnType: true,
     tabSize: 2,
     insertSpaces: true,
-    wordWrap: "on"
+    wordWrap: "on",
   });
 
   /*********************************************************
@@ -98,7 +98,7 @@ require(["vs/editor/editor.main"], function () {
       name: name || generateTabName(),
       path,
       language,
-      model
+      model,
     };
 
     tabs.push(tab);
@@ -126,7 +126,7 @@ require(["vs/editor/editor.main"], function () {
   function renderTabs() {
     tabsDiv.innerHTML = "";
 
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       const el = document.createElement("div");
       el.className = "tab" + (tab === activeTab ? " active" : "");
       el.textContent = tab.name;
@@ -134,7 +134,7 @@ require(["vs/editor/editor.main"], function () {
       const closeBtn = document.createElement("span");
       closeBtn.className = "tab-close";
       closeBtn.textContent = "×";
-      closeBtn.onclick = e => {
+      closeBtn.onclick = (e) => {
         e.stopPropagation();
         closeTab(tab);
       };
@@ -142,7 +142,7 @@ require(["vs/editor/editor.main"], function () {
       el.appendChild(closeBtn);
       el.onclick = () => activateTab(tab);
 
-      el.addEventListener("mousedown", e => {
+      el.addEventListener("mousedown", (e) => {
         if (e.button === 1) {
           e.preventDefault();
           closeTab(tab);
@@ -161,7 +161,7 @@ require(["vs/editor/editor.main"], function () {
 
     const savedPath = await window.api.saveFile({
       path: activeTab.path || null,
-      content: activeTab.model.getValue()
+      content: activeTab.model.getValue(),
     });
 
     if (savedPath) {
@@ -176,27 +176,35 @@ require(["vs/editor/editor.main"], function () {
    *********************************************************/
   function toggleWordWrap() {
     wordWrapEnabled = !wordWrapEnabled;
+
     editor.updateOptions({
       wordWrap: wordWrapEnabled ? "on" : "off",
-      wrappingIndent: "same"
+      wrappingIndent: "same",
     });
-  }
 
-  window.viewAPI?.onToggleWordWrap(toggleWordWrap);
+    // ✅ informa o main para marcar/desmarcar o menu
+    window.viewAPI.updateWordWrapState(wordWrapEnabled);
+  }
+  //window.viewAPI?.onToggleWordWrap(toggleWordWrap);
+
+  window.viewAPI.onToggleWordWrap(() => {
+    toggleWordWrap();
+  });
 
   /*********************************************************
    * SESSÃO
    *********************************************************/
+
   function collectSession() {
     return {
       activeIndex: tabs.indexOf(activeTab),
       wordWrap: wordWrapEnabled,
-      tabs: tabs.map(t => ({
+      tabs: tabs.map((t) => ({
         name: t.name,
         path: t.path,
         language: t.language,
-        content: t.model.getValue()
-      }))
+        content: t.model.getValue(),
+      })),
     };
   }
 
@@ -205,12 +213,16 @@ require(["vs/editor/editor.main"], function () {
     if (!s || !Array.isArray(s.tabs)) return false;
 
     wordWrapEnabled = s.wordWrap ?? true;
-    editor.updateOptions({ wordWrap: wordWrapEnabled ? "on" : "off" });
+
+    editor.updateOptions({
+      wordWrap: wordWrapEnabled ? "on" : "off",
+      wrappingIndent: "same",
+    });
 
     tabs.length = 0;
     activeTab = null;
 
-    s.tabs.forEach(t => {
+    s.tabs.forEach((t) => {
       createTab(t.name, t.content, t.path);
     });
 
@@ -246,53 +258,56 @@ require(["vs/editor/editor.main"], function () {
   //     saveActiveTab();
   //   }
   // });
- 
-/*********************************************************
- * ATALHO: CTRL + K  →  CTRL + D (ROBUSTO)
- *********************************************************/
-let awaitingCtrlKD = false;
 
-window.addEventListener(
-  "keydown",
-  (e) => {
-    // CTRL + K
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "k") {
-      e.preventDefault();
-      e.stopPropagation();
+  /*********************************************************
+   * ATALHO: CTRL + K  →  CTRL + D (ROBUSTO)
+   *********************************************************/
+  let awaitingCtrlKD = false;
 
-      awaitingCtrlKD = true;
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      // CTRL + K
+      if (
+        e.ctrlKey &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === "k"
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      setTimeout(() => {
+        awaitingCtrlKD = true;
+
+        setTimeout(() => {
+          awaitingCtrlKD = false;
+        }, 1500);
+
+        return;
+      }
+
+      // CTRL + D (após CTRL + K)
+      if (
+        awaitingCtrlKD &&
+        e.ctrlKey &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === "d"
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+
         awaitingCtrlKD = false;
-      }, 1500);
-
-      return;
-    }
-
-    // CTRL + D (após CTRL + K)
-    if (
-      awaitingCtrlKD &&
-      e.ctrlKey &&
-      !e.shiftKey &&
-      !e.altKey &&
-      e.key.toLowerCase() === "d"
-    ) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      awaitingCtrlKD = false;
-      formatDocument();
-    }
-  },
-  true // 🚨 CAPTURE PHASE (ESSENCIAL)
-);
-
+        formatDocument();
+      }
+    },
+    true, // 🚨 CAPTURE PHASE (ESSENCIAL)
+  );
 
   /*********************************************************
    * INIT
    *********************************************************/
-  restoreSession().then(restored => {
+  restoreSession().then((restored) => {
     if (!restored) createTab();
   });
-
 });

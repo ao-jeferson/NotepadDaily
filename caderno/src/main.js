@@ -22,47 +22,103 @@ function createWindow() {
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
 
   /* ===== MENUS ===== */
-  const menu = Menu.buildFromTemplate([
-    {
-      label: "File",
-      submenu: [
-        {
-          label: "New Tab",
-          accelerator: "Ctrl+T",
-          click: () => win.webContents.send("tab:new"),
-        },
-        {
-          label: "Open",
-          accelerator: "Ctrl+O",
-          click: () => win.webContents.send("file:open"),
-        },
-        {
-          label: "Save",
-          accelerator: "Ctrl+S",
-          click: () => win.webContents.send("file:save"),
-        },
-        {
-          label: "Close Tab",
-          accelerator: "Ctrl+W",
-          click: () => win.webContents.send("tab:close"),
-        },
-        { type: "separator" },
-        { label: "Quit", accelerator: "Alt+F4", click: () => win.close() },
-      ],
-    },
-    {
-      label: "Edit",
-      submenu: [
-        {
-          label: "Format Document",
-          accelerator: "Ctrl+K Ctrl+D",
-          click: () => win.webContents.send("editor:format-document"),
-        },
-      ],
-    },
-  ]);
+  // const menu = Menu.buildFromTemplate([
+  //   {
+  //     label: "File",
+  //     submenu: [
+  //       {
+  //         label: "New Tab",
+  //         accelerator: "Ctrl+T",
+  //         click: () => win.webContents.send("tab:new"),
+  //       },
+  //       {
+  //         label: "Open",
+  //         accelerator: "Ctrl+O",
+  //         click: () => win.webContents.send("file:open"),
+  //       },
+  //       {
+  //         label: "Save",
+  //         accelerator: "Ctrl+S",
+  //         click: () => win.webContents.send("file:save"),
+  //       },
+  //       {
+  //         label: "Close Tab",
+  //         accelerator: "Ctrl+W",
+  //         click: () => win.webContents.send("tab:close"),
+  //       },
+  //       { type: "separator" },
+  //       { label: "Quit", accelerator: "Alt+F4", click: () => win.close() },
+  //     ],
+  //   },
+  //   {
+  //     label: "Edit",
+  //     submenu: [
+  //       {
+  //         label: "Word Wrap",
+  //         type: "checkbox", // ✅ CHECKBOX
+  //         checked: wordWrapEnabled, // ✅ estado atual
+  //         accelerator: "Alt+Z",
+  //         click: () => win.webContents.send("view:toggle-word-wrap"),
+  //       },
+  //       {
+  //         label: "Format Document",
+  //         accelerator: "Ctrl+K Ctrl+D",
+  //         click: () => win.webContents.send("editor:format-document"),
+  //       },
+  //     ],
+  //   },
+  // ]);
 
-  Menu.setApplicationMenu(menu);
+  let wordWrapEnabled = true;
+
+  function buildMenu(win) {
+    return Menu.buildFromTemplate([
+      {
+        label: "File",
+        submenu: [
+          {
+            label: "New Tab",
+            accelerator: "Ctrl+T",
+            click: () => win.webContents.send("tab:new"),
+          },
+          {
+            label: "Open",
+            accelerator: "Ctrl+O",
+            click: () => win.webContents.send("file:open"),
+          },
+          {
+            label: "Save",
+            accelerator: "Ctrl+S",
+            click: () => win.webContents.send("file:save"),
+          },
+          { type: "separator" },
+          { role: "quit" },
+        ],
+      },
+      {
+        label: "Edit",
+        submenu: [
+          {
+            label: "Word Wrap",
+            type: "checkbox",
+            checked: wordWrapEnabled,
+            accelerator: "Alt+Z",
+            click: () => win.webContents.send("view:toggle-word-wrap"),
+          },
+          {
+            label: "Format Document",
+            accelerator: "Ctrl+K Ctrl+D",
+            click: () => win.webContents.send("editor:format-document"),
+          },
+        ],
+      },
+      { role: "viewMenu" },
+      { role: "windowMenu" },
+      { role: "helpMenu" },
+    ]);
+  }
+  
+   Menu.setApplicationMenu(buildMenu(win));
 
   /* ===== SESSÃO NO FECHAMENTO ===== */
   win.on("close", (e) => {
@@ -101,6 +157,10 @@ ipcMain.handle("save-file", async (_, data) => {
   fs.writeFileSync(p, data.content, "utf8");
   return p;
 });
+// ipcMain.on("view:word-wrap-updated", (_, enabled) => {
+//   wordWrapEnabled = enabled;
+//   Menu.setApplicationMenu(buildMenu(win)); // 🔄 atualiza ✓
+// });
 
 /* ===== SESSION ===== */
 

@@ -1,13 +1,13 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
-  onNewTab: cb => ipcRenderer.on("tab:new", cb),
-  onCloseTab: cb => ipcRenderer.on("tab:close", cb),
-  onOpen: cb => ipcRenderer.on("file:open", cb),
-  onSave: cb => ipcRenderer.on("file:save", cb),
+  onNewTab: (cb) => ipcRenderer.on("tab:new", cb),
+  onCloseTab: (cb) => ipcRenderer.on("tab:close", cb),
+  onOpen: (cb) => ipcRenderer.on("file:open", cb),
+  onSave: (cb) => ipcRenderer.on("file:save", cb),
 
   openFile: () => ipcRenderer.invoke("open-file"),
-  saveFile: data => ipcRenderer.invoke("save-file", data),
+  saveFile: (data) => ipcRenderer.invoke("save-file", data),
 });
 
 contextBridge.exposeInMainWorld("sessionAPI", {
@@ -15,11 +15,18 @@ contextBridge.exposeInMainWorld("sessionAPI", {
 });
 
 contextBridge.exposeInMainWorld("sessionBridge", {
-  onRequestSave: cb => ipcRenderer.on("session:request-save", cb),
-  saveToMain: session =>
+  onRequestSave: (cb) => ipcRenderer.on("session:request-save", cb),
+  saveToMain: (session) =>
     ipcRenderer.invoke("session:save-from-renderer", session),
 });
+
+contextBridge.exposeInMainWorld("viewAPI", {
+  onToggleWordWrap: (cb) => ipcRenderer.on("view:toggle-word-wrap", cb),
+
+  updateWordWrapState: (enabled) =>
+    ipcRenderer.send("view:word-wrap-updated", enabled),
+});
+
 contextBridge.exposeInMainWorld("editorAPI", {
-  onFormatDocument: cb =>
-    ipcRenderer.on("editor:format-document", cb)
+  onFormatDocument: (cb) => ipcRenderer.on("editor:format-document", cb),
 });
