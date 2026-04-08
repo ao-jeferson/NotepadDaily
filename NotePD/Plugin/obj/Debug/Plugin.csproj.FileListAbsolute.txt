@@ -1,0 +1,14 @@
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Plugin.dll
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Plugin.pdb
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Editor.exe
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\ScintillaNET.dll
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Service.dll
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Editor.pdb
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Editor.exe.config
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\ScintillaNET.xml
+C:\workspace\others\NotePD\NotePD\Plugin\bin\Debug\Service.pdb
+C:\workspace\others\NotePD\NotePD\Plugin\obj\Debug\Plugin.csprojAssemblyReference.cache
+C:\workspace\others\NotePD\NotePD\Plugin\obj\Debug\Plugin.csproj.CoreCompileInputs.cache
+C:\workspace\others\NotePD\NotePD\Plugin\obj\Debug\Plugin.csproj.CopyComplete
+C:\workspace\others\NotePD\NotePD\Plugin\obj\Debug\Plugin.dll
+C:\workspace\others\NotePD\NotePD\Plugin\obj\Debug\Plugin.pdb

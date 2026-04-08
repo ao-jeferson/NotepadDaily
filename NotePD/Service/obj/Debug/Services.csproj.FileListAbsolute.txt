@@ -1,0 +1,15 @@
+C:\workspace\others\NotePD\NotePD\Service\obj\Debug\Services.csproj.CoreCompileInputs.cache
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Service.dll
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Service.pdb
+C:\workspace\others\NotePD\NotePD\Service\obj\Debug\Service.dll
+C:\workspace\others\NotePD\NotePD\Service\obj\Debug\Service.pdb
+C:\workspace\others\NotePD\NotePD\Service\obj\Debug\Services.csprojAssemblyReference.cache
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\ScintillaNET.dll
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\ScintillaNET.xml
+C:\workspace\others\NotePD\NotePD\Service\obj\Debug\Services.csproj.CopyComplete
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Domain.dll
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Domain.pdb
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Newtonsoft.Json.dll
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\Newtonsoft.Json.xml
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\NotePD.Plugins.Abstractions.dll
+C:\workspace\others\NotePD\NotePD\Service\bin\Debug\NotePD.Plugins.Abstractions.pdb

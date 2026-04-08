@@ -1,0 +1,8 @@
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\bin\Debug\NotePD.Plugins.Abstractions.dll
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\bin\Debug\NotePD.Plugins.Abstractions.pdb
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\bin\Debug\ScintillaNET.dll
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\bin\Debug\ScintillaNET.xml
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.csproj.CoreCompileInputs.cache
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.csproj.CopyComplete
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.dll
+C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.pdb

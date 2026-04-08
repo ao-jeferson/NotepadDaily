@@ -1,0 +1,11 @@
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\Domain.dll
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\Domain.pdb
+C:\workspace\others\NotePD\NotePD\Domain\obj\Debug\Domain.csproj.CoreCompileInputs.cache
+C:\workspace\others\NotePD\NotePD\Domain\obj\Debug\Domain.dll
+C:\workspace\others\NotePD\NotePD\Domain\obj\Debug\Domain.pdb
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\JsonToEntityClass.dll
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\Newtonsoft.Json.dll
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\Newtonsoft.Json.xml
+C:\workspace\others\NotePD\NotePD\Domain\obj\Debug\Domain.csproj.CopyComplete
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\ScintillaNET.dll
+C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\ScintillaNET.xml
