@@ -2,7 +2,26 @@ require.config({ paths: { vs: "./monaco/vs" } });
 
 require(["vs/editor/editor.main"], function () {
   const editor = monaco.editor.create(document.getElementById("editor"), {
+    theme: "vs-white",
     automaticLayout: true,
+
+    // ✅ INDENTAÇÃO
+    tabSize: 2,
+    insertSpaces: true,
+    autoIndent: "advanced",
+
+    // ✅ BOAS PRÁTICAS
+    formatOnType: true,
+    formatOnPaste: true,
+
+    // ✅ INTELLISENSE
+    quickSuggestions: {
+      other: true,
+      comments: false,
+      strings: true,
+    },
+    suggestOnTriggerCharacters: true,
+    wordBasedSuggestions: true,
   });
 
   let diffEditor = null;
@@ -37,7 +56,6 @@ require(["vs/editor/editor.main"], function () {
 
   function createTab(name, content) {
     const language = detectLanguage(name, content);
-
     const model = monaco.editor.createModel(content || "", language);
 
     const tab = {
@@ -163,6 +181,34 @@ require(["vs/editor/editor.main"], function () {
 
   editor.onDidChangeCursorPosition(updateStatus);
   editor.onDidChangeCursorSelection(updateStatus);
+
+  editor.addCommand(
+    monaco.KeyMod.k | monaco.KeyMod.Shift | monaco.KeyCode.KeyF,
+    () => {
+      editor.getAction("editor.action.formatDocument").run();
+    },
+  );
+
+  let awaitingCtrlKD = false;
+
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+    // Ativa o modo "aguardando Ctrl+D"
+    awaitingCtrlKD = true;
+
+    // Cancela automaticamente após 1.5s (igual VS)
+    setTimeout(() => {
+      awaitingCtrlKD = false;
+    }, 1500);
+  });
+
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyD, () => {
+    if (!awaitingCtrlKD) return;
+
+    awaitingCtrlKD = false;
+
+    // ✅ Executa formatar documento
+    editor.getAction("editor.action.formatDocument").run();
+  });
 
   /* ================= MENU ================== */
 
@@ -372,5 +418,76 @@ require(["vs/editor/editor.main"], function () {
         if (r) createTab(r.path.split(/[\\/]/).pop(), r.content);
       });
     }
+    //Intelisense
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      allowNonTsExtensions: true,
+    });
+
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+
+    monaco.languages.css.cssDefaults.setOptions({
+      validate: true,
+    });
+    monaco.languages.register({ id: "csharp" });
+    monaco.languages.register({ id: "python" });
+
+    monaco.languages.registerCompletionItemProvider("python", {
+      provideCompletionItems: () => {
+        return {
+          suggestions: [
+            {
+              label: "if __name__ == '__main__'",
+              kind: monaco.languages.CompletionItemKind.Snippet,
+              insertText: "if __name__ == '__main__':\n    ${1}",
+              insertTextRules:
+                monaco.languages.CompletionItemInsertTextRules.InsertAsSnippet,
+              documentation: "Entry point do Python",
+            },
+          ],
+        };
+      },
+    });
+  });
+
+  monaco.languages.registerCompletionItemProvider("csharp", {
+    provideCompletionItems: () => {
+      return {
+        suggestions: [
+          {
+            label: "using",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "using System;",
+          },
+          {
+            label: "Console.WriteLine",
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: "Console.WriteLine(${1});",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRules.InsertAsSnippet,
+            documentation: "Imprime no console",
+          },
+          {
+            label: "class",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "class ${1:MyClass}\n{\n    ${2}\n}",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRules.InsertAsSnippet,
+            documentation: "Declaração de classe C#",
+          },
+          {
+            label: "Main",
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: "static void Main(string[] args)\n{\n    ${1}\n}",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRules.InsertAsSnippet,
+            documentation: "Método de entrada do programa",
+          },
+        ],
+      };
+    },
   });
 });
