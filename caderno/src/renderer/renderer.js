@@ -30,12 +30,19 @@ require(["vs/editor/editor.main"], function () {
   let activeTab = null;
   const tabsDiv = document.getElementById("tabs");
 
-  function createTab(name = "Untitled", content = "") {
-    const model = monaco.editor.createModel(content);
-    const tab = { name, model };
-    tabs.push(tab);
-    activateTab(tab);
-  }
+  
+function createTab(name, content) {
+  const model = monaco.editor.createModel(content || "");
+
+  const tab = {
+    name: name || generateTabName(),
+    model
+  };
+
+  tabs.push(tab);
+  activateTab(tab);
+}
+
 
   function activateTab(tab) {
     ensureEditorMode();
@@ -129,6 +136,20 @@ require(["vs/editor/editor.main"], function () {
       tabs: tabs.map(t => ({ name: t.name, content: t.model.getValue() }))
     };
   }
+
+function generateTabName() {
+  const now = new Date();
+
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
+}
 
   async function restoreSession() {
     const s = await window.sessionAPI.load();
