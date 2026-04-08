@@ -1,11 +1,9 @@
 require.config({ paths: { vs: "./monaco/vs" } });
 
 require(["vs/editor/editor.main"], function () {
-
-  const editor = monaco.editor.create(
-    document.getElementById("editor"),
-    { automaticLayout: true }
-  );
+  const editor = monaco.editor.create(document.getElementById("editor"), {
+    automaticLayout: true,
+  });
 
   let diffEditor = null;
 
@@ -19,7 +17,7 @@ require(["vs/editor/editor.main"], function () {
     if (diffEditor) return diffEditor;
     diffEditor = monaco.editor.createDiffEditor(
       document.getElementById("diff-editor"),
-      { automaticLayout: true }
+      { automaticLayout: true },
     );
     return diffEditor;
   }
@@ -30,19 +28,31 @@ require(["vs/editor/editor.main"], function () {
   let activeTab = null;
   const tabsDiv = document.getElementById("tabs");
 
-  
-function createTab(name, content) {
-  const model = monaco.editor.createModel(content || "");
+  function setActiveTabLanguage(languageId) {
+    if (!activeTab) return;
 
-  const tab = {
-    name: name || generateTabName(),
-    model
-  };
+    monaco.editor.setModelLanguage(activeTab.model, languageId);
+    updateStatus(); // atualiza status bar
+  }
 
-  tabs.push(tab);
-  activateTab(tab);
-}
+  function createTab(name, content) {
+    const language = detectLanguage(name, content);
 
+    const model = monaco.editor.createModel(content || "", language);
+
+    const tab = {
+      name: name || generateTabName(),
+      model,
+    };
+
+    tabs.push(tab);
+    activateTab(tab);
+  }
+
+  function setCurrentTabLanguage(languageId) {
+    if (!activeTab) return;
+    monaco.editor.setModelLanguage(activeTab.model, languageId);
+  }
 
   function activateTab(tab) {
     ensureEditorMode();
@@ -51,30 +61,65 @@ function createTab(name, content) {
     renderTabs();
     updateStatus();
   }
+  async function saveActiveTab() {
+    if (!activeTab) return;
+
+    const path = await window.api.saveFile({
+      path: null,
+      content: activeTab.model.getValue(),
+    });
+
+    if (path) {
+      activeTab.name = path.split(/[\\/]/).pop();
+      renderTabs();
+    }
+  }
 
   function closeTab(tab) {
     if (!tab) return;
-    ensureEditorMode();
-    const i = tabs.indexOf(tab);
-    tab.model.dispose();
-    tabs.splice(i, 1);
-    if (!tabs.length) createTab();
-    else activateTab(tabs[i] || tabs[i - 1]);
-  }
 
+    ensureEditorMode();
+
+    const index = tabs.indexOf(tab);
+    if (index === -1) return;
+
+    tab.model.dispose();
+    tabs.splice(index, 1);
+
+    if (tabs.length === 0) {
+      createTab();
+      return;
+    }
+
+    activateTab(tabs[index] || tabs[index - 1]);
+  }
   function renderTabs() {
     tabsDiv.innerHTML = "";
-    tabs.forEach(tab => {
+
+    tabs.forEach((tab) => {
       const el = document.createElement("div");
       el.className = "tab" + (tab === activeTab ? " active" : "");
       el.textContent = tab.name;
 
-      const x = document.createElement("span");
-      x.textContent = "×";
-      x.className = "close";
-      x.onclick = e => { e.stopPropagation(); closeTab(tab); };
+      // ✅ Fechar com botão X
+      const close = document.createElement("span");
+      close.className = "close";
+      close.textContent = "×";
+      close.onclick = (e) => {
+        e.stopPropagation();
+        closeTab(tab);
+      };
 
-      el.appendChild(x);
+      // ✅ Fechar com clique do meio (scroll / roda do mouse)
+      el.addEventListener("mousedown", (e) => {
+        if (e.button === 1) {
+          // 1 = botão do meio
+          e.preventDefault();
+          closeTab(tab);
+        }
+      });
+
+      el.appendChild(close);
       el.onclick = () => activateTab(tab);
       tabsDiv.appendChild(el);
     });
@@ -90,7 +135,7 @@ function createTab(name, content) {
     const diff = getDiffEditor();
     diff.setModel({
       original: monaco.editor.createModel(tabs[i - 1].model.getValue()),
-      modified: monaco.editor.createModel(activeTab.model.getValue())
+      modified: monaco.editor.createModel(activeTab.model.getValue()),
     });
 
     document.getElementById("editor").style.display = "none";
@@ -105,12 +150,15 @@ function createTab(name, content) {
 
   function updateStatus() {
     const pos = editor.getPosition();
-    if (pos) cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    if (pos)
+      cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
     const model = editor.getModel();
     if (model) languageEl.textContent = model.getLanguageId();
     const sel = editor.getSelection();
     selectionEl.textContent =
-      sel && !sel.isEmpty() ? `Sel: ${model.getValueInRange(sel).length}` : "Sel: 0";
+      sel && !sel.isEmpty()
+        ? `Sel: ${model.getValueInRange(sel).length}`
+        : "Sel: 0";
   }
 
   editor.onDidChangeCursorPosition(updateStatus);
@@ -127,41 +175,202 @@ function createTab(name, content) {
 
   window.diffAPI.onDiffPrevious(() => diffWithPreviousTab());
   window.diffAPI.onDiffExit(() => ensureEditorMode());
+  window.languageAPI.onSetLanguage((languageId) => {
+    setActiveTabLanguage(languageId);
+  });
+  window.api.onCloseTab(() => closeTab(activeTab));
+
+  window.api.onSave(() => {
+    saveActiveTab();
+  });
 
   /* ================= SESSION ================== */
 
   function collectSession() {
     return {
       index: tabs.indexOf(activeTab),
-      tabs: tabs.map(t => ({ name: t.name, content: t.model.getValue() }))
+      tabs: tabs.map((t) => ({ name: t.name, content: t.model.getValue() })),
     };
   }
 
-function generateTabName() {
-  const now = new Date();
+  function detectLanguageByFilename(filename) {
+    if (!filename) return "plaintext";
 
-  const day = String(now.getDate()).padStart(2, "0");
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const year = now.getFullYear();
+    const ext = filename.split(".").pop().toLowerCase();
 
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const seconds = String(now.getSeconds()).padStart(2, "0");
+    const map = {
+      js: "javascript",
+      ts: "typescript",
+      json: "json",
+      html: "html",
+      css: "css",
+      scss: "scss",
+      md: "markdown",
+      xml: "xml",
+      py: "python",
+      java: "java",
+      cs: "csharp",
+      cpp: "cpp",
+      c: "c",
+      go: "go",
+      php: "php",
+      rb: "ruby",
+      rs: "rust",
+      sql: "sql",
+      yaml: "yaml",
+      yml: "yaml",
+      sh: "shell",
+      bat: "bat",
+      ps1: "powershell",
+    };
 
-  return `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
-}
+    return map[ext] || "plaintext";
+  }
+
+  function generateTabName() {
+    const now = new Date();
+
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const year = now.getFullYear();
+
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
+    return `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
+  }
+  function detectLanguageByContent(text) {
+    if (!text) return "plaintext";
+
+    const t = text.trim();
+
+    // HTML
+    if (/^<!DOCTYPE html>|<\/html>/i.test(t)) return "html";
+
+    // JSON
+    if (/^\s*[{[]/.test(t) && /"\s*:/.test(t)) return "json";
+
+    // JavaScript / TypeScript
+    if (/\b(function|const|let|var|=>|import|export)\b/.test(t))
+      return "javascript";
+
+    // Python
+    if (/\b(def |import |from |print\(|class )/.test(t)) return "python";
+
+    // C#
+    if (/\b(using |namespace |class |public |void |static)\b/.test(t))
+      return "csharp";
+
+    // Java
+    if (/\b(public class |static void main|System\.out\.println)\b/.test(t))
+      return "java";
+
+    // SQL
+    if (/\b(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)\b/i.test(t)) return "sql";
+
+    // Shell
+    if (/^#!/.test(t) || /\b(echo |cd |ls |chmod )/.test(t)) return "shell";
+
+    // Markdown
+    if (/^# |```|\*\*.+\*\*/.test(t)) return "markdown";
+
+    return "plaintext";
+  }
+  function detectLanguageByFilename(filename) {
+    if (!filename || !filename.includes(".")) return null;
+
+    const ext = filename.split(".").pop().toLowerCase();
+
+    const map = {
+      js: "javascript",
+      ts: "typescript",
+      html: "html",
+      css: "css",
+      json: "json",
+      md: "markdown",
+      py: "python",
+      cs: "csharp",
+      java: "java",
+      sql: "sql",
+      sh: "shell",
+      xml: "xml",
+      yaml: "yaml",
+      yml: "yaml",
+    };
+
+    return map[ext] || null;
+  }
+
+  function detectLanguage(name, content) {
+    // 1️⃣ Tenta pela extensão
+    const byName = detectLanguageByFilename(name);
+    if (byName) return byName;
+
+    // 2️⃣ Fallback: conteúdo
+    return detectLanguageByContent(content);
+  }
+  function updateStatus() {
+    const model = editor.getModel();
+    if (model) {
+      languageEl.textContent = model.getLanguageId();
+    }
+  }
 
   async function restoreSession() {
     const s = await window.sessionAPI.load();
     if (!s) return false;
-    s.tabs.forEach(t => createTab(t.name, t.content));
+    s.tabs.forEach((t) => createTab(t.name, t.content));
     if (tabs[s.index]) activateTab(tabs[s.index]);
     return true;
   }
 
   window.addEventListener("beforeunload", () =>
-    window.sessionAPI.save(collectSession())
+    window.sessionAPI.save(collectSession()),
   );
+  window.languageAPI.onSetLanguage((lang) => {
+    setCurrentTabLanguage(lang);
+    updateStatus(); // atualizar status bar
+  });
 
-  restoreSession().then(r => { if (!r) createTab(); });
+  restoreSession().then((r) => {
+    if (!r) createTab();
+  });
+  window.addEventListener("keydown", (e) => {
+    // Salvar
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      if (!activeTab) return;
+
+      window.api
+        .saveFile({
+          path: null,
+          content: activeTab.model.getValue(),
+        })
+        .then((path) => {
+          if (path) activeTab.name = path.split(/[\\/]/).pop();
+          renderTabs();
+        });
+    }
+
+    // Ctrl+S
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      saveActiveTab();
+    }
+
+    // Fechar aba
+    if (e.ctrlKey && e.key.toLowerCase() === "w") {
+      e.preventDefault();
+      closeTab(activeTab);
+    }
+
+    // Abrir arquivo
+    if (e.ctrlKey && e.key.toLowerCase() === "o") {
+      e.preventDefault();
+      window.api.openFile().then((r) => {
+        if (r) createTab(r.path.split(/[\\/]/).pop(), r.content);
+      });
+    }
+  });
 });

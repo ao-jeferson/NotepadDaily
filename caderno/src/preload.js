@@ -19,3 +19,12 @@ contextBridge.exposeInMainWorld("sessionAPI", {
   save: session => ipcRenderer.invoke("session:save", session),
   load: () => ipcRenderer.invoke("session:load")
 });
+
+contextBridge.exposeInMainWorld("languageAPI", {
+  onSetLanguage: cb => ipcRenderer.on("lang:*", (e, lang) => cb(lang))
+});
+
+contextBridge.exposeInMainWorld("languageAPI", {
+  onSetLanguage: cb =>
+    ipcRenderer.on("language:set", (_event, languageId) => cb(languageId))
+});
