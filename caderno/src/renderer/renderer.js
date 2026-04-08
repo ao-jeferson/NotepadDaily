@@ -16,6 +16,10 @@ require(["vs/editor/editor.main"], function () {
   const tabsDiv = document.getElementById("tabs");
   const editorDiv = document.getElementById("editor");
 
+  const cursorPosEl = document.getElementById("cursor-pos");
+  const languageEl = document.getElementById("language");
+  const selectionEl = document.getElementById("selection");
+
   /*********************************************************
    * UTILIDADES
    *********************************************************/
@@ -52,10 +56,10 @@ require(["vs/editor/editor.main"], function () {
     if (/\bSELECT\b.*\bFROM\b/i.test(t)) return "sql";
     return "plaintext";
   }
-  const cursorPosEl = document.getElementById("cursor-pos");
-  const languageEl = document.getElementById("language");
-  const selectionEl = document.getElementById("selection");
 
+  /*********************************************************
+   * STATUS BAR
+   *********************************************************/
   function updateStatusBar() {
     if (!editor) return;
 
@@ -65,12 +69,11 @@ require(["vs/editor/editor.main"], function () {
     const pos = editor.getPosition();
     if (pos) {
       cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    } else {
+      cursorPosEl.textContent = "";
     }
 
     languageEl.textContent = model.getLanguageId();
-
-    editor.onDidChangeCursorPosition(updateStatusBar);
-    editor.onDidChangeCursorSelection(updateStatusBar);
 
     const sel = editor.getSelection();
     if (sel && !sel.isEmpty()) {
@@ -79,6 +82,7 @@ require(["vs/editor/editor.main"], function () {
       selectionEl.textContent = "Sel: 0";
     }
   }
+
   /*********************************************************
    * EDITOR
    *********************************************************/
@@ -92,22 +96,20 @@ require(["vs/editor/editor.main"], function () {
     wordWrap: "on",
   });
 
+  // ✅ LISTENERS UMA VEZ (CORRETO)
+  editor.onDidChangeCursorPosition(updateStatusBar);
+  editor.onDidChangeCursorSelection(updateStatusBar);
+
   /*********************************************************
    * FORMAT DOCUMENT
    *********************************************************/
-
   function formatDocument() {
-    if (!editor) return;
-
     const action = editor.getAction("editor.action.formatDocument");
     if (action) {
-      action.run().then(() => {
-        updateStatusBar();
-      });
+      action.run().then(updateStatusBar);
     }
   }
 
-  /* Menu → Format Document */
   window.editorAPI?.onFormatDocument(() => {
     formatDocument();
   });
@@ -184,6 +186,27 @@ require(["vs/editor/editor.main"], function () {
   }
 
   /*********************************************************
+   * NAVEGAÇÃO ENTRE ABAS
+   *********************************************************/
+  function goToNextTab() {
+    if (!activeTab || tabs.length < 2) return;
+
+    const index = tabs.indexOf(activeTab);
+    const nextIndex = (index + 1) % tabs.length;
+
+    activateTab(tabs[nextIndex]);
+  }
+
+  function goToPreviousTab() {
+    if (!activeTab || tabs.length < 2) return;
+
+    const index = tabs.indexOf(activeTab);
+    const prevIndex = (index - 1 + tabs.length) % tabs.length;
+
+    activateTab(tabs[prevIndex]);
+  }
+
+  /*********************************************************
    * SALVAR ARQUIVO
    *********************************************************/
   async function saveActiveTab() {
@@ -212,10 +235,8 @@ require(["vs/editor/editor.main"], function () {
       wrappingIndent: "same",
     });
 
-    // ✅ informa o main para marcar/desmarcar o menu
     window.viewAPI.updateWordWrapState(wordWrapEnabled);
   }
-  //window.viewAPI?.onToggleWordWrap(toggleWordWrap);
 
   window.viewAPI.onToggleWordWrap(() => {
     toggleWordWrap();
@@ -224,7 +245,6 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * SESSÃO
    *********************************************************/
-
   function collectSession() {
     return {
       activeIndex: tabs.indexOf(activeTab),
@@ -243,7 +263,6 @@ require(["vs/editor/editor.main"], function () {
     if (!s || !Array.isArray(s.tabs)) return false;
 
     wordWrapEnabled = s.wordWrap ?? true;
-
     editor.updateOptions({
       wordWrap: wordWrapEnabled ? "on" : "off",
       wrappingIndent: "same",
@@ -256,9 +275,7 @@ require(["vs/editor/editor.main"], function () {
       createTab(t.name, t.content, t.path);
     });
 
-    if (tabs[s.activeIndex]) {
-      activateTab(tabs[s.activeIndex]);
-    }
+    if (tabs[s.activeIndex]) activateTab(tabs[s.activeIndex]);
     return true;
   }
 
@@ -280,24 +297,13 @@ require(["vs/editor/editor.main"], function () {
   window.api.onSave(saveActiveTab);
 
   /*********************************************************
-   * ATALHO CTRL+S
-   *********************************************************/
-  // window.addEventListener("keydown", e => {
-  //   if (e.ctrlKey && e.key.toLowerCase() === "s") {
-  //     e.preventDefault();
-  //     saveActiveTab();
-  //   }
-  // });
-
-  /*********************************************************
-   * ATALHO: CTRL + K  →  CTRL + D (ROBUSTO)
+   * CTRL + K  →  CTRL + D (CORRIGIDO, SEM TRAVAR)
    *********************************************************/
   let awaitingCtrlKD = false;
 
   window.addEventListener(
     "keydown",
     (e) => {
-      // CTRL + K
       if (
         e.ctrlKey &&
         !e.shiftKey &&
@@ -305,33 +311,46 @@ require(["vs/editor/editor.main"], function () {
         e.key.toLowerCase() === "k"
       ) {
         e.preventDefault();
-        e.stopPropagation();
-
         awaitingCtrlKD = true;
-
-        setTimeout(() => {
-          awaitingCtrlKD = false;
-        }, 1500);
-
+        setTimeout(() => (awaitingCtrlKD = false), 1200);
         return;
       }
 
-      // CTRL + D (após CTRL + K)
-      if (
-        awaitingCtrlKD &&
-        e.ctrlKey &&
-        !e.shiftKey &&
-        !e.altKey &&
-        e.key.toLowerCase() === "d"
-      ) {
+      if (awaitingCtrlKD && e.ctrlKey && e.key.toLowerCase() === "d") {
         e.preventDefault();
-        e.stopPropagation();
-
         awaitingCtrlKD = false;
         formatDocument();
+        return;
+      }
+
+      if (awaitingCtrlKD) awaitingCtrlKD = false;
+    },
+    true,
+  );
+
+  /*********************************************************
+   * ATALHOS: CTRL + TAB / CTRL + SHIFT + TAB
+   *********************************************************/
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      // Ctrl + Tab → próxima aba
+      if (e.ctrlKey && !e.shiftKey && e.key === "Tab") {
+        e.preventDefault();
+        e.stopPropagation();
+        goToNextTab();
+        return;
+      }
+
+      // Ctrl + Shift + Tab → aba anterior
+      if (e.ctrlKey && e.shiftKey && e.key === "Tab") {
+        e.preventDefault();
+        e.stopPropagation();
+        goToPreviousTab();
+        return;
       }
     },
-    true, // 🚨 CAPTURE PHASE (ESSENCIAL)
+    true, // ✅ IMPORTANTE: capture phase (evita conflito com Monaco)
   );
 
   /*********************************************************
