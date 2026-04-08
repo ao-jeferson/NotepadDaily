@@ -3,6 +3,5 @@ define([], function () {
     editor: null,
     tabs: [],
     activeTab: null,
-    wordWrapEnabled: true
   };
 });

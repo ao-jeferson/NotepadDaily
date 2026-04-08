@@ -21,6 +21,20 @@ define(["editor/state"], function (state) {
     renderTabs();
   }
 
+  function closeTab(tab) {
+    const i = state.tabs.indexOf(tab);
+    if (i === -1) return;
+
+    tab.model.dispose();
+    state.tabs.splice(i, 1);
+
+    if (state.tabs.length) {
+      activateTab(state.tabs[Math.max(0, i - 1)]);
+    } else {
+      createTab();
+    }
+  }
+
   function renderTabs() {
     const tabsDiv = document.getElementById("tabs");
     tabsDiv.innerHTML = "";
@@ -34,5 +48,10 @@ define(["editor/state"], function (state) {
     });
   }
 
-  return { createTab, createTabInternal, activateTab };
+  return {
+    createTab,
+    createTabInternal,
+    activateTab,
+    closeTab,
+  };
 });
