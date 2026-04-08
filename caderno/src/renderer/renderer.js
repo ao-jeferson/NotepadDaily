@@ -52,7 +52,33 @@ require(["vs/editor/editor.main"], function () {
     if (/\bSELECT\b.*\bFROM\b/i.test(t)) return "sql";
     return "plaintext";
   }
+  const cursorPosEl = document.getElementById("cursor-pos");
+  const languageEl = document.getElementById("language");
+  const selectionEl = document.getElementById("selection");
 
+  function updateStatusBar() {
+    if (!editor) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    const pos = editor.getPosition();
+    if (pos) {
+      cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    }
+
+    languageEl.textContent = model.getLanguageId();
+
+    editor.onDidChangeCursorPosition(updateStatusBar);
+    editor.onDidChangeCursorSelection(updateStatusBar);
+
+    const sel = editor.getSelection();
+    if (sel && !sel.isEmpty()) {
+      selectionEl.textContent = `Sel: ${model.getValueInRange(sel).length}`;
+    } else {
+      selectionEl.textContent = "Sel: 0";
+    }
+  }
   /*********************************************************
    * EDITOR
    *********************************************************/
@@ -69,12 +95,15 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * FORMAT DOCUMENT
    *********************************************************/
+
   function formatDocument() {
     if (!editor) return;
 
     const action = editor.getAction("editor.action.formatDocument");
     if (action) {
-      action.run();
+      action.run().then(() => {
+        updateStatusBar();
+      });
     }
   }
 
@@ -110,6 +139,7 @@ require(["vs/editor/editor.main"], function () {
     monaco.editor.setModelLanguage(tab.model, tab.language);
     editor.setModel(tab.model);
     renderTabs();
+    updateStatusBar();
   }
 
   function closeTab(tab) {
