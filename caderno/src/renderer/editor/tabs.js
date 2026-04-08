@@ -6,7 +6,13 @@ define(["editor/state"], function (state) {
 
   function createTabInternal(name, content) {
     const model = monaco.editor.createModel(content || "", "plaintext");
-    const tab = { name: name || generateTabName(), model };
+
+    const tab = {
+      name: name || generateTabName(),
+      path: null,
+      model
+    };
+
     state.tabs.push(tab);
     return tab;
   }
@@ -52,6 +58,6 @@ define(["editor/state"], function (state) {
     createTab,
     createTabInternal,
     activateTab,
-    closeTab,
+    closeTab
   };
 });
