@@ -16,19 +16,37 @@ function createWindow () {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'))
 
-  const menu = Menu.buildFromTemplate([
-    {
-      label: 'File',
-      submenu: [
-        { label: 'New Tab', accelerator: 'Ctrl+T', click: () => mainWindow.webContents.send('tab:new') },
-        { label: 'Open', accelerator: 'Ctrl+O', click: () => mainWindow.webContents.send('file:open') },
-        { label: 'Save', accelerator: 'Ctrl+S', click: () => mainWindow.webContents.send('file:save') },
-        { role: 'quit' }
-      ]
-    }
-  ])
+const menu = Menu.buildFromTemplate([
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'New Tab',
+        accelerator: 'Ctrl+T',
+        click: () => mainWindow.webContents.send('tab:new')
+      },
+      {
+        label: 'Open',
+        accelerator: 'Ctrl+O',
+        click: () => mainWindow.webContents.send('file:open')
+      },
+      {
+        label: 'Save',
+        accelerator: 'Ctrl+S',
+        click: () => mainWindow.webContents.send('file:save')
+      },
+      {
+        label: 'Close Tab',
+        accelerator: 'Ctrl+W',
+        click: () => mainWindow.webContents.send('tab:close')
+      },
+      { type: 'separator' },
+      { role: 'quit' }
+    ]
+  }
+])
 
-  Menu.setApplicationMenu(menu)
+Menu.setApplicationMenu(menu)
 }
 
 // IPC OPEN
