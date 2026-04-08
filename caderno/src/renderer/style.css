@@ -132,3 +132,76 @@ body {
 .tab-close:hover {
   color: #fff;
 }
+/* ==============================
+   BARRA DE ABAS (CLARA E MAIS ALTA)
+============================== */
+#tabs {
+  display: flex;
+  align-items: center;
+  height: 55px;                     /* ✅ AUMENTA A ALTURA */
+  background: #ddd;              /* ✅ FUNDO CLARO */
+  border-bottom: 1px solid #007acc;
+  font-family: "Segoe UI", Arial, sans-serif;
+  padding: 0 6px;
+}
+
+/* ==============================
+   ABA
+============================== */
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  height: 23px;                     /* ✅ ABA MAIS ALTA */
+  padding: 0 2px;
+  margin-right: 8px;
+  font-size: 12px;                  /* ✅ TEXTO MAIS LEGÍVEL */
+  color: #333333;
+  cursor: pointer;
+  border: 0px solid #d0d0d0;         /* ✅ BORDA VISÍVEL */
+  border-bottom: none;
+  background: #e6e6e6;               /* ✅ ABA INATIVA */
+  border-radius: 0px 0px 0 0;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ==============================
+   ABA ATIVA
+============================== */
+.tab.active {
+  background: #ffff;
+  color: #000000;
+  font-weight: 500;
+  border-bottom: 2px solid #ffffff;
+}
+
+/* ==============================
+   HOVER
+============================== */
+.tab:hover {
+  background: #ededed;
+}
+
+/* ==============================
+   ÍCONE DA ABA (📄)
+============================== */
+.tab::before {
+  content: "📄";
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+/* ==============================
+   BOTÃO FECHAR (×)
+============================== */
+.tab-close {
+  margin-left: 8px;
+  font-size: 10px;
+  color: #777;
+  cursor: pointer;
+}
+
+.tab-close:hover {
+  color: #000;
+}
