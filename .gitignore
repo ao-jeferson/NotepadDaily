@@ -137,3 +137,134 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+############################################
+# Visual Studio / Visual Studio Code
+############################################
+
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Visual Studio files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+############################################
+# .NET / MSBuild
+############################################
+
+# Build results
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+AnyCPU/
+
+# .NET Core / SDK
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+############################################
+# ASP.NET Core
+############################################
+
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# IIS / IIS Express
+iisexpress/
+.application
+.deploy.cmd
+.deploy.readme
+.deploy/*.cmd
+.deploy/*.ps1
+.deploy/*.xml
+
+############################################
+# Test results
+############################################
+
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+############################################
+# NuGet
+############################################
+
+# Packages
+packages/
+*.nupkg
+*.snupkg
+.nuget/NuGet.Config
+.nuget/NuGet.targets
+.nuget/NuGet.props
+
+############################################
+# Entity Framework
+############################################
+
+# EF Core Migrations (se quiser ignorar)
+# Migrations/
+
+############################################
+# Azure / Publish
+############################################
+
+PublishProfiles/
+*.Publish.xml
+*.azurePubxml
+*.pubxml
+*.pubxml.user
+
+############################################
+# Rider / JetBrains
+############################################
+
+.idea/
+*.sln.iml
+*.cache
+
+############################################
+# OS files
+############################################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+############################################
+# Logs adicionais
+############################################
+
+*.log
+NotePD/Domain/obj/Debug/Domain.csproj.CoreCompileInputs.cache
+.gitignore
+NotePD/Editor/obj/Debug/Editor.csprojAssemblyReference.cache
+NotePD/NotePD.Plugins.Abstractions/obj/Debug/NotePD.Plugins.Abstractions.csproj.CoreCompileInputs.cache
+NotePD/NotePD.Plugins.Abstractions/obj/Debug/NotePD.Plugins.Abstractions.csprojAssemblyReference.cache
+NotePD/Plugin/obj/Debug/Plugin.csproj.CoreCompileInputs.cache
+NotePD/Plugin/obj/Debug/Plugin.csprojAssemblyReference.cache
+NotePD/Service/obj/Debug/Services.csproj.CoreCompileInputs.cache
+NotePD/Service/obj/Debug/Services.csprojAssemblyReference.cache
