@@ -4,44 +4,55 @@ require(["vs/editor/editor.main"], function () {
 
   const editor = monaco.editor.create(
     document.getElementById("editor"),
-    { theme: "vs-white", automaticLayout: true }
+    { automaticLayout: true }
   );
 
-  /* =========================
-     STATUS BAR
-  ========================= */
+  let diffEditor = null;
 
-  const cursorPosEl = document.getElementById("cursor-pos");
-  const languageEl = document.getElementById("language");
-  const selectionEl = document.getElementById("selection");
-
-  function updateStatus() {
-    const pos = editor.getPosition();
-    if (pos) cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
-
-    const model = editor.getModel();
-    if (model) languageEl.textContent = model.getLanguageId();
-
-    const sel = editor.getSelection();
-    selectionEl.textContent =
-      sel && !sel.isEmpty()
-        ? `Sel: ${model.getValueInRange(sel).length}`
-        : "Sel: 0";
+  function ensureEditorMode() {
+    document.getElementById("editor").style.display = "block";
+    document.getElementById("diff-editor").style.display = "none";
+    if (diffEditor) diffEditor.setModel(null);
   }
 
-  editor.onDidChangeCursorPosition(updateStatus);
-  editor.onDidChangeCursorSelection(updateStatus);
+  function getDiffEditor() {
+    if (diffEditor) return diffEditor;
+    diffEditor = monaco.editor.createDiffEditor(
+      document.getElementById("diff-editor"),
+      { automaticLayout: true }
+    );
+    return diffEditor;
+  }
 
-  /* =========================
-     ABAS
-  ========================= */
+  /* ================= TABS ================== */
 
   const tabs = [];
   let activeTab = null;
   const tabsDiv = document.getElementById("tabs");
 
-  function nowName() {
-    return new Date().toLocaleString();
+  function createTab(name = "Untitled", content = "") {
+    const model = monaco.editor.createModel(content);
+    const tab = { name, model };
+    tabs.push(tab);
+    activateTab(tab);
+  }
+
+  function activateTab(tab) {
+    ensureEditorMode();
+    activeTab = tab;
+    editor.setModel(tab.model);
+    renderTabs();
+    updateStatus();
+  }
+
+  function closeTab(tab) {
+    if (!tab) return;
+    ensureEditorMode();
+    const i = tabs.indexOf(tab);
+    tab.model.dispose();
+    tabs.splice(i, 1);
+    if (!tabs.length) createTab();
+    else activateTab(tabs[i] || tabs[i - 1]);
   }
 
   function renderTabs() {
@@ -50,75 +61,86 @@ require(["vs/editor/editor.main"], function () {
       const el = document.createElement("div");
       el.className = "tab" + (tab === activeTab ? " active" : "");
       el.textContent = tab.name;
+
+      const x = document.createElement("span");
+      x.textContent = "×";
+      x.className = "close";
+      x.onclick = e => { e.stopPropagation(); closeTab(tab); };
+
+      el.appendChild(x);
       el.onclick = () => activateTab(tab);
       tabsDiv.appendChild(el);
     });
   }
 
-  function activateTab(tab) {
-    activeTab = tab;
-    editor.setModel(tab.model);
-    renderTabs();
-    updateStatus();
+  /* ================= DIFF ================== */
+
+  function diffWithPreviousTab() {
+    if (tabs.length < 2) return;
+    const i = tabs.indexOf(activeTab);
+    if (i <= 0) return;
+
+    const diff = getDiffEditor();
+    diff.setModel({
+      original: monaco.editor.createModel(tabs[i - 1].model.getValue()),
+      modified: monaco.editor.createModel(activeTab.model.getValue())
+    });
+
+    document.getElementById("editor").style.display = "none";
+    document.getElementById("diff-editor").style.display = "block";
   }
 
-  function createTab(name, content) {
-    const model = monaco.editor.createModel(content || "");
-    const tab = { name: name || nowName(), model };
-    tabs.push(tab);
-    activateTab(tab);
+  /* ================= STATUS ================== */
+
+  const cursorPosEl = document.getElementById("cursor-pos");
+  const languageEl = document.getElementById("language");
+  const selectionEl = document.getElementById("selection");
+
+  function updateStatus() {
+    const pos = editor.getPosition();
+    if (pos) cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    const model = editor.getModel();
+    if (model) languageEl.textContent = model.getLanguageId();
+    const sel = editor.getSelection();
+    selectionEl.textContent =
+      sel && !sel.isEmpty() ? `Sel: ${model.getValueInRange(sel).length}` : "Sel: 0";
   }
 
-  function collectSession() {
-    return {
-      activeTabIndex: tabs.indexOf(activeTab),
-      tabs: tabs.map(t => ({
-        name: t.name,
-        content: t.model.getValue()
-      }))
-    };
-  }
+  editor.onDidChangeCursorPosition(updateStatus);
+  editor.onDidChangeCursorSelection(updateStatus);
 
-  async function restoreSession() {
-    const session = await window.sessionAPI.load();
-    if (!session) return false;
-
-    session.tabs.forEach(t => createTab(t.name, t.content));
-    if (tabs[session.activeTabIndex]) {
-      activateTab(tabs[session.activeTabIndex]);
-    }
-    return true;
-  }
-
-  window.addEventListener("beforeunload", () => {
-    window.sessionAPI.save(collectSession());
-  });
-
-  /* =========================
-     MENU
-  ========================= */
+  /* ================= MENU ================== */
 
   window.api.onNewTab(() => createTab());
+  window.api.onCloseTab(() => closeTab(activeTab));
   window.api.onOpen(async () => {
     const r = await window.api.openFile();
     if (r) createTab(r.path.split(/[\\/]/).pop(), r.content);
   });
 
-  window.api.onSave(async () => {
-    if (!activeTab) return;
-    const path = await window.api.saveFile({
-      path: null,
-      content: activeTab.model.getValue()
-    });
-    if (path) activeTab.name = path.split(/[\\/]/).pop();
-    renderTabs();
-  });
+  window.diffAPI.onDiffPrevious(() => diffWithPreviousTab());
+  window.diffAPI.onDiffExit(() => ensureEditorMode());
 
-  /* =========================
-     INIT
-  ========================= */
+  /* ================= SESSION ================== */
 
-  restoreSession().then(restored => {
-    if (!restored) createTab(null, "// Nova aba\n");
-  });
+  function collectSession() {
+    return {
+      index: tabs.indexOf(activeTab),
+      tabs: tabs.map(t => ({ name: t.name, content: t.model.getValue() }))
+    };
+  }
+
+  async function restoreSession() {
+    const s = await window.sessionAPI.load();
+    if (!s) return false;
+    s.tabs.forEach(t => createTab(t.name, t.content));
+    if (tabs[s.index]) activateTab(tabs[s.index]);
+    return true;
+  }
+
+  window.addEventListener("beforeunload", () =>
+    window.sessionAPI.save(collectSession())
+  );
+
+  restoreSession().then(r => { if (!r) createTab(); });
 });

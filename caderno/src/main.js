@@ -1,31 +1,38 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
-const path = require('path');
-const fs = require('fs');
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
+const path = require("path");
+const fs = require("fs");
 
-let mainWindow;
+let win;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, "preload.js")
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  win.loadFile(path.join(__dirname, "renderer", "index.html"));
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'File',
+      label: "File",
       submenu: [
-        { label: 'New Tab', accelerator: 'Ctrl+T', click: () => mainWindow.webContents.send('tab:new') },
-        { label: 'Open', accelerator: 'Ctrl+O', click: () => mainWindow.webContents.send('file:open') },
-        { label: 'Save', accelerator: 'Ctrl+S', click: () => mainWindow.webContents.send('file:save') },
-        { label: 'Close Tab', accelerator: 'Ctrl+W', click: () => mainWindow.webContents.send('tab:close') },
-        { type: 'separator' },
-        { role: 'quit' }
+        { label: "New Tab", accelerator: "Ctrl+T", click: () => win.webContents.send("tab:new") },
+        { label: "Open", accelerator: "Ctrl+O", click: () => win.webContents.send("file:open") },
+        { label: "Save", accelerator: "Ctrl+S", click: () => win.webContents.send("file:save") },
+        { label: "Close Tab", accelerator: "Ctrl+W", click: () => win.webContents.send("tab:close") },
+        { type: "separator" },
+        { role: "quit" }
+      ]
+    },
+    {
+      label: "View",
+      submenu: [
+        { label: "Compare with Previous Tab", click: () => win.webContents.send("diff:previous") },
+        { label: "Exit Diff", click: () => win.webContents.send("diff:exit") }
       ]
     }
   ]);
@@ -33,50 +40,42 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 }
 
-/* =========================
-   OPEN / SAVE
-========================= */
+/* ================= FILE IO ================== */
 
-ipcMain.handle('open-file', async () => {
-  const r = await dialog.showOpenDialog({ properties: ['openFile'] });
+ipcMain.handle("open-file", async () => {
+  const r = await dialog.showOpenDialog({ properties: ["openFile"] });
   if (r.canceled) return null;
-
-  const filePath = r.filePaths[0];
-  return {
-    path: filePath,
-    content: fs.readFileSync(filePath, 'utf8')
-  };
+  const file = r.filePaths[0];
+  return { path: file, content: fs.readFileSync(file, "utf8") };
 });
 
-ipcMain.handle('save-file', async (_, data) => {
-  let filePath = data.path;
-  if (!filePath) {
+ipcMain.handle("save-file", async (_, data) => {
+  let p = data.path;
+  if (!p) {
     const r = await dialog.showSaveDialog({});
     if (r.canceled) return null;
-    filePath = r.filePath;
+    p = r.filePath;
   }
-  fs.writeFileSync(filePath, data.content, 'utf8');
-  return filePath;
+  fs.writeFileSync(p, data.content, "utf8");
+  return p;
 });
 
-/* =========================
-   SESSION
-========================= */
+/* ================= SESSION ================== */
 
 const sessionFile = () =>
-  path.join(app.getPath('userData'), 'session.json');
+  path.join(app.getPath("userData"), "session.json");
 
-ipcMain.handle('session:save', (_, session) => {
-  fs.writeFileSync(sessionFile(), JSON.stringify(session, null, 2), 'utf8');
+ipcMain.handle("session:save", (_, session) => {
+  fs.writeFileSync(sessionFile(), JSON.stringify(session, null, 2), "utf8");
   return true;
 });
 
-ipcMain.handle('session:load', () => {
+ipcMain.handle("session:load", () => {
   if (!fs.existsSync(sessionFile())) return null;
-  return JSON.parse(fs.readFileSync(sessionFile(), 'utf8'));
+  return JSON.parse(fs.readFileSync(sessionFile(), "utf8"));
 });
 
-app.on('ready', createWindow);
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+app.on("ready", createWindow);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
 });
