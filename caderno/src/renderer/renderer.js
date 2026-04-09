@@ -12,7 +12,7 @@ require(["vs/editor/editor.main"], function () {
   const tabs = [];
   let activeTab = null;
   let wordWrapEnabled = true;
-
+  let draggedTabIndex = null;
   let editorLeft;
   let editorRight = null;
   let isSplitActive = false;
@@ -43,6 +43,11 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * UTILIDADES
    *********************************************************/
+  function saveTabsOrder() {
+    const order = tabs.map((t) => t.path || t.name);
+    localStorage.setItem("tabsOrder", JSON.stringify(order));
+  }
+
   function generateTabName() {
     return new Date().toLocaleString();
   }
@@ -266,20 +271,20 @@ require(["vs/editor/editor.main"], function () {
     isSplitActive = true;
   }
 
-function disableSplitView() {
-  if (!isSplitActive) return;
+  function disableSplitView() {
+    if (!isSplitActive) return;
 
-  editorRight.dispose();
-  editorRight = null;
+    editorRight.dispose();
+    editorRight = null;
 
-  splitTab.model.dispose();
-  splitTab = null;
+    splitTab.model.dispose();
+    splitTab = null;
 
-  document.getElementById("editor-right").classList.add("hidden");
-  document.getElementById("editor-container").classList.remove("split");
+    document.getElementById("editor-right").classList.add("hidden");
+    document.getElementById("editor-container").classList.remove("split");
 
-  isSplitActive = false;
-}
+    isSplitActive = false;
+  }
 
   function toggleSplitView() {
     isSplitActive ? disableSplitView() : enableSplitView();
@@ -371,6 +376,7 @@ function disableSplitView() {
     document.getElementById("nav-forward").disabled =
       historyIndex >= navigationHistory.length - 1;
   }
+
   function closeTab(tab) {
     const i = tabs.indexOf(tab);
     if (i === -1) return;
@@ -378,18 +384,92 @@ function disableSplitView() {
     tab.model.dispose();
     tabs.splice(i, 1);
 
-    if (tabs.length) activateTab(tabs[Math.max(0, i - 1)]);
-    else createTab();
+    saveTabsOrder(); // ✅ mantém persistência
+
+    tabs.length ? activateTab(tabs[Math.max(0, i - 1)]) : createTab();
+  }
+
+  function applySavedTabsOrder() {
+    const saved = localStorage.getItem("tabsOrder");
+    if (!saved) return;
+
+    const order = JSON.parse(saved);
+
+    tabs.sort((a, b) => {
+      const aKey = a.path || a.name;
+      const bKey = b.path || b.name;
+
+      return order.indexOf(aKey) - order.indexOf(bKey);
+    });
   }
 
   function renderTabs() {
     tabsDiv.innerHTML = "";
 
-    tabs.forEach((tab) => {
+    tabs.forEach((tab, index) => {
       const el = document.createElement("div");
       el.className = "tab" + (tab === activeTab ? " active" : "");
       el.textContent = tab.name;
+      el.draggable = true; // ✅ TORNA A ABA ARRASTÁVEL
 
+      /* ===============================
+       DRAG START
+    =============================== */
+      el.addEventListener("dragstart", (e) => {
+        draggedTabIndex = index;
+        el.classList.add("dragging");
+        e.dataTransfer.setData("text/plain", "");
+      });
+
+      /* ===============================
+       DRAG OVER
+    =============================== */
+      el.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        el.classList.add("drag-over");
+      });
+
+      /* ===============================
+       DRAG LEAVE
+    =============================== */
+      el.addEventListener("dragleave", () => {
+        el.classList.remove("drag-over");
+      });
+
+      /* ===============================
+       DROP  ✅ AQUI É O TRECHO QUE VOCÊ PERGUNTOU
+    =============================== */
+      el.addEventListener("drop", (e) => {
+        e.preventDefault();
+        el.classList.remove("drag-over");
+
+        const targetIndex = index;
+
+        if (draggedTabIndex === null || draggedTabIndex === targetIndex) {
+          return;
+        }
+
+        const [movedTab] = tabs.splice(draggedTabIndex, 1);
+        tabs.splice(targetIndex, 0, movedTab);
+
+        draggedTabIndex = null;
+
+        saveTabsOrder(); // ✅ AQUI
+        renderTabs();
+      });
+
+      /* ===============================
+       DRAG END
+    =============================== */
+      el.addEventListener("dragend", () => {
+        draggedTabIndex = null;
+        el.classList.remove("dragging");
+        el.classList.remove("drag-over");
+      });
+
+      /* ===============================
+       BOTÃO FECHAR
+    =============================== */
       const closeBtn = document.createElement("span");
       closeBtn.className = "tab-close";
       closeBtn.textContent = "×";
@@ -399,14 +479,11 @@ function disableSplitView() {
       };
 
       el.appendChild(closeBtn);
-      el.onclick = () => activateTab(tab);
 
-      el.addEventListener("mousedown", (e) => {
-        if (e.button === 1) {
-          e.preventDefault();
-          closeTab(tab);
-        }
-      });
+      /* ===============================
+       ATIVAR ABA
+    =============================== */
+      el.onclick = () => activateTab(tab);
 
       tabsDiv.appendChild(el);
     });
@@ -541,6 +618,12 @@ function disableSplitView() {
         : 0;
 
     activateTab(tabs[index]); // ✅ aplica linguagem + menu
+
+    // após recriar todas as abas
+    applySavedTabsOrder();
+
+    // agora ativa a aba correta
+    activateTab(tabs[session.activeIndex] || tabs[0]);
 
     return true;
   }

@@ -105,6 +105,16 @@ body {
 }
 
 
+/* Aba sendo arrastada */
+.tab.dragging {
+  opacity: 0.5;
+}
+
+/* Aba alvo do drop */
+.tab.drag-over {
+  border-left: 2px solid #0078d4;
+}
+
 /* Hover */
 .tab:hover:not(.active) {
   background: #dadada;
