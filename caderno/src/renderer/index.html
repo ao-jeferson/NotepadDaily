@@ -23,15 +23,25 @@
             <path d="M9 6l6 6-6 6" />
           </svg>
         </button>
+
+        <!-- ✅ BOTÃO SPLIT VIEW -->
+        <button id="nav-split" class="nav-btn" title="Split View (Ctrl + \)">
+          <svg viewBox="0 0 24 24" class="nav-icon">
+            <path d="M3 4h8v16H3zM13 4h8v16h-8z" />
+          </svg>
+        </button>
       </div>
 
       <div id="tabs"></div>
       <div id="editor-container">
-        <div id="editor"></div>
+        <div id="editor-left"></div>
+        <div id="editor-right" class="hidden"></div>
         <div id="diff-editor"></div>
       </div>
       <div id="status-bar">
-        | <span id="cursor-pos">Ln 1, Col 1</span> | <span id="language">plaintext</span> | <span id="selection">Sel: 0</span>
+        | <span id="cursor-pos">Ln 1, Col 1</span> |
+        <span id="language">plaintext</span> |
+        <span id="selection">Sel: 0</span>
       </div>
     </div>
 

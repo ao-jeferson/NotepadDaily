@@ -13,8 +13,14 @@ require(["vs/editor/editor.main"], function () {
   let activeTab = null;
   let wordWrapEnabled = true;
 
+  let editorLeft;
+  let editorRight = null;
+  let isSplitActive = false;
+
   const tabsDiv = document.getElementById("tabs");
   const editorDiv = document.getElementById("editor");
+
+  let splitTab = null; // editor direito
 
   const cursorPosEl = document.getElementById("cursor-pos");
   const languageEl = document.getElementById("language");
@@ -55,6 +61,19 @@ require(["vs/editor/editor.main"], function () {
     "sql",
     "xml",
   ];
+
+  function createDetachedTab(name, content = "", path = null) {
+    const language = detectLanguageByFilename(name) || "plaintext";
+
+    const model = monaco.editor.createModel(content, language);
+
+    return {
+      name: name || generateTabName(),
+      path,
+      language,
+      model,
+    };
+  }
 
   function recordNavigation(tab, position) {
     if (isNavigatingHistory) return;
@@ -176,7 +195,8 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * EDITOR
    *********************************************************/
-  editor = monaco.editor.create(editorDiv, {
+
+  editorLeft = monaco.editor.create(document.getElementById("editor-left"), {
     automaticLayout: true,
     autoIndent: "advanced",
     formatOnPaste: true,
@@ -185,6 +205,9 @@ require(["vs/editor/editor.main"], function () {
     insertSpaces: true,
     wordWrap: "on",
   });
+
+  // mantém compatibilidade com código existente
+  editor = editorLeft;
 
   // ✅ LISTENERS UMA VEZ (CORRETO)
   editor.onDidChangeCursorPosition(updateStatusBar);
@@ -222,6 +245,50 @@ require(["vs/editor/editor.main"], function () {
     }
   }
 
+  function enableSplitView() {
+    if (isSplitActive) return;
+
+    const container = document.getElementById("editor-container");
+    const rightDiv = document.getElementById("editor-right");
+
+    rightDiv.classList.remove("hidden");
+    container.classList.add("split");
+
+    // ✅ cria NOVA aba para o split
+    splitTab = createDetachedTab("Novo Arquivo");
+
+    editorRight = monaco.editor.create(rightDiv, {
+      model: splitTab.model,
+      automaticLayout: true,
+      wordWrap: wordWrapEnabled ? "on" : "off",
+    });
+
+    isSplitActive = true;
+  }
+
+function disableSplitView() {
+  if (!isSplitActive) return;
+
+  editorRight.dispose();
+  editorRight = null;
+
+  splitTab.model.dispose();
+  splitTab = null;
+
+  document.getElementById("editor-right").classList.add("hidden");
+  document.getElementById("editor-container").classList.remove("split");
+
+  isSplitActive = false;
+}
+
+  function toggleSplitView() {
+    isSplitActive ? disableSplitView() : enableSplitView();
+  }
+
+  if (activeTab && editorRight) {
+    editorRight.setModel(activeTab.model);
+  }
+
   window.editorAPI?.onFormatDocument(() => {
     formatDocument();
   });
@@ -253,6 +320,12 @@ require(["vs/editor/editor.main"], function () {
 
     monaco.editor.setModelLanguage(tab.model, tab.language);
     editor.setModel(tab.model);
+
+    editorLeft.setModel(tab.model);
+
+    if (isSplitActive && editorRight) {
+      editorRight.setModel(tab.model);
+    }
 
     renderTabs();
     updateStatusBar();
@@ -339,6 +412,14 @@ require(["vs/editor/editor.main"], function () {
     });
   }
 
+  window.addEventListener("keydown", (e) => {
+    // Ctrl + \  (padrão VS Code)
+    if (e.ctrlKey && e.key === "\\") {
+      e.preventDefault();
+      toggleSplitView();
+    }
+  });
+
   /*********************************************************
    * NAVEGAÇÃO ENTRE ABAS
    *********************************************************/
@@ -412,65 +493,57 @@ require(["vs/editor/editor.main"], function () {
     };
   }
 
-async function restoreSession() {
-  const session = await window.sessionAPI.load();
+  async function restoreSession() {
+    const session = await window.sessionAPI.load();
 
-  // ❌ Nada para restaurar
-  if (
-    !session ||
-    !Array.isArray(session.tabs) ||
-    session.tabs.length === 0
-  ) {
-    return false;
-  }
+    // ❌ Nada para restaurar
+    if (!session || !Array.isArray(session.tabs) || session.tabs.length === 0) {
+      return false;
+    }
 
-  /* ===============================
+    /* ===============================
      RESTAURA OPÇÕES GLOBAIS
   =============================== */
-  wordWrapEnabled = session.wordWrap ?? true;
+    wordWrapEnabled = session.wordWrap ?? true;
 
-  editor.updateOptions({
-    wordWrap: wordWrapEnabled ? "on" : "off"
-  });
+    editor.updateOptions({
+      wordWrap: wordWrapEnabled ? "on" : "off",
+    });
 
-  /* ===============================
+    /* ===============================
      LIMPA ESTADO ATUAL
   =============================== */
-  tabs.length = 0;
-  activeTab = null;
+    tabs.length = 0;
+    activeTab = null;
 
-  /* ===============================
+    /* ===============================
      RECRIA CADA ABA COM A LINGUAGEM SALVA
   =============================== */
-  session.tabs.forEach(t => {
-    const language = t.language || "plaintext";
+    session.tabs.forEach((t) => {
+      const language = t.language || "plaintext";
 
-    const model = monaco.editor.createModel(
-      t.content || "",
-      language
-    );
+      const model = monaco.editor.createModel(t.content || "", language);
 
-    tabs.push({
-      name: t.name || generateTabName(),
-      path: t.path || null,
-      language: language,        // ✅ linguagem restaurada
-      model
+      tabs.push({
+        name: t.name || generateTabName(),
+        path: t.path || null,
+        language: language, // ✅ linguagem restaurada
+        model,
+      });
     });
-  });
 
-  /* ===============================
+    /* ===============================
      ATIVA A ABA CORRETA
   =============================== */
-  const index =
-    typeof session.activeIndex === "number" &&
-    tabs[session.activeIndex]
-      ? session.activeIndex
-      : 0;
+    const index =
+      typeof session.activeIndex === "number" && tabs[session.activeIndex]
+        ? session.activeIndex
+        : 0;
 
-  activateTab(tabs[index]);      // ✅ aplica linguagem + menu
+    activateTab(tabs[index]); // ✅ aplica linguagem + menu
 
-  return true;
-}
+    return true;
+  }
 
   window.sessionBridge.onRequestSave(() => {
     window.sessionBridge.saveToMain(collectSession());
@@ -561,6 +634,13 @@ async function restoreSession() {
     }
   });
 
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "j") {
+      e.preventDefault();
+      toggleSplitView();
+    }
+  });
+
   function updateNavButtons() {
     document.getElementById("nav-back").disabled = historyIndex <= 0;
     document.getElementById("nav-forward").disabled =
@@ -583,4 +663,14 @@ async function restoreSession() {
     updateStatusBar();
     updateLanguageMenu();
   });
+
+  const navSplitBtn = document.getElementById("nav-split");
+
+  if (navSplitBtn) {
+    navSplitBtn.addEventListener("click", () => {
+      toggleSplitView();
+    });
+  }
+
+  /**/
 });
