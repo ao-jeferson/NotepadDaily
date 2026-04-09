@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "description": "Editor de texto em Electron com Monaco Editor",
   "main": "src/main.js",
-
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . Caderno --platform=win32 --arch=x64 --out=C:/workspace/others/NotepadDaily/dist --overwrite",
-     "build2": "electron-packager . Caderno --platform=win32 --portable --overwrite"
+    "build1": "electron-packager . Caderno --platform=win32 --arch=x64 --out=C:/workspace/others/NotepadDaily/dist --overwrite",
+    "build": "electron-packager . Caderno --platform=win32 --arch=x64 --icon=src/assets/icon.ico --out=./dist --overwrite",
+    "build2": "electron-packager . Caderno --platform=win32 --portable --overwrite"
   },
-
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-packager": "^17.1.1"

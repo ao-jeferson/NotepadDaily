@@ -33,30 +33,30 @@ body {
   align-items: center;
   overflow-x: auto;
   white-space: nowrap;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #007acc;
   user-select: none;
 }
 
 /* Aba individual */
 .tab {
   position: relative;
-  padding: 6px 20px 6px 10px;
+  padding: 1px 1px 1px 1px;
   font-size: 11px; /* FONTE MENOR */
   font-weight: 500;
   cursor: pointer;
-  color: #444;
+  color: #1e1e1e;
 }
 
 /* Aba ativa */
 .tab.active {
-  background: #ffffff;
+  background: #ffffffff;
   color: #000;
   border-bottom: 2px solid #007acc;
 }
 
 /* Hover */
 .tab:hover {
-  background: #eaeaea;
+  background: #000000;
 }
 
 /* Botão fechar (X) */
@@ -140,7 +140,7 @@ body {
   align-items: center;
   height: 55px;                     /* ✅ AUMENTA A ALTURA */
   background: #ddd;              /* ✅ FUNDO CLARO */
-  border-bottom: 1px solid #007acc;
+  border-bottom: 0px solid #007acc;
   font-family: "Segoe UI", Arial, sans-serif;
   padding: 0 6px;
 }
@@ -189,7 +189,7 @@ body {
 .tab::before {
   content: "📄";
   font-size: 14px;
-  margin-right: 6px;
+  margin-right: 1px;
 }
 
 /* ==============================
@@ -204,4 +204,61 @@ body {
 
 .tab-close:hover {
   color: #000;
+}
+/* ==============================
+   BARRA DE NAVEGAÇÃO
+============================== */
+#nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 10px;
+  background: #f3f3f3;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+/* ==============================
+   BOTÃO DE NAVEGAÇÃO
+============================== */
+.nav-btn {
+  width: 36px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Hover */
+.nav-btn:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+/* Pressionado */
+.nav-btn:active:not(:disabled) {
+  background: #dcdcdc;
+}
+
+/* Desabilitado */
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ==============================
+   ÍCONE SVG
+============================== */
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #333;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

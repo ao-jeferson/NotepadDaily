@@ -11,13 +11,25 @@
 
   <body>
     <div id="app">
-      <div id="tabs"></div>
+      <div id="nav-bar">
+        <button id="nav-back" class="nav-btn" title="Voltar (Alt + ←)">
+          <svg viewBox="0 0 24 24" class="nav-icon">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
 
+        <button id="nav-forward" class="nav-btn" title="Avançar (Alt + →)">
+          <svg viewBox="0 0 24 24" class="nav-icon">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="tabs"></div>
       <div id="editor-container">
         <div id="editor"></div>
         <div id="diff-editor"></div>
       </div>
-
       <div id="status-bar">
         <span id="cursor-pos">Ln 1, Col 1</span>
         <span id="language">plaintext</span>

@@ -13,6 +13,7 @@ function createWindow() {
     height: 800,
     backgroundColor: "#ffffff",
     title: "Caderno",
+    icon: path.join(__dirname, "assets", "icon.ico"),
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
@@ -20,54 +21,6 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
-
-  /* ===== MENUS ===== */
-  // const menu = Menu.buildFromTemplate([
-  //   {
-  //     label: "File",
-  //     submenu: [
-  //       {
-  //         label: "New Tab",
-  //         accelerator: "Ctrl+T",
-  //         click: () => win.webContents.send("tab:new"),
-  //       },
-  //       {
-  //         label: "Open",
-  //         accelerator: "Ctrl+O",
-  //         click: () => win.webContents.send("file:open"),
-  //       },
-  //       {
-  //         label: "Save",
-  //         accelerator: "Ctrl+S",
-  //         click: () => win.webContents.send("file:save"),
-  //       },
-  //       {
-  //         label: "Close Tab",
-  //         accelerator: "Ctrl+W",
-  //         click: () => win.webContents.send("tab:close"),
-  //       },
-  //       { type: "separator" },
-  //       { label: "Quit", accelerator: "Alt+F4", click: () => win.close() },
-  //     ],
-  //   },
-  //   {
-  //     label: "Edit",
-  //     submenu: [
-  //       {
-  //         label: "Word Wrap",
-  //         type: "checkbox", // ✅ CHECKBOX
-  //         checked: wordWrapEnabled, // ✅ estado atual
-  //         accelerator: "Alt+Z",
-  //         click: () => win.webContents.send("view:toggle-word-wrap"),
-  //       },
-  //       {
-  //         label: "Format Document",
-  //         accelerator: "Ctrl+K Ctrl+D",
-  //         click: () => win.webContents.send("editor:format-document"),
-  //       },
-  //     ],
-  //   },
-  // ]);
 
   let wordWrapEnabled = true;
 

@@ -20,6 +20,20 @@ require(["vs/editor/editor.main"], function () {
   const languageEl = document.getElementById("language");
   const selectionEl = document.getElementById("selection");
 
+  const navigationHistory = [];
+  let historyIndex = -1;
+  let isNavigatingHistory = false;
+
+  let cursorTimer = null;
+
+  document.getElementById("nav-back").addEventListener("click", () => {
+    goBackInHistory();
+  });
+
+  document.getElementById("nav-forward").addEventListener("click", () => {
+    goForwardInHistory();
+  });
+
   /*********************************************************
    * UTILIDADES
    *********************************************************/
@@ -41,6 +55,32 @@ require(["vs/editor/editor.main"], function () {
     "sql",
     "xml",
   ];
+
+  function recordNavigation(tab, position) {
+    if (isNavigatingHistory) return;
+
+    const last = navigationHistory[historyIndex];
+    if (
+      last &&
+      last.tab === tab &&
+      last.position.lineNumber === position.lineNumber &&
+      last.position.column === position.column
+    ) {
+      return; // evita duplicados
+    }
+
+    navigationHistory.splice(historyIndex + 1);
+    navigationHistory.push({
+      tab,
+      position: {
+        lineNumber: position.lineNumber,
+        column: position.column,
+      },
+    });
+
+    historyIndex = navigationHistory.length - 1;
+    updateNavButtons();
+  }
 
   function updateLanguageMenu() {
     if (!activeTab) return;
@@ -150,6 +190,15 @@ require(["vs/editor/editor.main"], function () {
   editor.onDidChangeCursorPosition(updateStatusBar);
   editor.onDidChangeCursorSelection(updateStatusBar);
 
+  editor.onDidChangeCursorPosition((e) => {
+    clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(() => {
+      if (activeTab) {
+        recordNavigation(activeTab, e.position);
+      }
+    }, 300); // evita flood ao digitar
+  });
+
   editor.onDidPaste(() => {
     if (!activeTab) return;
 
@@ -201,12 +250,54 @@ require(["vs/editor/editor.main"], function () {
 
   function activateTab(tab) {
     activeTab = tab;
+
     monaco.editor.setModelLanguage(tab.model, tab.language);
     editor.setModel(tab.model);
+
     renderTabs();
     updateStatusBar();
+
+    const pos = editor.getPosition();
+    if (pos) {
+      recordNavigation(tab, pos);
+    }
   }
 
+  function goBackInHistory() {
+    if (historyIndex <= 0) return;
+
+    isNavigatingHistory = true;
+    historyIndex--;
+
+    const entry = navigationHistory[historyIndex];
+    activateTab(entry.tab);
+    editor.setPosition(entry.position);
+    editor.revealPositionInCenter(entry.position);
+
+    isNavigatingHistory = false;
+    updateNavButtons();
+  }
+
+  function goForwardInHistory() {
+    if (historyIndex >= navigationHistory.length - 1) return;
+
+    isNavigatingHistory = true;
+    historyIndex++;
+
+    const entry = navigationHistory[historyIndex];
+    activateTab(entry.tab);
+    editor.setPosition(entry.position);
+    editor.revealPositionInCenter(entry.position);
+
+    isNavigatingHistory = false;
+    updateNavButtons();
+  }
+
+  function updateNavButtons() {
+    document.getElementById("nav-back").disabled = historyIndex <= 0;
+    document.getElementById("nav-forward").disabled =
+      historyIndex >= navigationHistory.length - 1;
+  }
   function closeTab(tab) {
     const i = tabs.indexOf(tab);
     if (i === -1) return;
@@ -416,13 +507,34 @@ require(["vs/editor/editor.main"], function () {
     true, // ✅ IMPORTANTE: capture phase (evita conflito com Monaco)
   );
 
+  document.getElementById("nav-back").onclick = goBackInHistory;
+  document.getElementById("nav-forward").onclick = goForwardInHistory;
+
+  window.addEventListener("keydown", (e) => {
+    if (e.altKey && e.key === "ArrowLeft") {
+      e.preventDefault();
+      goBackInHistory();
+    }
+
+    if (e.altKey && e.key === "ArrowRight") {
+      e.preventDefault();
+      goForwardInHistory();
+    }
+  });
+
+  function updateNavButtons() {
+    document.getElementById("nav-back").disabled = historyIndex <= 0;
+    document.getElementById("nav-forward").disabled =
+      historyIndex >= navigationHistory.length - 1;
+  }
+
   /*********************************************************
    * INIT
    *********************************************************/
   restoreSession().then((restored) => {
     if (!restored) createTab();
   });
-
+  //
   window.languageAPI.onSetLanguage((lang) => {
     if (!activeTab) return;
 
