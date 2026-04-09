@@ -25,54 +25,80 @@ body {
    BARRA DE ABAS (CLARA)
 ============================= */
 
+/* ==============================
+   BARRA DE ABAS
+============================== */
 #tabs {
-  height: 30px;
-  background: #f3f3f3; /* FUNDO CLARO */
-  color: #333;
   display: flex;
-  align-items: center;
-  overflow-x: auto;
-  white-space: nowrap;
-  border-bottom: 1px solid #007acc;
-  user-select: none;
+  align-items: flex-end;
+  height: 30px;                 /* ✅ barra mais baixa */
+  background: #ededed;
+  border-bottom: 1px solid #c8c8c8;
+  padding-left: 2px;
+  gap: 2px;                     /* ✅ distância mínima entre abas */
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 /* Aba individual */
 .tab {
-  position: relative;
-  padding: 1px 1px 1px 1px;
-  font-size: 11px; /* FONTE MENOR */
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 24px;                 /* ✅ aba bem baixa */
+  padding: 0 10px;
+  font-size: 12px;
+  color: #333;
+  background: #e6e6e6;
+  border-radius: 3px 3px 0 0;
   cursor: pointer;
-  color: #1e1e1e;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+
+  /* ✅ remove espaçamentos extras */
+  margin: 0;
 }
 
 /* Aba ativa */
 .tab.active {
-  background: #ffffffff;
+  background: #ffffff;
   color: #000;
-  border-bottom: 2px solid #007acc;
+  font-weight: 500;
+
+  /* ✅ borda azul à esquerda */
+  border-left: 1px solid #0078d4;
+
+  /* ✅ borda azul inferior */
+  border-bottom: 2px solid #0078d4;
+
+  /* ✅ bordas sutis para integração */
+  border-top: 1px solid #c8c8c8;
+  border-right: 1px solid #c8c8c8;
+
+  /* ✅ compensação visual da borda esquerda */
+  padding-left: 1px;
 }
+
 
 /* Hover */
-.tab:hover {
-  background: #000000;
+.tab:hover:not(.active) {
+  background: #dadada;
 }
 
+
 /* Botão fechar (X) */
-.tab .close {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  font-size: 12px;
-  line-height: 1;
-  opacity: 0.5;
+
+.tab-close {
+  margin-left: 6px;
+  font-size: 13px;
+  color: #666;
   cursor: pointer;
 }
 
-.tab .close:hover {
-  opacity: 1;
+.tab-close:hover {
+  color: #000;
 }
+
+
 
 /* =============================
    EDITOR / DIFF
@@ -106,7 +132,7 @@ body {
   font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 1px;
   padding: 0 8px;
 }
 
@@ -138,11 +164,11 @@ body {
 #tabs {
   display: flex;
   align-items: center;
-  height: 55px;                     /* ✅ AUMENTA A ALTURA */
+  height: 26px;                     /* ✅ AUMENTA A ALTURA */
   background: #ddd;              /* ✅ FUNDO CLARO */
   border-bottom: 0px solid #007acc;
   font-family: "Segoe UI", Arial, sans-serif;
-  padding: 0 6px;
+  padding: 0 1px;
 }
 
 /* ==============================
@@ -154,8 +180,8 @@ body {
   gap: 0px;
   height: 23px;                     /* ✅ ABA MAIS ALTA */
   padding: 0 2px;
-  margin-right: 8px;
-  font-size: 12px;                  /* ✅ TEXTO MAIS LEGÍVEL */
+  margin-right: 1px;
+  font-size: 11px;                  /* ✅ TEXTO MAIS LEGÍVEL */
   color: #333333;
   cursor: pointer;
   border: 0px solid #d0d0d0;         /* ✅ BORDA VISÍVEL */
@@ -173,7 +199,7 @@ body {
   background: #ffff;
   color: #000000;
   font-weight: 500;
-  border-bottom: 2px solid #ffffff;
+  border-bottom: -1px solid #ffffff;
 }
 
 /* ==============================
