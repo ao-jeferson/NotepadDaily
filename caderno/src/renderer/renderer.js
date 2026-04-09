@@ -27,6 +27,56 @@ require(["vs/editor/editor.main"], function () {
     return new Date().toLocaleString();
   }
 
+  const SUPPORTED_LANGUAGES = [
+    "plaintext",
+    "javascript",
+    "typescript",
+    "json",
+    "html",
+    "css",
+    "markdown",
+    "python",
+    "java",
+    "csharp",
+    "sql",
+    "xml",
+  ];
+
+  function updateLanguageMenu() {
+    if (!activeTab) return;
+    window.languageAPI.updateLanguageMenu(activeTab.language);
+  }
+
+  function detectLanguageByFilename(name = "") {
+    const ext = name.split(".").pop().toLowerCase();
+    const map = {
+      js: "javascript",
+      ts: "typescript",
+      json: "json",
+      html: "html",
+      css: "css",
+      md: "markdown",
+      py: "python",
+      java: "java",
+      cs: "csharp",
+      sql: "sql",
+      xml: "xml",
+    };
+    return map[ext] || "plaintext";
+  }
+
+  function detectLanguageByContent(text = "") {
+    const t = text.trim();
+    if (/^<!DOCTYPE html>|<\/html>/i.test(t)) return "html";
+    if (/^\s*[{[]/.test(t) && /"\s*:/.test(t)) return "json";
+    if (/\b(function|const|let|var|import|export)\b/.test(t))
+      return "javascript";
+    if (/\b(def |import |from )/i.test(t)) return "python";
+    if (/\b(public class|static void main)\b/i.test(t)) return "java";
+    if (/\bSELECT\b.*\bFROM\b/i.test(t)) return "sql";
+    return "plaintext";
+  }
+
   function detectLanguageByFilename(name = "") {
     const ext = name.split(".").pop().toLowerCase();
     const map = {
@@ -99,6 +149,19 @@ require(["vs/editor/editor.main"], function () {
   // ✅ LISTENERS UMA VEZ (CORRETO)
   editor.onDidChangeCursorPosition(updateStatusBar);
   editor.onDidChangeCursorSelection(updateStatusBar);
+
+  editor.onDidPaste(() => {
+    if (!activeTab) return;
+
+    const content = activeTab.model.getValue();
+    const detected = detectLanguageByContent(content);
+
+    if (detected !== activeTab.language) {
+      activeTab.language = detected;
+      monaco.editor.setModelLanguage(activeTab.model, detected);
+      updateLanguageMenu();
+    }
+  });
 
   /*********************************************************
    * FORMAT DOCUMENT
@@ -358,5 +421,15 @@ require(["vs/editor/editor.main"], function () {
    *********************************************************/
   restoreSession().then((restored) => {
     if (!restored) createTab();
+  });
+
+  window.languageAPI.onSetLanguage((lang) => {
+    if (!activeTab) return;
+
+    activeTab.language = lang;
+    monaco.editor.setModelLanguage(activeTab.model, lang);
+
+    updateStatusBar();
+    updateLanguageMenu();
   });
 });

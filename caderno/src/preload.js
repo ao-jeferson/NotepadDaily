@@ -30,3 +30,10 @@ contextBridge.exposeInMainWorld("viewAPI", {
 contextBridge.exposeInMainWorld("editorAPI", {
   onFormatDocument: (cb) => ipcRenderer.on("editor:format-document", cb),
 });
+contextBridge.exposeInMainWorld("languageAPI", {
+  onSetLanguage: cb =>
+    ipcRenderer.on("language:set", (_, lang) => cb(lang)),
+
+  updateLanguageMenu: lang =>
+    ipcRenderer.send("language:update-menu", lang)
+});

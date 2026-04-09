@@ -112,13 +112,78 @@ function createWindow() {
           },
         ],
       },
+      {
+        label: "Language",
+        submenu: [
+          {
+            label: "Plain Text",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "plaintext"),
+          },
+          {
+            label: "JavaScript",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "javascript"),
+          },
+          {
+            label: "TypeScript",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "typescript"),
+          },
+          {
+            label: "JSON",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "json"),
+          },
+          {
+            label: "HTML",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "html"),
+          },
+          {
+            label: "CSS",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "css"),
+          },
+          {
+            label: "Markdown",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "markdown"),
+          },
+          {
+            label: "Python",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "python"),
+          },
+          {
+            label: "Java",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "java"),
+          },
+          {
+            label: "C#",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "csharp"),
+          },
+          {
+            label: "SQL",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "sql"),
+          },
+          {
+            label: "XML",
+            type: "radio",
+            click: () => win.webContents.send("language:set", "xml"),
+          },
+        ],
+      },
       { role: "viewMenu" },
       { role: "windowMenu" },
       { role: "helpMenu" },
     ]);
   }
-  
-   Menu.setApplicationMenu(buildMenu(win));
+
+  Menu.setApplicationMenu(buildMenu(win));
 
   /* ===== SESSÃO NO FECHAMENTO ===== */
   win.on("close", (e) => {
