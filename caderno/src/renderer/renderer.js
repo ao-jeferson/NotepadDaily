@@ -496,7 +496,28 @@ require(["vs/editor/editor.main"], function () {
       toggleSplitView();
     }
   });
+  /* =========================================================
+   FECHAR ABA COM BOTÃO DO MEIO DO MOUSE
+========================================================= */
+  tabsDiv.addEventListener("mousedown", (e) => {
+    // botão do meio do mouse
+    if (e.button !== 1) return;
 
+    const tabEl = e.target.closest(".tab");
+    if (!tabEl) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Descobre o índice da aba clicada
+    const index = Array.from(tabsDiv.children).indexOf(tabEl);
+    if (index < 0) return;
+
+    const tab = tabs[index];
+    if (tab) {
+      closeTab(tab);
+    }
+  });
   /*********************************************************
    * NAVEGAÇÃO ENTRE ABAS
    *********************************************************/
