@@ -256,7 +256,7 @@ require(["vs/editor/editor.main"], function () {
 
     renderTabs();
     updateStatusBar();
-
+    updateLanguageMenu();
     const pos = editor.getPosition();
     if (pos) {
       recordNavigation(tab, pos);
@@ -412,26 +412,65 @@ require(["vs/editor/editor.main"], function () {
     };
   }
 
-  async function restoreSession() {
-    const s = await window.sessionAPI.load();
-    if (!s || !Array.isArray(s.tabs)) return false;
+async function restoreSession() {
+  const session = await window.sessionAPI.load();
 
-    wordWrapEnabled = s.wordWrap ?? true;
-    editor.updateOptions({
-      wordWrap: wordWrapEnabled ? "on" : "off",
-      wrappingIndent: "same",
-    });
-
-    tabs.length = 0;
-    activeTab = null;
-
-    s.tabs.forEach((t) => {
-      createTab(t.name, t.content, t.path);
-    });
-
-    if (tabs[s.activeIndex]) activateTab(tabs[s.activeIndex]);
-    return true;
+  // ❌ Nada para restaurar
+  if (
+    !session ||
+    !Array.isArray(session.tabs) ||
+    session.tabs.length === 0
+  ) {
+    return false;
   }
+
+  /* ===============================
+     RESTAURA OPÇÕES GLOBAIS
+  =============================== */
+  wordWrapEnabled = session.wordWrap ?? true;
+
+  editor.updateOptions({
+    wordWrap: wordWrapEnabled ? "on" : "off"
+  });
+
+  /* ===============================
+     LIMPA ESTADO ATUAL
+  =============================== */
+  tabs.length = 0;
+  activeTab = null;
+
+  /* ===============================
+     RECRIA CADA ABA COM A LINGUAGEM SALVA
+  =============================== */
+  session.tabs.forEach(t => {
+    const language = t.language || "plaintext";
+
+    const model = monaco.editor.createModel(
+      t.content || "",
+      language
+    );
+
+    tabs.push({
+      name: t.name || generateTabName(),
+      path: t.path || null,
+      language: language,        // ✅ linguagem restaurada
+      model
+    });
+  });
+
+  /* ===============================
+     ATIVA A ABA CORRETA
+  =============================== */
+  const index =
+    typeof session.activeIndex === "number" &&
+    tabs[session.activeIndex]
+      ? session.activeIndex
+      : 0;
+
+  activateTab(tabs[index]);      // ✅ aplica linguagem + menu
+
+  return true;
+}
 
   window.sessionBridge.onRequestSave(() => {
     window.sessionBridge.saveToMain(collectSession());
