@@ -8,6 +8,14 @@ contextBridge.exposeInMainWorld("api", {
 
   openFile: () => ipcRenderer.invoke("open-file"),
   saveFile: (data) => ipcRenderer.invoke("save-file", data),
+  // ✅ Recent Files
+  updateRecentFiles: (list) => ipcRenderer.send("recent-files:update", list),
+  // ✅ novo
+  openFileByPath: (filePath) =>
+    ipcRenderer.invoke("open-file-by-path", filePath),
+
+  onOpenRecentFile: (cb) =>
+    ipcRenderer.on("recent-files:open", (_, filePath) => cb(filePath)),
 });
 
 contextBridge.exposeInMainWorld("sessionAPI", {
@@ -31,9 +39,7 @@ contextBridge.exposeInMainWorld("editorAPI", {
   onFormatDocument: (cb) => ipcRenderer.on("editor:format-document", cb),
 });
 contextBridge.exposeInMainWorld("languageAPI", {
-  onSetLanguage: cb =>
-    ipcRenderer.on("language:set", (_, lang) => cb(lang)),
+  onSetLanguage: (cb) => ipcRenderer.on("language:set", (_, lang) => cb(lang)),
 
-  updateLanguageMenu: lang =>
-    ipcRenderer.send("language:update-menu", lang)
+  updateLanguageMenu: (lang) => ipcRenderer.send("language:update-menu", lang),
 });

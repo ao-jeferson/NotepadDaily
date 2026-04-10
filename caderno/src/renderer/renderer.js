@@ -16,7 +16,7 @@ require(["vs/editor/editor.main"], function () {
   let editorLeft;
   let editorRight = null;
   let isSplitActive = false;
-
+  const closedTabsStack = [];
   const tabsDiv = document.getElementById("tabs");
   const editorDiv = document.getElementById("editor");
 
@@ -43,6 +43,35 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * UTILIDADES
    *********************************************************/
+  /* =========================================================
+   RECENT FILES (máx. 20)
+========================================================= */
+  const RECENT_FILES_KEY = "recentFiles";
+  const MAX_RECENT_FILES = 20;
+
+  function getRecentFiles() {
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_FILES_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function setRecentFiles(list) {
+    localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(list));
+    // avisa o main para atualizar o menu
+    window.api?.updateRecentFiles(list);
+  }
+
+  function addRecentFile(filePath) {
+    if (!filePath) return;
+
+    let list = getRecentFiles().filter((p) => p !== filePath);
+    list.unshift(filePath);
+    if (list.length > MAX_RECENT_FILES) list = list.slice(0, MAX_RECENT_FILES);
+
+    setRecentFiles(list);
+  }
   function saveTabsOrder() {
     const order = tabs.map((t) => t.path || t.name);
     localStorage.setItem("tabsOrder", JSON.stringify(order));
@@ -175,11 +204,11 @@ require(["vs/editor/editor.main"], function () {
    * STATUS BAR
    *********************************************************/
   function updateStatusBar() {
-    if (!editor) return;
+    if (!editor || !editor.getModel()) return;
 
     const model = editor.getModel();
-    if (!model) return;
 
+    /* ===== POSIÇÃO DO CURSOR ===== */
     const pos = editor.getPosition();
     if (pos) {
       cursorPosEl.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
@@ -187,14 +216,34 @@ require(["vs/editor/editor.main"], function () {
       cursorPosEl.textContent = "";
     }
 
+    /* ===== LINGUAGEM ===== */
     languageEl.textContent = model.getLanguageId();
 
+    /* ===== SELEÇÃO ===== */
     const sel = editor.getSelection();
+    let selectionSize = 0;
+
     if (sel && !sel.isEmpty()) {
-      selectionEl.textContent = `Sel: ${model.getValueInRange(sel).length}`;
-    } else {
-      selectionEl.textContent = "Sel: 0";
+      selectionSize = model.getValueInRange(sel).length;
     }
+
+    selectionEl.textContent = `Sel: ${selectionSize}`;
+
+    /* ===== TAMANHO DO ARQUIVO ===== */
+    const text = model.getValue();
+    const byteSize = new TextEncoder().encode(text).length;
+    const formattedSize = formatBytes(byteSize);
+
+    // Cria ou atualiza o elemento de tamanho
+    let sizeEl = document.getElementById("file-size");
+    if (!sizeEl) {
+      sizeEl = document.createElement("span");
+      sizeEl.id = "file-size";
+      sizeEl.style.marginLeft = "12px";
+      selectionEl.parentElement.appendChild(sizeEl);
+    }
+
+    sizeEl.textContent = `Size: ${formattedSize}`;
   }
 
   /*********************************************************
@@ -387,6 +436,23 @@ require(["vs/editor/editor.main"], function () {
     saveTabsOrder(); // ✅ mantém persistência
 
     tabs.length ? activateTab(tabs[Math.max(0, i - 1)]) : createTab();
+
+    closedTabsStack.push({
+      name: tab.name,
+      path: tab.path,
+      language: tab.language,
+      content: tab.model.getValue(),
+    });
+
+    if (closedTabsStack.length > 20) {
+      closedTabsStack.shift();
+    }
+  }
+  function restoreClosedTab() {
+    const last = closedTabsStack.pop();
+    if (!last) return;
+
+    createTab(last.name, last.content, last.path);
   }
 
   function applySavedTabsOrder() {
@@ -437,7 +503,7 @@ require(["vs/editor/editor.main"], function () {
       });
 
       /* ===============================
-       DROP  ✅ AQUI É O TRECHO QUE VOCÊ PERGUNTOU
+       DROP  
     =============================== */
       el.addEventListener("drop", (e) => {
         e.preventDefault();
@@ -479,6 +545,16 @@ require(["vs/editor/editor.main"], function () {
       };
 
       el.appendChild(closeBtn);
+
+      /**
+       * Restaurar ABa
+       */
+      window.addEventListener("keydown", (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "t") {
+          e.preventDefault();
+          restoreClosedTab();
+        }
+      });
 
       /* ===============================
        ATIVAR ABA
@@ -555,6 +631,8 @@ require(["vs/editor/editor.main"], function () {
       activeTab.name = savedPath.split(/[\\/]/).pop();
       renderTabs();
     }
+    addFile(activeTab.path);
+    addRecentFile(activeTab.path);
   }
 
   /*********************************************************
@@ -662,9 +740,23 @@ require(["vs/editor/editor.main"], function () {
   window.api.onOpen(async () => {
     const r = await window.api.openFile();
     if (r) createTab(r.path.split(/[\\/]/).pop(), r.content, r.path);
+    addRecentFile(r.path);
   });
 
   window.api.onSave(saveActiveTab);
+
+window.api?.onOpenRecentFile(async (filePath) => {
+  const result = await window.api.openFileByPath(filePath);
+  if (!result) return;
+
+  createTab(
+    result.path.split(/[\\/]/).pop(),
+    result.content,
+    result.path
+  );
+
+  addRecentFile(result.path); // sobe para o topo da lista
+});
 
   /*********************************************************
    * CTRL + K  →  CTRL + D (CORRIGIDO, SEM TRAVAR)
@@ -744,7 +836,15 @@ require(["vs/editor/editor.main"], function () {
       toggleSplitView();
     }
   });
+  function formatBytes(bytes) {
+    if (bytes === 0) return "0 B";
 
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  }
   function updateNavButtons() {
     document.getElementById("nav-back").disabled = historyIndex <= 0;
     document.getElementById("nav-forward").disabled =
@@ -775,6 +875,20 @@ require(["vs/editor/editor.main"], function () {
       toggleSplitView();
     });
   }
+
+  /* =========================================================
+   INICIALIZA RECENT FILES NO MENU
+========================================================= */
+  (function initRecentFilesMenu() {
+    try {
+      const recent = JSON.parse(localStorage.getItem("recentFiles")) || [];
+      if (recent.length && window.api?.updateRecentFiles) {
+        window.api.updateRecentFiles(recent);
+      }
+    } catch (err) {
+      console.error("Erro ao inicializar Recent Files:", err);
+    }
+  })();
 
   /**/
 });
