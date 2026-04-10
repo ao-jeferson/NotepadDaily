@@ -70,6 +70,15 @@ function buildMenu(win) {
           click: () => win.webContents.send("file:open"),
         },
         {
+          label: "Open Folder",
+          accelerator: "Ctrl+K Ctrl+O",
+          click: () => {
+            if (win && !win.isDestroyed()) {
+              win.webContents.send("workspace:open");
+            }
+          },
+        },
+        {
           label: "Save",
           accelerator: "Ctrl+S",
           click: () => win.webContents.send("file:save"),
@@ -260,4 +269,36 @@ app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+function readDirectoryRecursive(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).map((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return {
+        type: "folder",
+        name: entry.name,
+        path: fullPath,
+        children: readDirectoryRecursive(fullPath),
+      };
+    }
+    return {
+      type: "file",
+      name: entry.name,
+      path: fullPath,
+    };
+  });
+}
+
+ipcMain.handle("workspace:open", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+  });
+  if (result.canceled) return null;
+
+  const root = result.filePaths[0];
+  return {
+    root,
+    tree: readDirectoryRecursive(root),
+  };
 });

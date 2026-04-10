@@ -4,6 +4,10 @@ require.config({
   },
 });
 
+require(["workspace/workspace.feature"], function () {
+  console.log("Workspace feature carregada11111");
+});
+
 require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * ESTADO GLOBAL
@@ -42,7 +46,6 @@ require(["vs/editor/editor.main"], function () {
   document.getElementById("nav-back").addEventListener("click", () => {
     goBackInHistory();
   });
-
 
   /*********************************************************
    * UTILIDADES
@@ -95,6 +98,13 @@ require(["vs/editor/editor.main"], function () {
       contextMenu.classList.add("hidden");
     });
   });
+
+  
+const savedWidth = localStorage.getItem("sidebarWidth");
+if (savedWidth) {
+  sidebar.style.width = `${savedWidth}px`;
+}
+
 
   /* =========================================================
    RECENT FILES (máx. 20)
@@ -152,7 +162,11 @@ require(["vs/editor/editor.main"], function () {
   function createDetachedTab(name, content = "", path = null) {
     const language = detectLanguageByFilename(name) || "plaintext";
 
-    const model = monaco.editor.Model(content, language);
+    const model = monaco.editor.createModel(
+      content,
+      language,
+      path ? monaco.Uri.file(path) : undefined,
+    );
 
     return {
       name: name || generateTabName(),
@@ -851,6 +865,20 @@ require(["vs/editor/editor.main"], function () {
   window.api.onNewTab(() => createTab());
   window.api.onCloseTab(() => activeTab && closeTab(activeTab));
 
+  // window.api.onOpenWorkspace(() => {
+  //   if (window.openWorkspace) {
+  //     window.openWorkspace();
+  //   }
+  // });
+  window.api.onOpenWorkspace(() => {
+    console.log("✅ onOpenWorkspace recebido no renderer");
+    if (window.openWorkspace) {
+      window.openWorkspace();
+    } else {
+      alert("❌ window.openWorkspace não existe");
+    }
+  });
+
   window.api.onOpen(async () => {
     const r = await window.api.openFile();
     if (r) createTab(r.path.split(/[\\/]/).pop(), r.content, r.path);
@@ -1001,4 +1029,51 @@ require(["vs/editor/editor.main"], function () {
   })();
 
   /**/
+});
+
+
+const sidebar = document.getElementById("sidebar");
+const resizer = document.getElementById("sidebar-resizer");
+
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+resizer.addEventListener("mousedown", (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+
+  document.body.classList.add("resizing");
+  document.body.style.cursor = "col-resize";
+  document.body.style.userSelect = "none";
+
+  e.preventDefault();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isResizing) return;
+
+  const dx = e.clientX - startX;
+  let newWidth = startWidth + dx;
+
+  const minWidth = 160;
+  const maxWidth = Math.floor(window.innerWidth / 2); // ✅ limite: metade da tela
+
+  if (newWidth < minWidth) newWidth = minWidth;
+  if (newWidth > maxWidth) newWidth = maxWidth;
+
+  sidebar.style.width = `${newWidth}px`;
+});
+
+document.addEventListener("mouseup", () => {
+  if (!isResizing) return;
+
+  isResizing = false;
+
+  document.body.classList.remove("resizing");
+  document.body.style.cursor = "";
+  document.body.style.userSelect = "";
+
+  localStorage.setItem("sidebarWidth", sidebar.offsetWidth);
 });
