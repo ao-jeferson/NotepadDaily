@@ -32,13 +32,17 @@ require(["vs/editor/editor.main"], function () {
 
   let cursorTimer = null;
 
+  // ✅ Fonte base usada para cálculo do zoom
+  const DEFAULT_FONT_SIZE = 14;
+
+  // ✅ Estado atual do editor
+  let editorFontSize = DEFAULT_FONT_SIZE;
+
+  // ✅ Listener NÃO relacionado ao zoom
   document.getElementById("nav-back").addEventListener("click", () => {
     goBackInHistory();
   });
 
-  document.getElementById("nav-forward").addEventListener("click", () => {
-    goForwardInHistory();
-  });
 
   /*********************************************************
    * UTILIDADES
@@ -148,7 +152,7 @@ require(["vs/editor/editor.main"], function () {
   function createDetachedTab(name, content = "", path = null) {
     const language = detectLanguageByFilename(name) || "plaintext";
 
-    const model = monaco.editor.createModel(content, language);
+    const model = monaco.editor.Model(content, language);
 
     return {
       name: name || generateTabName(),
@@ -293,6 +297,23 @@ require(["vs/editor/editor.main"], function () {
     }
 
     sizeEl.textContent = `Size: ${formattedSize}`;
+
+    /* ===== ZOOM ===== */
+    const currentFontSize = editor.getOption(
+      monaco.editor.EditorOption.fontSize,
+    );
+
+    const zoomPercent = Math.round((currentFontSize / DEFAULT_FONT_SIZE) * 100);
+
+    let zoomEl = document.getElementById("zoom-level");
+    if (!zoomEl) {
+      zoomEl = document.createElement("span");
+      zoomEl.id = "zoom-level";
+      zoomEl.style.marginLeft = "12px";
+      selectionEl.parentElement.appendChild(zoomEl);
+    }
+
+    zoomEl.textContent = `Zoom: ${zoomPercent}%`;
   }
 
   /*********************************************************
@@ -313,6 +334,12 @@ require(["vs/editor/editor.main"], function () {
   // mantém compatibilidade com código existente
   editor = editorLeft;
 
+  const savedFontSize = parseInt(localStorage.getItem("editorFontSize"), 10);
+
+  editor.updateOptions({
+    fontSize: isNaN(savedFontSize) ? DEFAULT_FONT_SIZE : savedFontSize,
+  });
+
   require(["./features/zoom.feature"], function () {
     if (window.zoomFeature && editor) {
       window.zoomFeature.init(editor);
@@ -322,6 +349,20 @@ require(["vs/editor/editor.main"], function () {
   /* =========================================================
    ZOOM DO EDITOR (CTRL + RODA DO MOUSE)
 ========================================================= */
+  /* ===== ZOOM ===== */
+  const currentFontSize = editor.getOption(monaco.editor.EditorOption.fontSize);
+
+  const zoomPercent = Math.round((currentFontSize / DEFAULT_FONT_SIZE) * 100);
+
+  let zoomEl = document.getElementById("zoom-level");
+  if (!zoomEl) {
+    zoomEl = document.createElement("span");
+    zoomEl.id = "zoom-level";
+    zoomEl.style.marginLeft = "12px";
+    selectionEl.parentElement.appendChild(zoomEl);
+  }
+
+  zoomEl.textContent = `Zoom: ${zoomPercent}%`;
 
   // ✅ Inicializa o zoom (CTRL + SCROLL)
   if (window.zoomFeature) {
@@ -380,10 +421,18 @@ require(["vs/editor/editor.main"], function () {
       model: splitTab.model,
       automaticLayout: true,
       wordWrap: wordWrapEnabled ? "on" : "off",
+      mouseWheelZoom: true,
     });
 
     isSplitActive = true;
   }
+  editor.onDidChangeConfiguration((e) => {
+    if (e.hasChanged(monaco.editor.EditorOption.fontSize)) {
+      const fs = editor.getOption(monaco.editor.EditorOption.fontSize);
+      localStorage.setItem("editorFontSize", fs);
+      updateStatusBar();
+    }
+  });
 
   function disableSplitView() {
     if (!isSplitActive) return;
