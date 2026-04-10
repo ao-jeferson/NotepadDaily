@@ -5,7 +5,11 @@ require.config({
 });
 
 require(["workspace/workspace.feature"], function () {
-  console.log("Workspace feature carregada11111");
+  console.log("Workspace feature carregada");
+});
+
+require(["state/app.state"], () => {
+  console.log("✅ appState carregado");
 });
 
 require(["vs/editor/editor.main"], function () {
@@ -99,12 +103,10 @@ require(["vs/editor/editor.main"], function () {
     });
   });
 
-  
-const savedWidth = localStorage.getItem("sidebarWidth");
-if (savedWidth) {
-  sidebar.style.width = `${savedWidth}px`;
-}
-
+  const savedWidth = localStorage.getItem("sidebarWidth");
+  if (savedWidth) {
+    sidebar.style.width = `${savedWidth}px`;
+  }
 
   /* =========================================================
    RECENT FILES (máx. 20)
@@ -518,6 +520,21 @@ if (savedWidth) {
     }
   }
 
+  /* ======================================================
+   EDITOR PUBLIC API
+   (interface mínima para features)
+====================================================== */
+
+  window.editorApi = {
+    openTab({ name, content, path }) {
+      createTab(name, content, path);
+    },
+
+    activateTab(tab) {
+      activateTab(tab);
+    },
+  };
+
   function goBackInHistory() {
     if (historyIndex <= 0) return;
 
@@ -865,18 +882,8 @@ if (savedWidth) {
   window.api.onNewTab(() => createTab());
   window.api.onCloseTab(() => activeTab && closeTab(activeTab));
 
-  // window.api.onOpenWorkspace(() => {
-  //   if (window.openWorkspace) {
-  //     window.openWorkspace();
-  //   }
-  // });
   window.api.onOpenWorkspace(() => {
-    console.log("✅ onOpenWorkspace recebido no renderer");
-    if (window.openWorkspace) {
-      window.openWorkspace();
-    } else {
-      alert("❌ window.openWorkspace não existe");
-    }
+    window.workspace?.open();
   });
 
   window.api.onOpen(async () => {
@@ -1030,7 +1037,6 @@ if (savedWidth) {
 
   /**/
 });
-
 
 const sidebar = document.getElementById("sidebar");
 const resizer = document.getElementById("sidebar-resizer");
