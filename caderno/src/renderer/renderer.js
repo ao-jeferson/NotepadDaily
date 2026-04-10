@@ -43,6 +43,55 @@ require(["vs/editor/editor.main"], function () {
   /*********************************************************
    * UTILIDADES
    *********************************************************/
+  document.addEventListener("DOMContentLoaded", () => {
+    const contextMenu = document.getElementById("tab-context-menu");
+    let contextTab = null;
+
+    if (!contextMenu) {
+      console.warn("⚠️ tab-context-menu não encontrado");
+      return;
+    }
+
+    tabsDiv.addEventListener("contextmenu", (e) => {
+      const tabEl = e.target.closest(".tab");
+      if (!tabEl) return;
+
+      e.preventDefault();
+
+      const index = Array.from(tabsDiv.children).indexOf(tabEl);
+      contextTab = tabs[index];
+      if (!contextTab) return;
+
+      contextMenu.style.left = `${e.pageX}px`;
+      contextMenu.style.top = `${e.pageY}px`;
+      contextMenu.classList.remove("hidden");
+
+      const pin = contextMenu.querySelector('[data-action="pin"]');
+      const unpin = contextMenu.querySelector('[data-action="unpin"]');
+      const close = contextMenu.querySelector('[data-action="close"]');
+
+      if (pin) pin.style.display = contextTab.pinned ? "none" : "block";
+      if (unpin) unpin.style.display = contextTab.pinned ? "block" : "none";
+      if (close) close.style.display = contextTab.pinned ? "none" : "block";
+    });
+
+    document.addEventListener("click", () => {
+      contextMenu.classList.add("hidden");
+    });
+
+    contextMenu.addEventListener("click", (e) => {
+      const action = e.target.dataset.action;
+      if (!action || !contextTab) return;
+
+      if (action === "pin") contextTab.pinned = true;
+      if (action === "unpin") contextTab.pinned = false;
+      if (action === "close") closeTab(contextTab);
+
+      renderTabs();
+      contextMenu.classList.add("hidden");
+    });
+  });
+
   /* =========================================================
    RECENT FILES (máx. 20)
 ========================================================= */
@@ -258,10 +307,26 @@ require(["vs/editor/editor.main"], function () {
     tabSize: 2,
     insertSpaces: true,
     wordWrap: "on",
+    mouseWheelZoom: true,
   });
 
   // mantém compatibilidade com código existente
   editor = editorLeft;
+
+  require(["./features/zoom.feature"], function () {
+    if (window.zoomFeature && editor) {
+      window.zoomFeature.init(editor);
+    }
+  });
+
+  /* =========================================================
+   ZOOM DO EDITOR (CTRL + RODA DO MOUSE)
+========================================================= */
+
+  // ✅ Inicializa o zoom (CTRL + SCROLL)
+  if (window.zoomFeature) {
+    window.zoomFeature.init(editor);
+  }
 
   // ✅ LISTENERS UMA VEZ (CORRETO)
   editor.onDidChangeCursorPosition(updateStatusBar);
@@ -745,18 +810,14 @@ require(["vs/editor/editor.main"], function () {
 
   window.api.onSave(saveActiveTab);
 
-window.api?.onOpenRecentFile(async (filePath) => {
-  const result = await window.api.openFileByPath(filePath);
-  if (!result) return;
+  window.api?.onOpenRecentFile(async (filePath) => {
+    const result = await window.api.openFileByPath(filePath);
+    if (!result) return;
 
-  createTab(
-    result.path.split(/[\\/]/).pop(),
-    result.content,
-    result.path
-  );
+    createTab(result.path.split(/[\\/]/).pop(), result.content, result.path);
 
-  addRecentFile(result.path); // sobe para o topo da lista
-});
+    addRecentFile(result.path); // sobe para o topo da lista
+  });
 
   /*********************************************************
    * CTRL + K  →  CTRL + D (CORRIGIDO, SEM TRAVAR)
