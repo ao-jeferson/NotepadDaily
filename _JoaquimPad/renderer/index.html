@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Editor</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="editor"></div>
+
+  <!-- Monaco loader -->
+  <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+
+  <script>
+    require.config({
+      paths: {
+        vs: "../node_modules/monaco-editor/min/vs"
+      }
+    });
+
+    require(["vs/editor/editor.main"], function () {
+      window.createEditor();
+    });
+  </script>
+
+  <script src="./editor.js"></script>
+</body>
+</html>
+``
