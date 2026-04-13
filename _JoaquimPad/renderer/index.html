@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>My Editor</title>
+  <title>_JoaquimPad</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+
   <div id="editor"></div>
 
-  <!-- Monaco loader -->
+  <!-- MONACO LOADER -->
   <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+
+  <!-- BOOT (MÓDULO) -->
+  <script type="module" src="./boot.js"></script>
 
   <script>
     require.config({
@@ -22,8 +26,5 @@
       window.createEditor();
     });
   </script>
-
-  <script src="./editor.js"></script>
 </body>
 </html>
-``

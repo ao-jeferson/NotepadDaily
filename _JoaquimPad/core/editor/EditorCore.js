@@ -6,7 +6,7 @@ export const EditorCore = {
       value: "",
       language: "plaintext",
       theme: "vs-dark",
-      automaticLayout: true
+      automaticLayout: true,
     });
   },
 
@@ -20,5 +20,12 @@ export const EditorCore = {
 
   onCursorChange(callback) {
     editor.onDidChangeCursorPosition(callback);
-  }
+  },
+
+  onContentChange(callback) {
+    editor.onDidChangeModelContent(callback);
+  },
+
+  
+  /**/
 };
