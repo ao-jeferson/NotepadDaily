@@ -7,13 +7,29 @@ import { SmartNewTabFeature } from "../features/smart-new-tab/SmartNewTabFeature
 import { CursorNavigationFeature } from "../features/cursor-navigation/CursorNavigationFeature.js";
 
 window.createEditor = () => {
+  /* =====================================================
+     DOM REFERENCES
+     ===================================================== */
   const editorContainer = document.getElementById("editor");
   const tabContainer = document.getElementById("tabs");
   const newTabBtn = document.getElementById("newTabBtn");
+  const backBtn = document.getElementById("cursorBack");
+  const forwardBtn = document.getElementById("cursorForward");
 
-  /* ============================
-   * Core / Services
-   * ============================ */
+  const languageIcons = {
+    javascript: "🟨",
+    typescript: "🟦",
+    csharp: "🟪",
+    json: "🟫",
+    markdown: "📘",
+    html: "🟥",
+    css: "🟪",
+    plaintext: "📄"
+  };
+
+  /* =====================================================
+     CORE & SERVICES
+     ===================================================== */
   EditorCore.init(editorContainer);
 
   const tabManager = new TabManager();
@@ -23,67 +39,70 @@ window.createEditor = () => {
   const statusBar = new StatusBar(EditorCore);
   statusBar.init();
 
+  /* =====================================================
+     FEATURES
+     ===================================================== */
   const smartNewTab = new SmartNewTabFeature(tabManager, EditorCore);
 
   const cursorNav = new CursorNavigationFeature(EditorCore, tabManager);
   cursorNav.init();
 
-  /* ============================
-   * Session persistence (✅ CENTRALIZADO)
-   * ============================ */
-  function saveSession() {
+  // ✅ UI reage ao estado da navegação (única ligação)
+  cursorNav.onStateChange(({ canGoBack, canGoForward }) => {
+    backBtn.disabled = !canGoBack;
+    forwardBtn.disabled = !canGoForward;
+  });
+
+  /* =====================================================
+     SESSION
+     ===================================================== */
+  const saveSession = () => {
     session.save(tabManager.tabs);
     session.saveCursorHistory(cursorNav.serialize());
-  }
+  };
 
-  /* ============================
-   * Helpers
-   * ============================ */
-  function activateDocument(doc) {
+  /* =====================================================
+     DOCUMENT ACTIVATION
+     ===================================================== */
+  const activateDocument = (doc) => {
     if (!doc) return;
 
     tabManager.setActive(doc);
     EditorCore.setDocument(doc);
     statusBar.bindDocument(doc);
+
     renderTabs();
-  }
+  };
 
-  /* ============================
-   * Restore session
-   * ============================ */
-  /* ============================
-   * Restore session (CORRETO)
-   * ============================ */
-  const restored = session.load();
+  /* =====================================================
+     RESTORE SESSION
+     ===================================================== */
+  const restoredDocs = session.load();
 
-  if (restored.length > 0) {
-    restored.forEach((d) => tabManager.open(d));
+  if (restoredDocs.length > 0) {
+    restoredDocs.forEach(doc => tabManager.open(doc));
     activateDocument(tabManager.getActive());
   } else {
-    // ✅ documento inicial neutro
     const doc = tabManager.createNew("Untitled");
     activateDocument(doc);
   }
-  const cursorHistory = session.loadCursorHistory();
-  cursorNav.restore(cursorHistory);
 
-  /* ============================
-   * New Tab Button
-   * ============================ */
+  cursorNav.restore(session.loadCursorHistory());
+
+  /* =====================================================
+     ACTIONS
+     ===================================================== */
   newTabBtn.addEventListener("click", () => {
-    const doc = smartNewTab.handleNewDocument((name) =>
-      tabManager.createNew(name),
+    const doc = smartNewTab.handleNewDocument(name =>
+      tabManager.createNew(name)
     );
     activateDocument(doc);
     saveSession();
   });
-  /* ============================
-   * Menu actions
-   * ============================ */
 
   window.menu.onNewFile(() => {
-    const doc = smartNewTab.handleNewDocument((name) =>
-      tabManager.createNew(name),
+    const doc = smartNewTab.handleNewDocument(name =>
+      tabManager.createNew(name)
     );
     activateDocument(doc);
     saveSession();
@@ -117,44 +136,36 @@ window.createEditor = () => {
     saveSession();
   });
 
-  /* ============================
-   * Config menu
-   * ============================ */
-  window.config.onToggleSmartNewTab((enabled) => {
-    smartNewTab.setEnabled(enabled);
-  });
+  window.config.onToggleSmartNewTab(enabled =>
+    smartNewTab.setEnabled(enabled)
+  );
 
-  /* ============================
-   * Cursor navigation buttons
-   * ============================ */
-  document
-    .getElementById("cursorBack")
-    .addEventListener("click", () => cursorNav.back());
+  /* =====================================================
+     CURSOR NAVIGATION (botões simples, sem lógica)
+     ===================================================== */
+  backBtn.addEventListener("click", () => cursorNav.back());
+  forwardBtn.addEventListener("click", () => cursorNav.forward());
 
-  document
-    .getElementById("cursorForward")
-    .addEventListener("click", () => cursorNav.forward());
-
-  /* ============================
-   * Render Tabs
-   * ============================ */
+  /* =====================================================
+     RENDER TABS
+     ===================================================== */
   function renderTabs() {
     tabContainer.innerHTML = "";
 
-    tabManager.tabs.forEach((doc) => {
+    tabManager.tabs.forEach(doc => {
       const tabEl = document.createElement("div");
-      tabEl.classList.add("tab");
-
-      const btn = document.createElement("button");
-      btn.textContent = `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
-
+      tabEl.className = "tab";
       if (doc === tabManager.getActive()) {
-        btn.classList.add("active");
+        tabEl.classList.add("active");
       }
 
+      const btn = document.createElement("button");
+      const icon = languageIcons[doc.language] || "📄";
+      btn.textContent = `${icon} ${doc.getFileName()}`;
       btn.onclick = () => activateDocument(doc);
 
-      btn.addEventListener("mousedown", (e) => {
+      // ✅ Fechar com botão do meio
+      btn.addEventListener("mousedown", e => {
         if (e.button === 1) {
           e.preventDefault();
           tabManager.close(doc.id);
@@ -163,46 +174,85 @@ window.createEditor = () => {
         }
       });
 
+      // ✅ Indicador de modificação
+      if (doc.isDirty()) {
+        const dot = document.createElement("span");
+        dot.className = "modified-dot";
+        btn.appendChild(dot);
+      }
+
       const close = document.createElement("span");
+      close.className = "close";
       close.textContent = "×";
-      close.classList.add("close");
-      close.onclick = (e) => {
+      close.onclick = e => {
         e.stopPropagation();
         tabManager.close(doc.id);
         activateDocument(tabManager.getActive());
         saveSession();
       };
 
+      // ✅ Context menu
+      tabEl.addEventListener("contextmenu", e => {
+        e.preventDefault();
+        showTabContextMenu(e.clientX, e.clientY, doc);
+      });
+
       tabEl.appendChild(btn);
       tabEl.appendChild(close);
       tabContainer.appendChild(tabEl);
     });
-
-    if (window.Sortable) {
-      Sortable.create(tabContainer, {
-        animation: 150,
-        onEnd: (evt) => {
-          const [moved] = tabManager.tabs.splice(evt.oldIndex, 1);
-          tabManager.tabs.splice(evt.newIndex, 0, moved);
-          renderTabs();
-          saveSession();
-        },
-      });
-    }
   }
 
-  /* ============================
-   * App lifecycle (✅ CORRETO PARA ELECTRON)
-   * ============================ */
+  /* =====================================================
+     TAB CONTEXT MENU
+     ===================================================== */
+  function showTabContextMenu(x, y, doc) {
+    document.querySelector(".tab-context-menu")?.remove();
 
-  function saveSession() {
-    console.log("[SESSION] saveSession()");
-    session.save(tabManager.tabs);
-    session.saveCursorHistory(cursorNav.serialize());
+    const menu = document.createElement("div");
+    menu.className = "tab-context-menu";
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+
+    menu.innerHTML = `
+      <div class="item">Fechar</div>
+      <div class="item">Fechar outras</div>
+      <div class="item">Fechar tudo</div>
+    `;
+
+    menu.children[0].onclick = () => {
+      tabManager.close(doc.id);
+      activateDocument(tabManager.getActive());
+      saveSession();
+      menu.remove();
+    };
+
+    menu.children[1].onclick = () => {
+      tabManager.tabs
+        .filter(t => t.id !== doc.id)
+        .forEach(t => tabManager.close(t.id));
+      activateDocument(tabManager.getActive());
+      saveSession();
+      menu.remove();
+    };
+
+    menu.children[2].onclick = () => {
+      tabManager.tabs.slice().forEach(t => tabManager.close(t.id));
+      EditorCore.setDocument(null);
+      saveSession();
+      menu.remove();
+    };
+
+    document.body.appendChild(menu);
+
+    setTimeout(() =>
+      document.addEventListener("click", () => menu.remove(), { once: true }),
+      0
+    );
   }
 
-  window.appLifecycle?.onBeforeQuit(() => {
-    console.log("[SESSION] before-quit recebido");
-    saveSession();
-  });
+  /* =====================================================
+     APP LIFECYCLE
+     ===================================================== */
+  window.appLifecycle?.onBeforeQuit(() => saveSession());
 };

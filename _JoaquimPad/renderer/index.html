@@ -8,36 +8,29 @@
   <body>
     <!-- Barra superior: navegação + ações -->
     <div class="top-bar">
-      <!-- Navegação de cursor -->
-      <div class="nav-controls">
-        <button
-          id="cursorBack"
-          title="Voltar cursor"
-          aria-label="Voltar cursor"
-        >
-          <svg viewBox="0 0 24 24">
-            <path d="M14 7l-5 5 5 5V7z"></path>
+      <!-- Barra de ações -->
+      <div class="action-bar">
+        <button id="newTabBtn" title="Nova aba">+</button>
+
+        <button id="cursorBack" disabled title="Voltar no histórico">
+          <svg viewBox="0 0 64 24" class="nav-arrow left">
+            <line x1="20" y1="12" x2="60" y2="12" />
+            <polyline points="20,4 4,12 20,20" />
           </svg>
         </button>
 
-        <button
-          id="cursorForward"
-          title="Avançar cursor"
-          aria-label="Avançar cursor"
-        >
-          <svg viewBox="0 0 24 24">
-            <path d="M10 17l5-5-5-5v10z"></path>
+        <button id="cursorForward" disabled title="Avançar no histórico">
+          <svg viewBox="0 0 64 24" class="nav-arrow right">
+            <line x1="4" y1="12" x2="44" y2="12" />
+            <polyline points="44,4 60,12 44,20" />
           </svg>
         </button>
       </div>
 
-      <!-- Abas -->
-      <div id="tabs" class="tabs-container"></div>
+      <!-- Barra de abas -->
+      <div id="tabs" class="tabs-bar"></div>
 
       <!-- Ações -->
-      <div class="tab-actions">
-        <button id="newTabBtn" title="Nova aba" aria-label="Nova aba">+</button>
-      </div>
     </div>
 
     <!-- Área das abas -->

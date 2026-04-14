@@ -4,11 +4,13 @@ export class CursorNavigationFeature {
   constructor(editorCore, tabManager) {
     this.editorCore = editorCore;
     this.tabManager = tabManager;
+
     this.editor = null;
 
-    this.globalBack = [];
-    this.globalForward = [];
+    this.backStack = [];
+    this.forwardStack = [];
 
+    this.listeners = new Set();
     this.ignoreNext = false;
   }
 
@@ -16,7 +18,7 @@ export class CursorNavigationFeature {
     this.editor = this.editorCore.getEditor();
     if (!this.editor) return;
 
-    this.editor.onDidChangeCursorPosition(e => {
+    this.editor.onDidChangeCursorPosition((e) => {
       if (this.ignoreNext) {
         this.ignoreNext = false;
         return;
@@ -25,76 +27,104 @@ export class CursorNavigationFeature {
       const doc = this.tabManager.getActive();
       if (!doc) return;
 
-      const entry = {
-        docId: doc.id,
-        position: { ...e.position }
-      };
-
-      const last = this.globalBack[this.globalBack.length - 1];
+      const last = this.backStack.at(-1);
       if (
         last &&
-        last.docId === entry.docId &&
-        last.position.lineNumber === entry.position.lineNumber &&
-        last.position.column === entry.position.column
+        last.docId === doc.id &&
+        last.line === e.position.lineNumber &&
+        last.col === e.position.column
       ) {
         return;
       }
 
-      this.globalBack.push(entry);
-      if (this.globalBack.length > MAX_HISTORY) {
-        this.globalBack.shift();
-      }
+      this.backStack.push({
+        docId: doc.id,
+        line: e.position.lineNumber,
+        col: e.position.column,
+      });
 
-      this.globalForward.length = 0;
+      this.forwardStack.length = 0;
+      this.emit();
     });
   }
 
+  /* ===== API pública ===== */
+
   back() {
-    if (this.globalBack.length < 2) return;
+    if (!this.canGoBack()) return;
 
     this.ignoreNext = true;
-    const current = this.globalBack.pop();
-    this.globalForward.push(current);
+    const current = this.backStack.pop();
+    this.forwardStack.push(current);
 
-    const prev = this.globalBack[this.globalBack.length - 1];
-    this._go(prev);
+    this.goTo(this.backStack.at(-1));
+    this.emit();
   }
 
   forward() {
-    if (this.globalForward.length === 0) return;
+    if (!this.canGoForward()) return;
 
     this.ignoreNext = true;
-    const next = this.globalForward.pop();
-    this.globalBack.push(next);
-    this._go(next);
+    const next = this.forwardStack.pop();
+    this.backStack.push(next);
+
+    this.goTo(next);
+    this.emit();
   }
 
-  _go(entry) {
-    const doc = this.tabManager.tabs.find(d => d.id === entry.docId);
+  canGoBack() {
+    return this.backStack.length > 1;
+  }
+
+  canGoForward() {
+    return this.forwardStack.length > 0;
+  }
+
+  onStateChange(cb) {
+    this.listeners.add(cb);
+    cb(this.state()); // estado inicial
+  }
+
+  state() {
+    return {
+      canGoBack: this.canGoBack(),
+      canGoForward: this.canGoForward(),
+    };
+  }
+
+  /* ===== Interno ===== */
+
+  goTo(entry) {
+    const doc = this.tabManager.tabs.find((d) => d.id === entry.docId);
     if (!doc) return;
 
     this.tabManager.setActive(doc);
     this.editorCore.setDocument(doc);
 
-    this.editor.setPosition(entry.position);
-    this.editor.revealPositionInCenter(entry.position);
+    this.editor.setPosition({
+      lineNumber: entry.line,
+      column: entry.col,
+    });
+    this.editor.revealPositionInCenter();
     this.editor.focus();
   }
 
-  /* =========================
-   * Session integration
-   * ========================= */
+  emit() {
+    const state = this.state();
+    this.listeners.forEach((l) => l(state));
+  }
 
   serialize() {
     return {
-      back: this.globalBack,
-      forward: this.globalForward
+      back: this.backStack,
+      forward: this.forwardStack,
     };
   }
 
   restore(data) {
     if (!data) return;
-    this.globalBack = data.back || [];
-    this.globalForward = data.forward || [];
+    this.backStack = data.back || [];
+    this.forwardStack = data.forward || [];
+    this.emit();
   }
 }

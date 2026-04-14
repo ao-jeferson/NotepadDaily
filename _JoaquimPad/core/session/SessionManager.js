@@ -7,7 +7,6 @@ export default class SessionManager {
   }
 
   save(documents) {
-    console.log("[SESSION] Salvando documentos:", documents.length);
     const data = documents.map(d => d.toJSON());
     localStorage.setItem(this.key, JSON.stringify(data));
   }
@@ -19,7 +18,7 @@ export default class SessionManager {
       const parsed = JSON.parse(raw);
       return parsed.map(Document.fromJSON);
     } catch (e) {
-      console.error("[SESSION] Erro ao carregar sessão", e);
+    
       return [];
     }
   }

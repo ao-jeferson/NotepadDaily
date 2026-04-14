@@ -7,17 +7,17 @@ export const EditorCore = {
 
     this.editor = monaco.editor.create(container, {
       model,
-      theme: "vs-dark",
+      theme: "vs-white",
       automaticLayout: true,
-
       // ✅ garante atalhos e comandos padrão
       readOnly: false,
       renderWhitespace: "selection",
       cursorBlinking: "blink",
       multiCursorModifier: "ctrlCmd",
+      mouseWheelZoom: true,
       find: {
         addExtraSpaceOnTop: false
-      }
+      },
     });
 
     this.editor.onDidChangeModelContent(() => {
