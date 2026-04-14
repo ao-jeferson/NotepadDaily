@@ -1,48 +1,53 @@
 const CONFIG_KEY = "smart-new-tab-enabled";
 
-function getCurrentDisplayName() {
-  const d = new Date();
-
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-
-  return `${dd}-${mm} ${hh}-${min}`;
-}
-
+/**
+ * Feature responsável por controlar o comportamento
+ * de criação e reutilização de novos arquivos (Untitled).
+ */
 export class SmartNewTabFeature {
   constructor(tabManager, editorCore) {
     this.tabManager = tabManager;
     this.editorCore = editorCore;
   }
 
-  /* =========================
-   * Config
-   * ========================= */
+  /* =====================================================
+     CONFIGURAÇÃO (Menu)
+     ===================================================== */
 
   isEnabled() {
     return localStorage.getItem(CONFIG_KEY) !== "false";
   }
 
-  setEnabled(value) {
-    localStorage.setItem(CONFIG_KEY, value ? "true" : "false");
+  setEnabled(enabled) {
+    localStorage.setItem(
+      CONFIG_KEY,
+      enabled ? "true" : "false"
+    );
   }
 
-  /* =========================
-   * Novo documento inteligente
-   * ========================= */
+  /* =====================================================
+     NOVO DOCUMENTO INTELIGENTE
+     ===================================================== */
 
+  /**
+   * Cria ou reutiliza um documento "Untitled"
+   * conforme a configuração ativa.
+   *
+   * @param {Function} createFn função que cria um novo documento
+   */
   handleNewDocument(createFn) {
-    const displayNameNow = getCurrentDisplayName();
+    const displayName = this.getCurrentDisplayName();
 
+    // 🔴 Feature desligada → sempre cria novo
     if (!this.isEnabled()) {
-      return createFn(displayNameNow);
+      return createFn(displayName);
     }
 
-    /* ✅ reutiliza SOMENTE se o nome for IGUAL */
+    // ✅ Reutiliza SOMENTE se o nome bater
     const existing = this.tabManager.tabs.find(
-      (d) => d.filePath === null && d.displayName === displayNameNow,
+      doc =>
+        doc.filePath === null &&
+        doc.displayName === displayName
     );
 
     if (existing) {
@@ -52,26 +57,17 @@ export class SmartNewTabFeature {
       return existing;
     }
 
-    return createFn(displayNameNow);
+    return createFn(displayName);
   }
 
-  moveCursorToEnd() {
-    const editor = this.editorCore.getEditor();
-    if (!editor) return;
+  /* =====================================================
+     DATA / NOME DO DOCUMENTO
+     ===================================================== */
 
-    const model = editor.getModel();
-    if (!model) return;
-
-    const lastLine = model.getLineCount();
-    const lastColumn = model.getLineLength(lastLine) + 1;
-
-    editor.setPosition({
-      lineNumber: lastLine,
-      column: lastColumn,
-    });
-
-    editor.focus();
-  }
+  /**
+   * Gera o nome incremental baseado em data/hora.
+   * Exemplo: 14-04 11-58
+   */
   getCurrentDisplayName() {
     const d = new Date();
 
@@ -83,5 +79,29 @@ export class SmartNewTabFeature {
     return `${dd}-${mm} ${hh}-${min}`;
   }
 
-  /**/
+  /* =====================================================
+     UTILITÁRIOS
+     ===================================================== */
+
+  /**
+   * Move o cursor para o final do documento reutilizado.
+   */
+  moveCursorToEnd() {
+    const editor = this.editorCore.getEditor();
+    if (!editor) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    const lastLine = model.getLineCount();
+    const lastColumn =
+      model.getLineLength(lastLine) + 1;
+
+    editor.setPosition({
+      lineNumber: lastLine,
+      column: lastColumn
+    });
+
+    editor.focus();
+  }
 }

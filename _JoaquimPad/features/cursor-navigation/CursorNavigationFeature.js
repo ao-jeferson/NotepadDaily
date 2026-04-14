@@ -94,20 +94,32 @@ export class CursorNavigationFeature {
 
   /* ===== Interno ===== */
 
-  goTo(entry) {
-    const doc = this.tabManager.tabs.find((d) => d.id === entry.docId);
-    if (!doc) return;
+goTo(entry) {
+  const doc = this.tabManager.tabs.find(d => d.id === entry.docId);
+  if (!doc) return;
 
-    this.tabManager.setActive(doc);
-    this.editorCore.setDocument(doc);
+  this.tabManager.setActive(doc);
+  this.editorCore.setDocument(doc);
 
-    this.editor.setPosition({
-      lineNumber: entry.line,
-      column: entry.col,
-    });
-    this.editor.revealPositionInCenter();
-    this.editor.focus();
-  }
+  const editor = this.editor;
+  if (!editor) return;
+
+  const model = editor.getModel();
+  if (!model) return;
+
+  const maxLine = model.getLineCount();
+  let line = Math.min(entry.line, maxLine);
+  let column = Math.max(1, entry.col);
+
+  const maxColumn = model.getLineLength(line) + 1;
+  column = Math.min(column, maxColumn);
+
+  const position = { lineNumber: line, column };
+
+  editor.setPosition(position);
+  editor.revealPositionInCenter(position);
+  editor.focus();
+}
 
   emit() {
     const state = this.state();

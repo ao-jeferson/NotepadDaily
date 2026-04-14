@@ -1,47 +1,51 @@
+/* =====================================================
+   VARIÁVEIS DE TEMA
+   ===================================================== */
+
 :root {
   --bg-main: #ffffff;
-  --bg-secondary: #f4f7fb;
-  --bg-tab: #ffffff;
-  --bg-tab-hover: #eef5ff;
+  --bg-secondary: #f3f3f3;
+  --bg-tab-hover: #eaeaea;
 
-  --border-color: #d0d7de;
-  --accent: #2563eb;
-  --accent-soft: #c9defc;
+  --border-color: #d0d0d0;
+  --accent: #007acc;
 
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
+  --text-primary: #111;
+  --text-secondary: #666;
 }
 
+/* Dark theme */
 [data-theme="dark"] {
   --bg-main: #1e1e1e;
   --bg-secondary: #252526;
-  --bg-tab: #2d2d30;
-  --bg-tab-hover: #3a3a3d;
+  --bg-tab-hover: #2d2d30;
 
   --border-color: #3f3f46;
   --accent: #60a5fa;
-  --accent-soft: #1d4ed8;
 
   --text-primary: #e5e7eb;
   --text-secondary: #9ca3af;
 }
+
 /* =====================================================
-   RESET E BASE
+   RESET / BASE
    ===================================================== */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
+
   font-family: "Segoe UI", system-ui, sans-serif;
-  background: #ffffff;
+  background: var(--bg-main);
+  color: var(--text-primary);
 }
 
-
 /* =====================================================
-   MENU DO ELECTRON
+   MENU BAR (ELECTRON)
    ===================================================== */
 
 .menu-bar {
@@ -57,45 +61,33 @@ html, body {
   border-bottom: 1px solid #333;
 }
 
-
 /* =====================================================
-   BARRA DE AÇÕES
+   ACTION BAR
    ===================================================== */
 
 .action-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 
   padding: 6px 10px;
-  background: #fafafa;
-  border-bottom: 1px solid #e2e6eb;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border-color);
 }
 
-/* Botões principais */
 .action-bar button {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
 
-  background: #ffffff;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
-
-  color: #2563eb; /* azul principal */
+  background: transparent;
+  border: none;
   cursor: pointer;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  transition: background 0.15s ease,
-              border-color 0.15s ease,
-              color 0.15s ease;
-}
-
-.action-bar button:hover:not(:disabled) {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  color: var(--text-primary);
 }
 
 .action-bar button:disabled {
@@ -103,119 +95,159 @@ html, body {
   cursor: not-allowed;
 }
 
-/* Ícones */
-.action-bar svg {
+/* =====================================================
+   SETAS DE NAVEGAÇÃO
+   ===================================================== */
+
+.nav-arrow {
   width: 16px;
   height: 16px;
-  fill: currentColor;
+
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-/* Separador visual */
-.action-bar::after {
-  content: "";
-  width: 1px;
-  height: 24px;
-  background: #d0d7de;
-  margin-left: 6px;
+.action-bar button:hover:not(:disabled) .nav-arrow {
+  transform: translateX(2px);
 }
 
+.action-bar button:hover:not(:disabled) .nav-arrow.left {
+  transform: translateX(-2px);
+}
+
+.action-bar button:disabled .nav-arrow {
+  opacity: 0.35;
+}
 
 /* =====================================================
-   BARRA DE ABAS
+   TABS BAR
    ===================================================== */
 
 .tabs-bar {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  height: 28px;
 
-  padding: 6px 10px;
-  background: #f4f7fb;
-  border-bottom: 1px solid #d0d7de;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 
   overflow-x: auto;
-  scrollbar-width: thin;
+  white-space: nowrap;
 }
 
-
 /* =====================================================
-   ABA (ESTILO ENVOLVENTE / MODERNO)
+   ABA
    ===================================================== */
 
 .tabs-bar .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
-  padding: 6px 14px;
-  background: #ffffff;
+  padding: 0 10px;
+  height: 100%;
 
-  border: 1px solid #d0d7de;
-  border-radius: 999px; /* pill */
+  background: transparent;
+  border-right: 1px solid var(--border-color);
 
-  font-size: 12.5px;
-  color: #1f2937;
-  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+
   cursor: pointer;
-
-  transition: background 0.15s ease,
-              border-color 0.15s ease,
-              box-shadow 0.15s ease;
+  position: relative;
 }
 
 .tabs-bar .tab:hover {
-  background: #eef5ff;
+  background: var(--bg-tab-hover);
 }
 
-/* Aba ativa */
+/* =====================================================
+   ABA ATIVA
+   ===================================================== */
+
 .tabs-bar .tab.active {
-  background: linear-gradient(
-    180deg,
-    #eaf2ff,
-    #ffffff
-  );
-  border-color: #60a5fa;
-  color: #1d4ed8;
-
-  box-shadow:
-    0 1px 2px rgba(37, 99, 235, 0.25),
-    inset 0 -2px 0 #3b82f6;
+  background: var(--bg-main);
+  color: var(--text-primary);
 }
 
+.tabs-bar .tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 2px;
+  background: var(--accent);
+}
 
 /* =====================================================
    BOTÃO FECHAR ABA
    ===================================================== */
 
 .tabs-bar .tab .close {
-  font-size: 13px;
-  color: #6b7280;
+  margin-left: 6px;
+  font-size: 12px;
+  color: #777;
   cursor: pointer;
-  margin-left: 4px;
-
-  transition: color 0.15s ease;
 }
 
 .tabs-bar .tab .close:hover {
-  color: #dc2626;
+  color: #c62828;
 }
 
+/* =====================================================
+   PINNED TAB
+   ===================================================== */
+
+.tabs-bar .tab.pinned {
+  font-weight: 500;
+}
+
+.tabs-bar .tab.pinned .close {
+  display: none;
+}
 
 /* =====================================================
-   DRAG & DROP DAS ABAS
+   DRAG & DROP
    ===================================================== */
 
 .tab.sortable-chosen {
   opacity: 0.85;
-  transform: scale(1.05);
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+  transform: scale(1.04);
 }
 
 .tab.sortable-ghost {
   opacity: 0.3;
-  border: 2px dashed #3b82f6;
+  border: 2px dashed var(--accent);
 }
 
+/* =====================================================
+   CONTEXT MENU
+   ===================================================== */
+
+.tab-context-menu {
+  position: fixed;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  z-index: 9999;
+}
+
+.tab-context-menu .item {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.tab-context-menu .item:hover {
+  background: var(--bg-tab-hover);
+}
 
 /* =====================================================
    EDITOR
@@ -223,22 +255,16 @@ html, body {
 
 #editor {
   flex: 1;
-  width: 100%;
   min-height: 0;
+  width: 100%;
   background: #1e1e1e;
 }
 
-
 /* =====================================================
-   BARRA DE STATUS
+   STATUS BAR
    ===================================================== */
 
 .status-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
   height: 22px;
   padding: 2px 10px;
 
@@ -250,95 +276,4 @@ html, body {
   font-size: 12px;
 
   border-top: 1px solid #374151;
-}body {
-  background: var(--bg-main);
 }
-
-.action-bar {
-  background: var(--bg-main);
-}
-
-.tabs-bar {
-  background: var(--bg-secondary);
-}
-
-.tabs-bar .tab {
-  background: var(--bg-tab);
-  color: var(--text-primary);
-}.tabs-bar .tab {
-  position: relative;
-}
-
-.tabs-bar .tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 10%;
-  width: 80%;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 10px;
-
-  animation: slide-in 150ms ease-out;
-}
-
-@keyframes slide-in {
-  from {
-    width: 0;
-    left: 50%;
-  }
-  to {
-    width: 80%;
-    left: 10%;
-  }
-}.tab-context-menu {
-  position: fixed;
-  background: var(--bg-tab);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-  font-size: 13px;
-  z-index: 9999;
-}
-
-.tab-context-menu .item {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.tab-context-menu .item:hover {
-  background: var(--bg-tab-hover);
-}/* ============================
-   SETAS DE NAVEGAÇÃO
-   ============================ */
-
-.nav-arrow {
-  width: 30px;
-  height: 14px;
-
-  stroke: var(--accent);
-  stroke-width: 2;
-  fill: none;
-
-  transition:
-    stroke 0.15s ease,
-    opacity 0.15s ease,
-    transform 0.15s ease;
-}
-
-/* Hover */
-.action-bar button:hover:not(:disabled) .nav-arrow {
-  transform: translateX(2px);
-}
-
-/* Direção oposta */
-.action-bar button:hover:not(:disabled) .nav-arrow.left {
-  transform: translateX(-2px);
-}
-
-/* Estado desabilitado */
-.action-bar button:disabled .nav-arrow {
-  stroke: var(--text-secondary);
-  opacity: 0.35;
-}
-

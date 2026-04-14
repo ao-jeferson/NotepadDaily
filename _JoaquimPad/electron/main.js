@@ -1,10 +1,12 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
- 
 const path = require("path");
 const fs = require("fs/promises");
 
 let mainWindow;
 
+/* =====================================================
+   WINDOW
+   ===================================================== */
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -28,7 +30,12 @@ function createMainWindow() {
   });
 }
 
+/* =====================================================
+   MENU
+   ===================================================== */
 function createAppMenu() {
+  if (!mainWindow) return;
+
   const template = [
     {
       label: "Arquivo",
@@ -59,7 +66,7 @@ function createAppMenu() {
           click: () => mainWindow.webContents.send("menu:file:closeTab"),
         },
         { type: "separator" },
-        { label: "Sair", role: "quit" },
+        { role: "quit" },
       ],
     },
     {
@@ -78,97 +85,35 @@ function createAppMenu() {
         {
           label: "Word Wrap",
           type: "checkbox",
-          checked: true, // começa ligado
-          click: (menuItem) => {
-            mainWindow.webContents.send("menu:view:wordWrap", menuItem.checked);
-          },
+          checked: true,
+          click: (item) =>
+            mainWindow.webContents.send("menu:view:wordWrap", item.checked),
         },
       ],
     },
     {
       label: "Linguagem",
       submenu: [
-        {
-          label: "JavaScript",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "javascript"),
-        },
-        {
-          label: "TypeScript",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "typescript"),
-        },
-        {
-          label: "Python",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "python"),
-        },
-        {
-          label: "HTML",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "html"),
-        },
-        {
-          label: "CSS",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "css"),
-        },
-        {
-          label: "JSON",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "json"),
-        },
-        {
-          label: "Markdown",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "markdown"),
-        },
-        {
-          label: "C",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "c"),
-        },
-        {
-          label: "C++",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "cpp"),
-        },
-        {
-          label: "Java",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "java"),
-        },
-        {
-          label: "Go",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "go"),
-        },
-        {
-          label: "Rust",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "rust"),
-        },
-        {
-          label: "PHP",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "php"),
-        },
-        {
-          label: "SQL",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "sql"),
-        },
-        {
-          label: "Shell",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "shell"),
-        },
-        {
-          label: "YAML",
-          click: () =>
-            mainWindow.webContents.send("menu:view:setLanguage", "yaml"),
-        },
-      ],
+        "javascript",
+        "typescript",
+        "python",
+        "html",
+        "css",
+        "json",
+        "markdown",
+        "c",
+        "cpp",
+        "java",
+        "go",
+        "rust",
+        "php",
+        "sql",
+        "shell",
+        "yaml",
+      ].map((lang) => ({
+        label: lang.toUpperCase(),
+        click: () => mainWindow.webContents.send("menu:view:setLanguage", lang),
+      })),
     },
     {
       label: "Configurações",
@@ -177,59 +122,73 @@ function createAppMenu() {
           label: "Arquivo incremental",
           type: "checkbox",
           checked: true,
-          click: (item) => {
-            mainWindow.webContents.send("config:smart-new-tab", item.checked);
-          },
+          click: (item) =>
+            mainWindow.webContents.send("config:smart-new-tab", item.checked),
         },
       ],
     },
   ];
 
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-app.setName("_JoaquimPad");
-app.whenReady().then(createMainWindow);
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
-});
-
-// IPC - File System
+/* =====================================================
+   IPC – FILE SYSTEM
+   ===================================================== */
 ipcMain.handle("fs:open-dialog", async () => {
+  if (!mainWindow) return null;
+
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openFile"],
-    filters: [
-      { name: "Text files", extensions: ["txt", "js", "ts", "json", "md"] },
-      { name: "All files", extensions: ["*"] },
-    ],
   });
-  if (result.canceled) return null;
-  return result.filePaths[0];
+
+  return result.canceled ? null : result.filePaths[0];
 });
 
 ipcMain.handle("fs:save-dialog", async () => {
+  if (!mainWindow) return null;
+
   const result = await dialog.showSaveDialog(mainWindow);
   return result.canceled ? null : result.filePath;
 });
 
-ipcMain.handle("fs:readFile", (_, path) => fs.readFile(path, "utf-8"));
-ipcMain.handle("fs:writeFile", (_, path, content) =>
-  fs.writeFile(path, content, "utf-8"),
-);
+ipcMain.handle("fs:readFile", (_, filePath) => fs.readFile(filePath, "utf-8"));
 
-ipcMain.handle("window:set-title", (_, title) => {
-  if (mainWindow) mainWindow.setTitle(title);
+ipcMain.handle("fs:writeFile", (_, filePath, content) =>
+  fs.writeFile(filePath, content, "utf-8"),
+); 
+
+ipcMain.handle("fs:stat", async (_, path) => {
+  return fs.stat(path);
 });
 
+ipcMain.handle("fs:readFirstBytes", async (_, path, maxBytes = 1024 * 1024) => {
+  const handle = await fs.open(path, "r");
+  const buffer = Buffer.alloc(maxBytes);
+  await handle.read(buffer, 0, maxBytes, 0);
+  await handle.close();
+  return buffer.toString("utf-8");
+});
+
+/* =====================================================
+   APP LIFECYCLE
+   ===================================================== */
+app.whenReady().then(createMainWindow);
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createMainWindow();
+  }
+});
 
 app.on("before-quit", () => {
-  BrowserWindow.getAllWindows().forEach(win => {
-    win.webContents.send("app:before-quit");
-  });
+  BrowserWindow.getAllWindows().forEach((win) =>
+    win.webContents.send("app:before-quit"),
+  );
 });

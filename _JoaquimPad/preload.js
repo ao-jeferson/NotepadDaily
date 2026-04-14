@@ -1,47 +1,68 @@
-const { contextBridge, ipcRenderer } = require("electron");
-const { webFrame } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require("electron");
 
-window.addEventListener('wheel', (e) => {
-  if (e.ctrlKey) {
-    e.preventDefault();
-
-    // pega o nível atual
-    let currentZoom = webFrame.getZoomLevel();
-
-    if (e.deltaY < 0) {
-      webFrame.setZoomLevel(currentZoom + 0.1); // zoom in
-    } else {
-      webFrame.setZoomLevel(currentZoom - 0.1); // zoom out
+/* =====================================================
+   ZOOM (Ctrl + Scroll)
+   ===================================================== */
+window.addEventListener(
+  "wheel",
+  e => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const zoom = webFrame.getZoomLevel();
+      webFrame.setZoomLevel(
+        e.deltaY < 0 ? zoom + 0.1 : zoom - 0.1
+      );
     }
-  }
-}, { passive: false });
+  },
+  { passive: false }
+);
 
-contextBridge.exposeInMainWorld("menu", {
-  onNewFile: (cb) => ipcRenderer.on("menu:file:new", cb),
-  onOpenFile: (cb) => ipcRenderer.on("menu:file:open", cb),
-  onSaveFile: (cb) => ipcRenderer.on("menu:file:save", cb),
-  onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb),
-  onCloseTab: (cb) => ipcRenderer.on("menu:file:closeTab", cb),
-  onToggleWordWrap: (cb) => ipcRenderer.on("menu:view:wordWrap", (_, checked) => cb(checked)),
-  onSetLanguage: (cb) => ipcRenderer.on("menu:view:setLanguage", (_, lang) => cb(lang)),
-});
-
-
+/* =====================================================
+   FILE SYSTEM (APENAS IPC)
+   ===================================================== */
 contextBridge.exposeInMainWorld("fs", {
-  openDialog: () => ipcRenderer.invoke("fs:open-dialog"),
-  saveDialog: () => ipcRenderer.invoke("fs:save-dialog"),
-  readFile: (p) => ipcRenderer.invoke("fs:readFile", p),
-  writeFile: (p, c) => ipcRenderer.invoke("fs:writeFile", p, c)
+  openDialog: () =>
+    ipcRenderer.invoke("fs:open-dialog"),
+
+  saveDialog: () =>
+    ipcRenderer.invoke("fs:save-dialog"),
+
+  readFile: path =>
+    ipcRenderer.invoke("fs:readFile", path),
+
+  writeFile: (path, content) =>
+    ipcRenderer.invoke("fs:writeFile", path, content),
+
+  stat: path =>
+    ipcRenderer.invoke("fs:stat", path),
+
+  readFirstBytes: (path, maxBytes) =>
+    ipcRenderer.invoke("fs:readFirstBytes", path, maxBytes)
 });
 
-contextBridge.exposeInMainWorld("app", {
-  setWindowTitle: (title) => ipcRenderer.invoke("window:set-title", title)
+/* =====================================================
+   MENU EVENTS
+   ===================================================== */
+contextBridge.exposeInMainWorld("menu", {
+  onNewFile: cb => ipcRenderer.on("menu:file:new", cb),
+  onOpenFile: cb => ipcRenderer.on("menu:file:open", cb),
+  onSaveFile: cb => ipcRenderer.on("menu:file:save", cb),
+  onSaveAsFile: cb => ipcRenderer.on("menu:file:saveAs", cb),
+  onCloseTab: cb => ipcRenderer.on("menu:file:closeTab", cb)
 });
+
+/* =====================================================
+   CONFIG
+   ===================================================== */
 contextBridge.exposeInMainWorld("config", {
-  onToggleSmartNewTab: (cb) =>
+  onToggleSmartNewTab: cb =>
     ipcRenderer.on("config:smart-new-tab", (_, v) => cb(v))
 });
+
+/* =====================================================
+   LIFECYCLE
+   ===================================================== */
 contextBridge.exposeInMainWorld("appLifecycle", {
-  onBeforeQuit: (cb) =>
+  onBeforeQuit: cb =>
     ipcRenderer.on("app:before-quit", cb)
 });
