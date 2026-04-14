@@ -108,36 +108,66 @@ window.createEditor = () => {
   /* ============================
    * Render tabs
    * ============================ */
-  function renderTabs() {
-    tabContainer.innerHTML = "";
+ function renderTabs() {
+  tabContainer.innerHTML = "";
 
-    tabManager.tabs.forEach(doc => {
-      const el = document.createElement("div");
-      el.classList.add("tab");
+  tabManager.tabs.forEach(doc => {
+    const el = document.createElement("div");
+    el.classList.add("tab");
 
-      const btn = document.createElement("button");
-      btn.textContent =
-        `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
-      if (doc === tabManager.getActive()) {
-        btn.classList.add("active");
-      }
+    const btn = document.createElement("button");
+    btn.textContent =
+      `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
 
-      btn.onclick = () => activateDocument(doc);
+    if (doc === tabManager.getActive()) {
+      btn.classList.add("active");
+    }
 
-      const close = document.createElement("span");
-      close.textContent = "×";
-      close.classList.add("close");
-      close.onclick = e => {
-        e.stopPropagation();
+    // ✅ trocar de aba
+    btn.onclick = () => activateDocument(doc);
+
+    // ✅ FECHAR ABA COM CLIQUE DA RODA DO MOUSE
+    btn.addEventListener("mousedown", e => {
+      if (e.button === 1) { // botão do meio
+        e.preventDefault();
         tabManager.close(doc.id);
+
         const next = tabManager.getActive();
         if (next) activateDocument(next);
         session.save(tabManager.tabs);
-      };
+      }
+    });
 
-      el.appendChild(btn);
-      el.appendChild(close);
-      tabContainer.appendChild(el);
+    // botão X
+    const close = document.createElement("span");
+    close.textContent = "×";
+    close.classList.add("close");
+    close.onclick = e => {
+      e.stopPropagation();
+      tabManager.close(doc.id);
+
+      const next = tabManager.getActive();
+      if (next) activateDocument(next);
+      session.save(tabManager.tabs);
+    };
+
+    el.appendChild(btn);
+    el.appendChild(close);
+    tabContainer.appendChild(el);
+  });
+
+  /* ============================
+   * ✅ DRAG & DROP DAS ABAS
+   * ============================ */
+  if (window.Sortable) {
+    Sortable.create(tabContainer, {
+      animation: 150,
+      onEnd: evt => {
+        const [moved] = tabManager.tabs.splice(evt.oldIndex, 1);
+        tabManager.tabs.splice(evt.newIndex, 0, moved);
+        renderTabs();
+      }
     });
   }
+}
 };

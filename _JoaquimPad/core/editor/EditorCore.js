@@ -8,14 +8,12 @@ export const EditorCore = {
     this.editor = monaco.editor.create(container, {
       model,
       theme: "vs-dark",
-      automaticLayout: true
+      automaticLayout: true,
     });
 
     this.editor.onDidChangeModelContent(() => {
       if (this.currentDocument) {
-        this.currentDocument.setContent(
-          this.editor.getValue()
-        );
+        this.currentDocument.setContent(this.editor.getValue());
       }
     });
   },
@@ -23,14 +21,19 @@ export const EditorCore = {
   setDocument(document) {
     this.currentDocument = document;
 
-    this.editor.setValue(document.getContent());
-    monaco.editor.setModelLanguage(
-      this.editor.getModel(),
-      document.language
-    );
-  },
+    if (!document) {
+      this.editor.setValue("");
+      return;
+    }
 
+    this.editor.setValue(document.getContent());
+
+    const model = this.editor.getModel();
+    if (model) {
+      monaco.editor.setModelLanguage(model, document.language || "plaintext");
+    }
+  },
   getEditor() {
     return this.editor;
-  }
+  },
 };

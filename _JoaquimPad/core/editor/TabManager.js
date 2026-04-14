@@ -1,5 +1,16 @@
 import { Document } from "../document/Document.js";
 
+function formatNow() {
+  const d = new Date();
+
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+
+  return `${dd}-${mm} ${hh}-${min}`;
+}
+
 export default class TabManager {
   constructor() {
     this.tabs = [];
@@ -8,7 +19,8 @@ export default class TabManager {
 
   createNew() {
     const doc = new Document({
-      id: crypto.randomUUID()
+      id: crypto.randomUUID(),
+      displayName: formatNow()
     });
 
     this.tabs.push(doc);
