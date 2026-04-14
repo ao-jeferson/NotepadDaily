@@ -1,17 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("menu", {
-  onNewFile: (cb) =>
-    ipcRenderer.on("menu:file:new", cb),
-
-  onOpenFile: (cb) =>
-    ipcRenderer.on("menu:file:open", cb),
-
-  onSaveFile: (cb) =>
-    ipcRenderer.on("menu:file:save", cb),
-
-  onSaveAsFile: (cb) =>
-    ipcRenderer.on("menu:file:saveAs", cb)
+  onNewFile: (cb) => ipcRenderer.on("menu:file:new", cb),
+  onOpenFile: (cb) => ipcRenderer.on("menu:file:open", cb),
+  onSaveFile: (cb) => ipcRenderer.on("menu:file:save", cb),
+  onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb)
 });
 
 contextBridge.exposeInMainWorld("fs", {
@@ -22,6 +15,5 @@ contextBridge.exposeInMainWorld("fs", {
 });
 
 contextBridge.exposeInMainWorld("app", {
-  setWindowTitle: (title) =>
-    ipcRenderer.invoke("window:set-title", title)
+  setWindowTitle: (title) => ipcRenderer.invoke("window:set-title", title)
 });

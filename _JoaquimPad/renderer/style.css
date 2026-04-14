@@ -2,36 +2,68 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: "Segoe UI", sans-serif;
 }
 
+/* Barra de menu */
+.menu-bar {
+  display: flex;
+  align-items: center;
+  background: #1e1e1e;
+  color: #fff;
+  padding: 4px 8px;
+  border-bottom: 1px solid #333;
+}
 
+/* Barra de abas */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
+  height: 32px;
+  padding: 0 4px;
+  overflow-x: auto;
+}
+
+.tab-bar button {
+  background: #3c3c3c;
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  margin-right: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 4px 4px 0 0;
+  transition: background 0.2s;
+}
+
+.tab-bar button:hover {
+  background: #505050;
+}
+
+.tab-bar button.active {
+  background: #007acc;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Editor ocupa todo o espaço central */
 #editor {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 24px; /* altura da status bar */
+  flex: 1;          /* ocupa todo o espaço disponível */
+  width: 100%;
+  min-height: 0;    /* evita colapso */
 }
 
-
+/* Barra de status */
 .status-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
   height: 24px;
   line-height: 24px;
-
-  background: #f3f3f3;
-  border-top: 1px solid #cfcfcf;
-
-  color: #000;
-  font-family: Consolas, monospace;
+  background: #1e1e1e;
+  color: #ccc;
   font-size: 12px;
-
   padding-left: 8px;
-  white-space: nowrap;
-  user-select: none;
+  border-top: 1px solid #333;
 }

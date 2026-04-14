@@ -11,11 +11,6 @@ const fs = require("fs/promises");
 
 let mainWindow;
 
-/**
- * ============================
- * Window
- * ============================
- */
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -28,14 +23,8 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(
-    path.join(__dirname, "../renderer/index.html")
-  );
+  mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
 
-  /**
-   * ⚠️ MENU SÓ É CRIADO
-   * DEPOIS QUE O RENDERER CARREGAR
-   */
   mainWindow.webContents.on("did-finish-load", () => {
     createAppMenu();
   });
@@ -45,52 +34,19 @@ function createMainWindow() {
   });
 }
 
-/**
- * ============================
- * Menu
- * ============================
- */
 function createAppMenu() {
   const template = [
     {
       label: "Arquivo",
       submenu: [
-        {
-          label: "Novo",
-          accelerator: "Ctrl+N",
-          click: () => {
-            mainWindow.webContents.send("menu:file:new");
-          }
-        },
-        {
-          label: "Abrir…",
-          accelerator: "Ctrl+O",
-          click: () => {
-            mainWindow.webContents.send("menu:file:open");
-          }
-        },
-        {
-          label: "Salvar",
-          accelerator: "Ctrl+S",
-          click: () => {
-            mainWindow.webContents.send("menu:file:save");
-          }
-        },
-        {
-          label: "Salvar como…",
-          accelerator: "Ctrl+Shift+S",
-          click: () => {
-            mainWindow.webContents.send("menu:file:saveAs");
-          }
-        },
+        { label: "Novo", accelerator: "Ctrl+N", click: () => mainWindow.webContents.send("menu:file:new") },
+        { label: "Abrir…", accelerator: "Ctrl+O", click: () => mainWindow.webContents.send("menu:file:open") },
+        { label: "Salvar", accelerator: "Ctrl+S", click: () => mainWindow.webContents.send("menu:file:save") },
+        { label: "Salvar como…", accelerator: "Ctrl+Shift+S", click: () => mainWindow.webContents.send("menu:file:saveAs") },
         { type: "separator" },
-        {
-          label: "Sair",
-          role: "quit"
-        }
+        { label: "Sair", role: "quit" }
       ]
     },
-
     {
       label: "Exibir",
       submenu: [
@@ -111,13 +67,7 @@ function createAppMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-/**
- * ============================
- * App lifecycle
- * ============================
- */
 app.setName("_JoaquimPad");
-
 app.whenReady().then(createMainWindow);
 
 app.on("window-all-closed", () => {
@@ -125,16 +75,10 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createMainWindow();
-  }
+  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
 });
 
-/**
- * ============================
- * IPC - File System (CORE)
- * ============================
- */
+// IPC - File System
 ipcMain.handle("fs:open-dialog", async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openFile"],
@@ -143,7 +87,6 @@ ipcMain.handle("fs:open-dialog", async () => {
       { name: "All files", extensions: ["*"] }
     ]
   });
-
   if (result.canceled) return null;
   return result.filePaths[0];
 });
@@ -153,14 +96,9 @@ ipcMain.handle("fs:save-dialog", async () => {
   return result.canceled ? null : result.filePath;
 });
 
-ipcMain.handle("fs:readFile", (_, path) =>
-  fs.readFile(path, "utf-8")
-);
-
-ipcMain.handle("fs:writeFile", (_, path, content) =>
-  fs.writeFile(path, content, "utf-8")
-);
+ipcMain.handle("fs:readFile", (_, path) => fs.readFile(path, "utf-8"));
+ipcMain.handle("fs:writeFile", (_, path, content) => fs.writeFile(path, content, "utf-8"));
 
 ipcMain.handle("window:set-title", (_, title) => {
-  mainWindow.setTitle(title);
+  if (mainWindow) mainWindow.setTitle(title);
 });

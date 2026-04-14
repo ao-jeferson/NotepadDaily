@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <title>_JoaquimPad</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
-<body>
 
+<body>
+  <!-- Barra de abas -->
+  <div class="menu-bar">
+    <button id="newTabBtn" title="Nova Aba">+</button>
+  </div>
+  <div class="tab-bar" id="tabs"></div>
+  <div class="status-bar" id="statusbar"></div>
+  <!-- Editor -->
   <div id="editor"></div>
+
+  <!-- Barra de status -->
+  <div class="status-bar" id="statusbar"></div>
+
+
 
   <!-- MONACO LOADER -->
   <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
@@ -27,4 +40,5 @@
     });
   </script>
 </body>
+
 </html>
