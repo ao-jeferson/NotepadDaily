@@ -42,11 +42,6 @@ export const EditorCore = {
       if (!ranges || ranges.length === 0) return;
 
       const visible = ranges[0];
-      console.log(
-        "Linhas visíveis:",
-        visible.startLineNumber,
-        visible.endLineNumber,
-      );
 
       // Aqui você chama o LargeDocument / FileSystemService
     });

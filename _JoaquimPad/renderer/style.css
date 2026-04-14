@@ -123,21 +123,23 @@ body {
 }
 
 /* =====================================================
-   TABS BAR
+   TABS BAR (EDITOR STYLE)
    ===================================================== */
 
 .tabs-bar {
   display: flex;
   align-items: stretch;
-  height: 28px;
 
+  height: 26px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
 
   overflow-x: auto;
+  overflow-y: hidden;
   white-space: nowrap;
-}
 
+  scrollbar-width: thin;
+}
 /* =====================================================
    ABA
    ===================================================== */
@@ -147,21 +149,53 @@ body {
   align-items: center;
   gap: 6px;
 
-  padding: 0 10px;
   height: 100%;
+  padding: 0 8px;
 
-  background: transparent;
-  border-right: 1px solid var(--border-color);
+  flex: 1 1 auto;          /* 🔥 chave da responsividade */
+  min-width: 90px;         /* limite mínimo */
+  max-width: 220px;        /* limite máximo */
 
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-secondary);
 
   cursor: pointer;
   position: relative;
+  user-select: none;
+
+  background: transparent;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .tabs-bar .tab {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .tabs-bar .tab {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tabs-bar .tab:hover {
   background: var(--bg-tab-hover);
+}
+
+/* =====================================================
+   CONTEÚDO DA ABA (ÍCONE + TEXTO)
+   ===================================================== */
+
+.tabs-bar .tab button {
+  all: unset;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  min-width: 0;            /* 🔥 ESSENCIAL para ellipsis */
+  flex: 1;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* =====================================================
@@ -171,6 +205,9 @@ body {
 .tabs-bar .tab.active {
   background: var(--bg-main);
   color: var(--text-primary);
+  font-weight: 500;
+
+  flex: 1.3 1 auto;        /* ✅ destaque visual */
 }
 
 .tabs-bar .tab.active::after {
@@ -184,15 +221,26 @@ body {
   background: var(--accent);
 }
 
+
+.tabs-bar .tab:not(.active) {
+  opacity: 0.75;
+}
+
+.tabs-bar .tab:hover {
+  opacity: 1;
+  background: var(--bg-tab-hover);
+}
+
+
 /* =====================================================
    BOTÃO FECHAR ABA
    ===================================================== */
 
 .tabs-bar .tab .close {
+  flex-shrink: 0;          /* nunca some */
   margin-left: 6px;
-  font-size: 12px;
+  font-size: 11px;
   color: #777;
-  cursor: pointer;
 }
 
 .tabs-bar .tab .close:hover {
@@ -212,7 +260,7 @@ body {
 }
 
 /* =====================================================
-   DRAG & DROP
+   DRAG & DROP DAS ABAS
    ===================================================== */
 
 .tab.sortable-chosen {
