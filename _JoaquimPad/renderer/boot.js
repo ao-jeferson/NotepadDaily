@@ -19,14 +19,24 @@ window.createEditor = () => {
   let sortable = null;
 
   const languageIcons = {
-    javascript: "🟨",
-    typescript: "🟦",
-    csharp: "🟪",
-    json: "🟫",
-    markdown: "📘",
-    html: "🟥",
-    css: "🟪",
-    plaintext: "📄",
+    javascript: "js",
+    typescript: "ts",
+    python: "python",
+    csharp: "csharp",
+    java: "java",
+    sql: "sql",
+    json: "json",
+    yaml: "yaml",
+    html: "html",
+    css: "css",
+    c: "c",
+    cpp: "cpp",
+    go: "go",
+    rust: "rust",
+    php: "php",
+    shell: "shell",
+    markdown: "markdown",
+    plaintext: null,
   };
 
   /* =====================================================
@@ -215,6 +225,7 @@ window.createEditor = () => {
   function renderTabs() {
     tabContainer.innerHTML = "";
 
+    // 1. Organiza abas: pinadas à esquerda
     const pinnedTabs = tabManager.tabs.filter((t) => t.pinned);
     const normalTabs = tabManager.tabs.filter((t) => !t.pinned);
     const orderedTabs = [...pinnedTabs, ...normalTabs];
@@ -222,21 +233,48 @@ window.createEditor = () => {
     orderedTabs.forEach((doc) => {
       const tab = document.createElement("div");
       tab.className = "tab";
-      if (doc === tabManager.getActive()) tab.classList.add("active");
-      if (doc.pinned) tab.classList.add("pinned");
 
-      const btn = document.createElement("button");
-
-      if (doc.pinned) {
-        btn.innerHTML = `<span class="pin-icon">📌</span><span class="pin-name">${doc.getFileName()}</span>`;
-        btn.title = doc.filePath || doc.getFileName();
-      } else {
-        btn.textContent = `${languageIcons[doc.language] || "📄"} ${doc.getFileName()}`;
-        btn.title = doc.filePath || doc.getFileName();
+      if (doc === tabManager.getActive()) {
+        tab.classList.add("active");
       }
 
-      btn.onclick = () => activateDocument(doc);
+      if (doc.pinned) {
+        tab.classList.add("pinned");
+      }
 
+      // 2. Botão principal da aba
+      const btn = document.createElement("button");
+      btn.type = "button";
+
+      // 3. Ícone da linguagem
+      const iconKey = languageIcons[doc.language];
+      if (iconKey) {
+        const icon = document.createElement("img");
+        icon.src = `../assets/icons/${iconKey}.png`;
+        icon.className = "tab-icon";
+        icon.alt = doc.language;
+        btn.appendChild(icon);
+      }
+
+      // 4. Título da aba
+      const title = document.createElement("span");
+      title.className = "tab-title";
+      title.textContent = doc.getFileName();
+      btn.appendChild(title);
+
+      // 5. Indicador de modificação (*)
+      if (doc.isDirty()) {
+        const dirtyDot = document.createElement("span");
+        dirtyDot.className = "modified-dot";
+        btn.appendChild(dirtyDot);
+      }
+
+      // 6. Ativar documento ao clicar
+      btn.onclick = () => {
+        activateDocument(doc);
+      };
+
+      // 7. Clique do meio fecha aba (se não estiver pinada)
       btn.onmousedown = (e) => {
         if (e.button === 1 && !doc.pinned) {
           e.preventDefault();
@@ -247,16 +285,14 @@ window.createEditor = () => {
         }
       };
 
-      if (doc.isDirty()) {
-        const dot = document.createElement("span");
-        dot.className = "modified-dot";
-        btn.appendChild(dot);
-      }
+      tab.appendChild(btn);
 
+      // 8. Botão de fechar (não aparece se estiver pinada)
       if (!doc.pinned) {
         const close = document.createElement("span");
         close.className = "close";
         close.textContent = "×";
+
         close.onclick = (e) => {
           e.stopPropagation();
           tabManager.close(doc.id);
@@ -264,18 +300,20 @@ window.createEditor = () => {
           activateDocument(tabManager.getActive());
           saveSession();
         };
+
         tab.appendChild(close);
       }
 
+      // 9. Menu de contexto (pin, fechar, etc.)
       tab.oncontextmenu = (e) => {
         e.preventDefault();
         showContextMenu(e.clientX, e.clientY, doc);
       };
 
-      tab.appendChild(btn);
       tabContainer.appendChild(tab);
     });
 
+    // 10. Drag & drop (SortableJS)
     setupSortable();
   }
 

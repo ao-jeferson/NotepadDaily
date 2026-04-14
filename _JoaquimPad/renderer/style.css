@@ -283,3 +283,20 @@ body {
 .action-bar button:disabled svg {
   stroke: #999;
 }
+.tab button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.tab-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
