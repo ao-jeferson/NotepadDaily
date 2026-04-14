@@ -1,15 +1,14 @@
-
-{ 
-  "name": "joaquimpad",
-  "productName": "_JoaquimPad",
-
-  "version": "0.1.0",
-  "main": "electron/main.js",
-  "scripts": {
-    "start": "electron ."
-  },
-  "dependencies": {
-    "electron": "^30.0.0",
-    "monaco-editor": "^0.47.0"
-  }
+{
+    "name": "joaquimpad",
+    "productName": "_JoaquimPad",
+    "version": "0.1.0",
+    "main": "electron/main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "electron": "^30.0.0",
+        "monaco-editor": "^0.47.0",
+        "sortablejs": "^1.15.7"
+    }
 }

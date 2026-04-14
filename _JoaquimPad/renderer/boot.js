@@ -134,49 +134,64 @@ window.createEditor = () => {
   });
 
   // renderização das abas
-  function renderTabs() {
-    tabContainer.innerHTML = "";
-    tabManager.tabs.forEach(tab => {
-      const el = document.createElement("div");
-      el.classList.add("tab");
 
-      const btn = document.createElement("button");
-      btn.textContent = `${tab.name} [${tab.language}]`;
-      if (tab.active) btn.classList.add("active");
-      btn.onclick = () => {
-        tabManager.switchTab(tab.id);
-        EditorCore.setText(tab.content);
+function renderTabs() {
+  tabContainer.innerHTML = "";
+  tabManager.tabs.forEach(tab => {
+    const el = document.createElement("div");
+    el.classList.add("tab");
 
-        const model = EditorCore.editor.getModel();
-        if (model) monaco.editor.setModelLanguage(model, tab.language);
+    const btn = document.createElement("button");
+    btn.textContent = `${tab.name} [${tab.language}]`;
+    if (tab.active) btn.classList.add("active");
 
-        renderTabs();
-        session.save(tabManager.tabs);
-      };
+    btn.onclick = () => {
+      tabManager.switchTab(tab.id);
+      EditorCore.setText(tab.content);
+      const model = EditorCore.editor.getModel();
+      if (model) monaco.editor.setModelLanguage(model, tab.language);
+      renderTabs();
+    };
 
-      const closeBtn = document.createElement("span");
-      closeBtn.textContent = "×";
-      closeBtn.classList.add("close");
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
+    // fechar com roda do mouse
+    btn.addEventListener("mousedown", (e) => {
+      if (e.button === 1) {
+        e.preventDefault();
         tabManager.closeTab(tab.id);
         renderTabs();
         const newActive = tabManager.getActiveTab();
-        if (newActive) {
-          EditorCore.setText(newActive.content);
-          const model = EditorCore.editor.getModel();
-          if (model) monaco.editor.setModelLanguage(model, newActive.language);
-        } else {
-          EditorCore.setText("");
-        }
-        session.save(tabManager.tabs);
-      };
-
-      el.appendChild(btn);
-      el.appendChild(closeBtn);
-      tabContainer.appendChild(el);
+        EditorCore.setText(newActive ? newActive.content : "");
+      }
     });
+
+    const closeBtn = document.createElement("span");
+    closeBtn.textContent = "×";
+    closeBtn.classList.add("close");
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      tabManager.closeTab(tab.id);
+      renderTabs();
+      const newActive = tabManager.getActiveTab();
+      EditorCore.setText(newActive ? newActive.content : "");
+    };
+
+    el.appendChild(btn);
+    el.appendChild(closeBtn);
+    tabContainer.appendChild(el);
+  });
+
+  // ✅ inicializa SortableJS
+ Sortable.create(tabContainer, {
+  animation: 150,
+  onEnd: (evt) => {
+    const [movedTab] = tabManager.tabs.splice(evt.oldIndex, 1);
+    tabManager.tabs.splice(evt.newIndex, 0, movedTab);
+    renderTabs();
   }
+});
+}
+
+
 
   // detecção automática de linguagem pelo nome do arquivo
   function detectLanguage(fileName) {

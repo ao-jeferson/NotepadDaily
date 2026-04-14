@@ -6,19 +6,36 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <!-- Barra de menu -->
   <div class="menu-bar">
     <button id="newTabBtn" title="Nova Aba">+</button>
   </div>
+
+  <!-- Área das abas -->
   <div class="tab-bar" id="tabs"></div>
- 
+
+  <!-- Editor -->
   <div id="editor"></div>
- <div class="status-bar" id="statusbar"></div>
-  <!-- Carrega Monaco -->
+
+  <!-- Barra de status -->
+  <div class="status-bar" id="statusbar"></div>
+
+  <!-- SortableJS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <!-- Monaco Editor -->
   <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
     require.config({ paths: { 'vs': '../node_modules/monaco-editor/min/vs' } });
     require(['vs/editor/editor.main'], function () {
-      import('./boot.js').then(() => window.createEditor());
+      // Carrega boot.js como módulo ES
+      import('./boot.js').then(() => {
+        if (window.createEditor) {
+          window.createEditor();
+        } else {
+          console.error("createEditor não encontrado em boot.js");
+        }
+      }).catch(err => console.error("Erro ao carregar boot.js:", err));
     });
   </script>
 </body>

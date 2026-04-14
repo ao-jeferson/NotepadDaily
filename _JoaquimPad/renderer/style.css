@@ -100,3 +100,18 @@ html, body {
   display: flex;
   align-items: center;
 }
+/* Aba normal */
+.tab {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tab.sortable-chosen {
+  opacity: 0.7;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.6);
+}
+
+.tab.sortable-ghost {
+  opacity: 0.3;
+  border: 2px dashed #007acc;
+}

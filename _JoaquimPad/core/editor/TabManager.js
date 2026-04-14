@@ -1,36 +1,49 @@
 export default class TabManager {
   constructor() {
     this.tabs = [];
-    this.activeTabId = null;
+    this.counter = 0;
   }
 
-  createTab(content = "", name = null) {
-    const now = new Date();
-    const tabName = name || now.toLocaleString("pt-BR");
+  createTab(content = "", name = "Untitled", language = "plaintext") {
     const tab = {
-      id: Date.now(),
-      name: tabName,
+      id: String(this.counter++),
+      name,
       content,
-      active: false
+      language,
+      active: true
     };
+    this.tabs.forEach(t => (t.active = false));
     this.tabs.push(tab);
-    this.switchTab(tab.id);
     return tab;
   }
 
-  switchTab(id) {
-    this.activeTabId = id;
-    this.tabs.forEach(t => (t.active = t.id === id));
+  getActiveTab() {
+    return this.tabs.find(t => t.active);
   }
 
-  getActiveTab() {
-    return this.tabs.find(t => t.id === this.activeTabId);
+  switchTab(id) {
+    this.tabs.forEach(t => (t.active = false));
+    const tab = this.tabs.find(t => t.id === id);
+    if (tab) tab.active = true;
   }
 
   closeTab(id) {
-    this.tabs = this.tabs.filter(t => t.id !== id);
-    if (this.activeTabId === id) {
-      this.activeTabId = this.tabs.length ? this.tabs[0].id : null;
+    const idx = this.tabs.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      this.tabs.splice(idx, 1);
+      if (this.tabs.length > 0) {
+        this.tabs[Math.max(0, idx - 1)].active = true;
+      }
     }
+  }
+
+  // ✅ novo método para mover abas
+  moveTab(draggedId, targetId) {
+    const draggedIndex = this.tabs.findIndex(t => t.id === draggedId);
+    const targetIndex = this.tabs.findIndex(t => t.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const [draggedTab] = this.tabs.splice(draggedIndex, 1);
+    this.tabs.splice(targetIndex, 0, draggedTab);
   }
 }
