@@ -2,6 +2,7 @@ import { EditorCore } from "../core/editor/EditorCore.js";
 import { FileSystemService } from "../core/filesystem/FileSystemService.js";
 import { StatusBar } from "../core/statusbar/StatusBar.js";
 import TabManager from "../core/editor/TabManager.js";
+import SessionManager from "../core/session/SessionManager.js";
 
 window.createEditor = () => {
   const container = document.getElementById("editor");
@@ -21,25 +22,40 @@ window.createEditor = () => {
   const statusBar = new StatusBar(EditorCore);
   statusBar.init();
 
-  // tab manager
+  // tab manager + session manager
   const tabManager = new TabManager();
+  const session = new SessionManager();
 
-  // cria primeira aba
-  const firstTab = tabManager.createTab("");
-  renderTabs();
-  EditorCore.setText(firstTab.content);
+  // restaura sessão
+  const savedTabs = session.load();
+  if (savedTabs.length > 0) {
+    tabManager.tabs = savedTabs;
+    renderTabs();
+    const active = tabManager.getActiveTab();
+    if (active) {
+      EditorCore.setText(active.content);
+      const model = EditorCore.editor.getModel();
+      if (model) monaco.editor.setModelLanguage(model, active.language);
+    }
+  } else {
+    const firstTab = tabManager.createTab("");
+    renderTabs();
+    EditorCore.setText(firstTab.content);
+  }
 
   // botão nova aba
   newTabBtn.addEventListener("click", () => {
     const tab = tabManager.createTab("");
     renderTabs();
     EditorCore.setText(tab.content);
+    session.save(tabManager.tabs);
   });
 
   // sincronizar conteúdo da aba ativa
-  EditorCore.editor.onDidChangeModelContent(() => {
+  EditorCore.onContentChange(() => {
     const active = tabManager.getActiveTab();
     if (active) active.content = EditorCore.getText();
+    session.save(tabManager.tabs);
   });
 
   // menu: novo arquivo
@@ -47,6 +63,7 @@ window.createEditor = () => {
     const tab = tabManager.createTab("");
     renderTabs();
     EditorCore.setText("");
+    session.save(tabManager.tabs);
   });
 
   // menu: abrir arquivo
@@ -63,6 +80,8 @@ window.createEditor = () => {
 
       const model = EditorCore.editor.getModel();
       if (model) monaco.editor.setModelLanguage(model, lang);
+
+      session.save(tabManager.tabs);
     });
   });
 
@@ -84,6 +103,7 @@ window.createEditor = () => {
       } else {
         EditorCore.setText("");
       }
+      session.save(tabManager.tabs);
     }
   });
 
@@ -109,6 +129,7 @@ window.createEditor = () => {
       }
       active.language = lang;
       renderTabs();
+      session.save(tabManager.tabs);
     }
   });
 
@@ -130,6 +151,7 @@ window.createEditor = () => {
         if (model) monaco.editor.setModelLanguage(model, tab.language);
 
         renderTabs();
+        session.save(tabManager.tabs);
       };
 
       const closeBtn = document.createElement("span");
@@ -147,6 +169,7 @@ window.createEditor = () => {
         } else {
           EditorCore.setText("");
         }
+        session.save(tabManager.tabs);
       };
 
       el.appendChild(btn);
