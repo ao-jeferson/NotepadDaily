@@ -9,219 +9,135 @@ window.createEditor = () => {
   const tabContainer = document.getElementById("tabs");
   const newTabBtn = document.getElementById("newTabBtn");
 
-  // inicializa editor
+  /* ============================
+   * Core initialization
+   * ============================ */
   EditorCore.init(container);
-  // Zoom com Ctrl + roda do mouse
-const editorContainer = document.getElementById("editor");
-editorContainer.addEventListener("wheel", (e) => {
-  if (e.ctrlKey && EditorCore.editor) {
-    e.preventDefault(); // evita zoom da página
-    let fontSize = EditorCore.editor.getOption(monaco.editor.EditorOption.fontSize);
 
-    if (e.deltaY < 0) {
-      fontSize = Math.min(fontSize + 1, 40); // zoom in
-    } else {
-      fontSize = Math.max(fontSize - 1, 8);  // zoom out
-    }
-
-    EditorCore.editor.updateOptions({ fontSize });
-  }
-}, { passive: false });
-
-   // filesystem
-  const fsService = new FileSystemService(EditorCore);
-  fsService.attachEditorListeners();
-
-  // statusbar
-  const statusBar = new StatusBar(EditorCore);
-  statusBar.init();
-
-  // tab manager + session manager
+  const fsService = new FileSystemService();
   const tabManager = new TabManager();
   const session = new SessionManager();
 
-  // restaura sessão
-  const savedTabs = session.load();
-  if (savedTabs.length > 0) {
-    tabManager.tabs = savedTabs;
+  const statusBar = new StatusBar(EditorCore);
+  statusBar.init();
+
+  /* ============================
+   * Helpers
+   * ============================ */
+  function activateDocument(doc) {
+    tabManager.setActive(doc);
+    EditorCore.setDocument(doc);
+    statusBar.bindDocument(doc);
     renderTabs();
-    const active = tabManager.getActiveTab();
-    if (active) {
-      EditorCore.setText(active.content);
-      const model = EditorCore.editor.getModel();
-      if (model) monaco.editor.setModelLanguage(model, active.language);
-    }
-  } else {
-    const firstTab = tabManager.createTab("");
-    renderTabs();
-    EditorCore.setText(firstTab.content);
   }
 
-  // botão nova aba
+  /* ============================
+   * Restore session
+   * ============================ */
+  const docs = session.load();
+
+  if (docs.length > 0) {
+    docs.forEach(d => tabManager.open(d));
+    activateDocument(tabManager.getActive());
+  } else {
+    const doc = tabManager.createNew();
+    activateDocument(doc);
+  }
+
+  /* ============================
+   * New tab button
+   * ============================ */
   newTabBtn.addEventListener("click", () => {
-    const tab = tabManager.createTab("");
-    renderTabs();
-    EditorCore.setText(tab.content);
+    const doc = tabManager.createNew();
+    activateDocument(doc);
     session.save(tabManager.tabs);
   });
 
-  // sincronizar conteúdo da aba ativa
-  EditorCore.onContentChange(() => {
-    const active = tabManager.getActiveTab();
-    if (active) active.content = EditorCore.getText();
-    session.save(tabManager.tabs);
-  });
+  /* ============================
+   * Menu actions
+   * ============================ */
 
-  // menu: novo arquivo
   window.menu.onNewFile(() => {
-    const tab = tabManager.createTab("");
-    renderTabs();
-    EditorCore.setText("");
+    const doc = tabManager.createNew();
+    activateDocument(doc);
     session.save(tabManager.tabs);
   });
 
-  // menu: abrir arquivo
-  window.menu.onOpenFile(() => {
-    fsService.openFile().then(() => {
-      const content = EditorCore.getText();
-      const fileName = fsService.getCurrentFilePath()
-        ? fsService.getCurrentFilePath().split(/[\\/]/).pop()
-        : "";
-      const lang = detectLanguage(fileName);
-      const tab = tabManager.createTab(content, fileName, lang);
-      renderTabs();
-      EditorCore.setText(content);
+  window.menu.onOpenFile(async () => {
+    const doc = await fsService.open();
+    if (!doc) return;
 
-      const model = EditorCore.editor.getModel();
-      if (model) monaco.editor.setModelLanguage(model, lang);
-
-      session.save(tabManager.tabs);
-    });
+    tabManager.open(doc);
+    activateDocument(doc);
+    session.save(tabManager.tabs);
   });
 
-  // menu: salvar
-  window.menu.onSaveFile(() => fsService.saveFile());
-  window.menu.onSaveAsFile(() => fsService.saveFileAs());
+  window.menu.onSaveFile(() => {
+    const doc = tabManager.getActive();
+    if (doc) fsService.save(doc);
+  });
 
-  // menu: fechar aba
+  window.menu.onSaveAsFile(() => {
+    const doc = tabManager.getActive();
+    if (doc) fsService.saveAs(doc);
+  });
+
   window.menu.onCloseTab(() => {
-    const active = tabManager.getActiveTab();
-    if (active) {
-      tabManager.closeTab(active.id);
-      renderTabs();
-      const newActive = tabManager.getActiveTab();
-      if (newActive) {
-        EditorCore.setText(newActive.content);
-        const model = EditorCore.editor.getModel();
-        if (model) monaco.editor.setModelLanguage(model, newActive.language);
-      } else {
-        EditorCore.setText("");
-      }
-      session.save(tabManager.tabs);
-    }
+    const active = tabManager.getActive();
+    if (!active) return;
+
+    tabManager.close(active.id);
+    const next = tabManager.getActive();
+
+    if (next) activateDocument(next);
+    else EditorCore.setDocument(null);
+
+    session.save(tabManager.tabs);
   });
 
-  // menu: Word Wrap
-  window.menu.onToggleWordWrap((enabled) => {
-    if (EditorCore.editor) {
-      EditorCore.editor.updateOptions({
-        wordWrap: enabled ? "on" : "off"
-      });
-    }
+  window.menu.onSetLanguage(lang => {
+    const doc = tabManager.getActive();
+    if (!doc) return;
+
+    doc.language = lang;
+    EditorCore.setDocument(doc);
+    renderTabs();
+    session.save(tabManager.tabs);
   });
 
-  // menu: Linguagem
-  window.menu.onSetLanguage((lang) => {
-    const active = tabManager.getActiveTab();
-    if (active && EditorCore.editor) {
-      let model = EditorCore.editor.getModel();
-      if (!model) {
-        model = monaco.editor.createModel(EditorCore.getText(), lang);
-        EditorCore.editor.setModel(model);
-      } else {
-        monaco.editor.setModelLanguage(model, lang);
-      }
-      active.language = lang;
-      renderTabs();
-      session.save(tabManager.tabs);
-    }
-  });
-
-  // renderização das abas
+  /* ============================
+   * Render tabs
+   * ============================ */
   function renderTabs() {
     tabContainer.innerHTML = "";
-    tabManager.tabs.forEach(tab => {
+
+    tabManager.tabs.forEach(doc => {
       const el = document.createElement("div");
       el.classList.add("tab");
 
       const btn = document.createElement("button");
-      btn.textContent = `${tab.name} [${tab.language}]`;
-      if (tab.active) btn.classList.add("active");
+      btn.textContent =
+        `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
+      if (doc === tabManager.getActive()) {
+        btn.classList.add("active");
+      }
 
-      btn.onclick = () => {
-        tabManager.switchTab(tab.id);
-        EditorCore.setText(tab.content);
-        const model = EditorCore.editor.getModel();
-        if (model) monaco.editor.setModelLanguage(model, tab.language);
-        renderTabs();
-      };
+      btn.onclick = () => activateDocument(doc);
 
-      // fechar com roda do mouse
-      btn.addEventListener("mousedown", (e) => {
-        if (e.button === 1) {
-          e.preventDefault();
-          tabManager.closeTab(tab.id);
-          renderTabs();
-          const newActive = tabManager.getActiveTab();
-          EditorCore.setText(newActive ? newActive.content : "");
-        }
-      });
-
-      const closeBtn = document.createElement("span");
-      closeBtn.textContent = "×";
-      closeBtn.classList.add("close");
-      closeBtn.onclick = (e) => {
+      const close = document.createElement("span");
+      close.textContent = "×";
+      close.classList.add("close");
+      close.onclick = e => {
         e.stopPropagation();
-        tabManager.closeTab(tab.id);
-        renderTabs();
-        const newActive = tabManager.getActiveTab();
-        EditorCore.setText(newActive ? newActive.content : "");
+        tabManager.close(doc.id);
+        const next = tabManager.getActive();
+        if (next) activateDocument(next);
+        session.save(tabManager.tabs);
       };
 
       el.appendChild(btn);
-      el.appendChild(closeBtn);
+      el.appendChild(close);
       tabContainer.appendChild(el);
     });
-
-    // ✅ inicializa SortableJS
-    Sortable.create(tabContainer, {
-      animation: 150,
-      onEnd: (evt) => {
-        const [movedTab] = tabManager.tabs.splice(evt.oldIndex, 1);
-        tabManager.tabs.splice(evt.newIndex, 0, movedTab);
-        renderTabs();
-      }
-    });
-  }
-
-  // detecção automática de linguagem pelo nome do arquivo
-  function detectLanguage(fileName) {
-    if (fileName.endsWith(".js")) return "javascript";
-    if (fileName.endsWith(".ts")) return "typescript";
-    if (fileName.endsWith(".py")) return "python";
-    if (fileName.endsWith(".html")) return "html";
-    if (fileName.endsWith(".css")) return "css";
-    if (fileName.endsWith(".json")) return "json";
-    if (fileName.endsWith(".md")) return "markdown";
-    if (fileName.endsWith(".java")) return "java";
-    if (fileName.endsWith(".c")) return "c";
-    if (fileName.endsWith(".cpp")) return "cpp";
-    if (fileName.endsWith(".cs")) return "csharp";
-    if (fileName.endsWith(".go")) return "go";
-    if (fileName.endsWith(".rs")) return "rust";
-    if (fileName.endsWith(".php")) return "php";
-    if (fileName.endsWith(".sql")) return "sql";
-    if (fileName.endsWith(".yml") || fileName.endsWith(".yaml")) return "yaml";
-    return "plaintext";
   }
 };

@@ -1,49 +1,58 @@
+import { Document } from "../document/Document.js";
+
 export default class TabManager {
   constructor() {
     this.tabs = [];
-    this.counter = 0;
+    this.activeDocument = null;
   }
 
-  createTab(content = "", name = "Untitled", language = "") {
-    const tab = {
-      id: String(this.counter++),
-      name,
-      content,
-      language ,
-      active: true
-    };
-    this.tabs.forEach(t => (t.active = false));
-    this.tabs.push(tab);
-    return tab;
+  createNew() {
+    const doc = new Document({
+      id: crypto.randomUUID()
+    });
+
+    this.tabs.push(doc);
+    this.setActive(doc);
+    return doc;
   }
 
-  getActiveTab() {
-    return this.tabs.find(t => t.active);
+  open(doc) {
+    this.tabs.push(doc);
+    this.setActive(doc);
   }
 
-  switchTab(id) {
-    this.tabs.forEach(t => (t.active = false));
-    const tab = this.tabs.find(t => t.id === id);
-    if (tab) tab.active = true;
+  getActive() {
+    return this.activeDocument;
   }
 
-  closeTab(id) {
-    const idx = this.tabs.findIndex(t => t.id === id);
-    if (idx !== -1) {
-      this.tabs.splice(idx, 1);
-      if (this.tabs.length > 0) {
-        this.tabs[Math.max(0, idx - 1)].active = true;
-      }
+  setActive(doc) {
+    this.activeDocument = doc;
+  }
+
+  switchTo(id) {
+    const doc = this.tabs.find(d => d.id === id);
+    if (doc) this.setActive(doc);
+  }
+
+  close(id) {
+    const idx = this.tabs.findIndex(d => d.id === id);
+    if (idx === -1) return;
+
+    const wasActive = this.tabs[idx] === this.activeDocument;
+    this.tabs.splice(idx, 1);
+
+    if (wasActive) {
+      this.activeDocument =
+        this.tabs[idx - 1] || this.tabs[0] || null;
     }
   }
 
-  // ✅ novo método para mover abas
-  moveTab(draggedId, targetId) {
-    const draggedIndex = this.tabs.findIndex(t => t.id === draggedId);
-    const targetIndex = this.tabs.findIndex(t => t.id === targetId);
-    if (draggedIndex === -1 || targetIndex === -1) return;
+  move(draggedId, targetId) {
+    const from = this.tabs.findIndex(d => d.id === draggedId);
+    const to = this.tabs.findIndex(d => d.id === targetId);
+    if (from === -1 || to === -1) return;
 
-    const [draggedTab] = this.tabs.splice(draggedIndex, 1);
-    this.tabs.splice(targetIndex, 0, draggedTab);
+    const [doc] = this.tabs.splice(from, 1);
+    this.tabs.splice(to, 0, doc);
   }
 }
