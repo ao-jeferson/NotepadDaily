@@ -37,36 +37,80 @@ window.createEditor = () => {
   });
 
   // sincronizar conteúdo da aba ativa
-  EditorCore.onContentChange(() => {
+  EditorCore.editor.onDidChangeModelContent(() => {
     const active = tabManager.getActiveTab();
-    if (active) {
-      active.content = EditorCore.getText();
-    }
+    if (active) active.content = EditorCore.getText();
   });
 
-  // menu handlers
+  // menu: novo arquivo
   window.menu.onNewFile(() => {
     const tab = tabManager.createTab("");
     renderTabs();
     EditorCore.setText("");
   });
 
+  // menu: abrir arquivo
   window.menu.onOpenFile(() => {
     fsService.openFile().then(() => {
       const content = EditorCore.getText();
-      // nome da aba = nome do arquivo aberto
       const fileName = fsService.getCurrentFilePath()
         ? fsService.getCurrentFilePath().split(/[\\/]/).pop()
         : "Untitled";
-      const tab = tabManager.createTab(content);
-      tab.name = fileName;
+      const lang = detectLanguage(fileName);
+      const tab = tabManager.createTab(content, fileName, lang);
       renderTabs();
       EditorCore.setText(content);
+
+      const model = EditorCore.editor.getModel();
+      if (model) monaco.editor.setModelLanguage(model, lang);
     });
   });
 
+  // menu: salvar
   window.menu.onSaveFile(() => fsService.saveFile());
   window.menu.onSaveAsFile(() => fsService.saveFileAs());
+
+  // menu: fechar aba
+  window.menu.onCloseTab(() => {
+    const active = tabManager.getActiveTab();
+    if (active) {
+      tabManager.closeTab(active.id);
+      renderTabs();
+      const newActive = tabManager.getActiveTab();
+      if (newActive) {
+        EditorCore.setText(newActive.content);
+        const model = EditorCore.editor.getModel();
+        if (model) monaco.editor.setModelLanguage(model, newActive.language);
+      } else {
+        EditorCore.setText("");
+      }
+    }
+  });
+
+  // menu: Word Wrap
+  window.menu.onToggleWordWrap((enabled) => {
+    if (EditorCore.editor) {
+      EditorCore.editor.updateOptions({
+        wordWrap: enabled ? "on" : "off"
+      });
+    }
+  });
+
+  // menu: Linguagem
+  window.menu.onSetLanguage((lang) => {
+    const active = tabManager.getActiveTab();
+    if (active && EditorCore.editor) {
+      let model = EditorCore.editor.getModel();
+      if (!model) {
+        model = monaco.editor.createModel(EditorCore.getText(), lang);
+        EditorCore.editor.setModel(model);
+      } else {
+        monaco.editor.setModelLanguage(model, lang);
+      }
+      active.language = lang;
+      renderTabs();
+    }
+  });
 
   // renderização das abas
   function renderTabs() {
@@ -76,23 +120,33 @@ window.createEditor = () => {
       el.classList.add("tab");
 
       const btn = document.createElement("button");
-      btn.textContent = tab.name;
+      btn.textContent = `${tab.name} [${tab.language}]`;
       if (tab.active) btn.classList.add("active");
       btn.onclick = () => {
         tabManager.switchTab(tab.id);
         EditorCore.setText(tab.content);
+
+        const model = EditorCore.editor.getModel();
+        if (model) monaco.editor.setModelLanguage(model, tab.language);
+
         renderTabs();
       };
 
       const closeBtn = document.createElement("span");
-      closeBtn.textContent = "×"; // ícone de fechar
+      closeBtn.textContent = "×";
       closeBtn.classList.add("close");
       closeBtn.onclick = (e) => {
-        e.stopPropagation(); // não trocar aba ao clicar no X
+        e.stopPropagation();
         tabManager.closeTab(tab.id);
         renderTabs();
         const newActive = tabManager.getActiveTab();
-        EditorCore.setText(newActive ? newActive.content : "");
+        if (newActive) {
+          EditorCore.setText(newActive.content);
+          const model = EditorCore.editor.getModel();
+          if (model) monaco.editor.setModelLanguage(model, newActive.language);
+        } else {
+          EditorCore.setText("");
+        }
       };
 
       el.appendChild(btn);
@@ -101,25 +155,24 @@ window.createEditor = () => {
     });
   }
 
-
-  window.menu.onCloseTab(() => {
-    const active = tabManager.getActiveTab();
-    if (active) {
-      tabManager.closeTab(active.id);
-      renderTabs();
-      const newActive = tabManager.getActiveTab();
-      if (newActive) {
-        EditorCore.setText(newActive.content);
-      } else {
-        EditorCore.setText(""); // sem abas abertas
-      }
-    }
-  });
-  window.menu.onToggleWordWrap((enabled) => {
-    EditorCore.editor.updateOptions({
-      wordWrap: enabled ? "on" : "off"
-    });
-  });
-
-
+  // detecção automática de linguagem pelo nome do arquivo
+  function detectLanguage(fileName) {
+    if (fileName.endsWith(".js")) return "javascript";
+    if (fileName.endsWith(".ts")) return "typescript";
+    if (fileName.endsWith(".py")) return "python";
+    if (fileName.endsWith(".html")) return "html";
+    if (fileName.endsWith(".css")) return "css";
+    if (fileName.endsWith(".json")) return "json";
+    if (fileName.endsWith(".md")) return "markdown";
+    if (fileName.endsWith(".java")) return "java";
+    if (fileName.endsWith(".c")) return "c";
+    if (fileName.endsWith(".cpp")) return "cpp";
+    if (fileName.endsWith(".cs")) return "csharp";
+    if (fileName.endsWith(".go")) return "go";
+    if (fileName.endsWith(".rs")) return "rust";
+    if (fileName.endsWith(".php")) return "php";
+    if (fileName.endsWith(".sql")) return "sql";
+    if (fileName.endsWith(".yml") || fileName.endsWith(".yaml")) return "yaml";
+    return "plaintext";
+  }
 };

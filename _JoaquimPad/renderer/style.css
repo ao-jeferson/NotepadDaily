@@ -59,14 +59,19 @@ html, body {
 
 /* Barra de status */
 .status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 24px;
-  line-height: 24px;
-  background: #1e1e1e;
-  color: #ccc;
+  background: #222;
+  color: #eee;
   font-size: 12px;
-  padding-left: 8px;
-  border-top: 1px solid #333;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
 }
+
 .tab {
   display: flex;
   align-items: center;

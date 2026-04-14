@@ -6,7 +6,8 @@ contextBridge.exposeInMainWorld("menu", {
   onSaveFile: (cb) => ipcRenderer.on("menu:file:save", cb),
   onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb),
   onCloseTab: (cb) => ipcRenderer.on("menu:file:closeTab", cb),
-  onToggleWordWrap: (cb) => ipcRenderer.on("menu:view:wordWrap", (_, checked) => cb(checked))
+  onToggleWordWrap: (cb) => ipcRenderer.on("menu:view:wordWrap", (_, checked) => cb(checked)),
+  onSetLanguage: (cb) => ipcRenderer.on("menu:view:setLanguage", (_, lang) => cb(lang)),
 });
 
 

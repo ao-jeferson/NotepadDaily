@@ -1,98 +1,45 @@
-let editor;
-
 export const EditorCore = {
+  editor: null,
+
   init(container) {
-    editor = monaco.editor.create(container, {
-      language: "plaintext",
-      theme: "vs-blue",
+    const model = monaco.editor.createModel("", "plaintext");
+
+    this.editor = monaco.editor.create(container, {
+      model,
+      theme: "vs-dark",
       automaticLayout: true,
       minimap: { enabled: true },
       fontSize: 14,
-      lineNumbers: "on",wordWrap: "on"
-      
+      lineNumbers: "on",
+      wordWrap: "on"
     });
-  },
-
-  layout() {
-    if (editor) {
-      editor.layout();
-    }
-  },
-
-  getText() {
-    return editor.getValue();
   },
 
   setText(text) {
-    if (editor) {
-      editor.setValue(text || "");
+    if (this.editor) this.editor.setValue(text);
+  },
+
+  getText() {
+    return this.editor ? this.editor.getValue() : "";
+  },
+
+  layout() {
+    if (this.editor) this.editor.layout();
+  },
+
+  setLanguage(lang) {
+    if (this.editor) {
+      const model = this.editor.getModel();
+      if (model) {
+        monaco.editor.setModelLanguage(model, lang);
+      }
     }
   },
 
-  onCursorChange(callback) {
-    editor.onDidChangeCursorPosition(callback);
-  },
-
-  onContentChange(callback) {
-    editor.onDidChangeModelContent(callback);
-  },
-  getSelectionLength() {
-    const selection = editor.getSelection();
-    if (selection.isEmpty()) return 0;
-
-    const model = editor.getModel();
-    const start = model.getOffsetAt(selection.getStartPosition());
-    const end = model.getOffsetAt(selection.getEndPosition());
-    return Math.abs(end - start);
-  },
-  getContentSize() {
-    const text = editor.getValue();
-    return new TextEncoder().encode(text).length; // bytes reais
-  },
-  onSelectionChange(callback) {
-    editor.onDidChangeCursorSelection(() => {
-      callback({
-        selectionLength: this.getSelectionLength()
-      });
-    });
-  }, getCursorPosition() {
-    const pos = editor.getPosition();
-    return {
-      line: pos.lineNumber,
-      column: pos.column
-    };
-  },
-  getAbsolutePosition() {
-    const model = editor.getModel();
-    const pos = editor.getPosition();
-    return model.getOffsetAt(pos) + 1; // 1-based
-  },
-  onCursorChange(callback) {
-    editor.onDidChangeCursorPosition(() => {
-      callback({
-        ...this.getCursorPosition(),
-        position: this.getAbsolutePosition()
-      });
-    });
-  }, getSelectionLength() {
-    const selection = editor.getSelection();
-    if (selection.isEmpty()) return 0;
-
-    const model = editor.getModel();
-    const start = model.getOffsetAt(selection.getStartPosition());
-    const end = model.getOffsetAt(selection.getEndPosition());
-    return Math.abs(end - start);
-  },
-  getContentSize() {
-    const text = editor.getValue();
-    return new TextEncoder().encode(text).length; // bytes reais
-  },
-  onSelectionChange(callback) {
-    editor.onDidChangeCursorSelection(() => {
-      callback({
-        selectionLength: this.getSelectionLength()
-      });
-    });
+  // ✅ Novo método encapsulado
+  onContentChange(cb) {
+    if (this.editor) {
+      this.editor.onDidChangeModelContent(cb);
+    }
   }
-  /**/
 };

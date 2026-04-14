@@ -70,6 +70,26 @@ function createAppMenu() {
           }
         }
       ]
+    },{
+      label: "Linguagem",
+      submenu: [
+        { label: "JavaScript", click: () => mainWindow.webContents.send("menu:view:setLanguage", "javascript") },
+        { label: "TypeScript", click: () => mainWindow.webContents.send("menu:view:setLanguage", "typescript") },
+        { label: "Python", click: () => mainWindow.webContents.send("menu:view:setLanguage", "python") },
+        { label: "HTML", click: () => mainWindow.webContents.send("menu:view:setLanguage", "html") },
+        { label: "CSS", click: () => mainWindow.webContents.send("menu:view:setLanguage", "css") },
+        { label: "JSON", click: () => mainWindow.webContents.send("menu:view:setLanguage", "json") },
+        { label: "Markdown", click: () => mainWindow.webContents.send("menu:view:setLanguage", "markdown") },
+        { label: "C", click: () => mainWindow.webContents.send("menu:view:setLanguage", "c") },
+        { label: "C++", click: () => mainWindow.webContents.send("menu:view:setLanguage", "cpp") },
+        { label: "Java", click: () => mainWindow.webContents.send("menu:view:setLanguage", "java") },
+        { label: "Go", click: () => mainWindow.webContents.send("menu:view:setLanguage", "go") },
+        { label: "Rust", click: () => mainWindow.webContents.send("menu:view:setLanguage", "rust") },
+        { label: "PHP", click: () => mainWindow.webContents.send("menu:view:setLanguage", "php") },
+        { label: "SQL", click: () => mainWindow.webContents.send("menu:view:setLanguage", "sql") },
+        { label: "Shell", click: () => mainWindow.webContents.send("menu:view:setLanguage", "shell") },
+        { label: "YAML", click: () => mainWindow.webContents.send("menu:view:setLanguage", "yaml") }
+      ]
     }
   ];
 
