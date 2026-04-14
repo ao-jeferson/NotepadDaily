@@ -4,6 +4,7 @@ import {
 } from "./detectLanguage.js";
 
 import { LANGUAGE_INDENTATION } from "./languageIndentation.js";
+import { registerAllProviders } from "./providers/index.js";
 
 export const EditorCore = {
   editor: null,
@@ -41,7 +42,57 @@ export const EditorCore = {
       largeFileOptimizations: true,
       detectIndentation: false,
     });
+    registerAllProviders(monaco);
+    ///Intelisense
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      allowNonTsExtensions: true,
+      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+    });
 
+    monaco.languages.registerCompletionItemProvider("python", {
+      provideCompletionItems: () => {
+        const suggestions = [
+          {
+            label: "def",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "def ${1:name}(${2:args}):\n\t${0}",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          },
+          {
+            label: "import",
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: "import ",
+          },
+          {
+            label: "print",
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: "print(${1:value})",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          },
+        ];
+
+        return { suggestions };
+      },
+    });
+    monaco.languages.registerCompletionItemProvider("plaintext", {
+      provideCompletionItems(model) {
+        const words = new Set(
+          model.getValue().match(/\b[A-Za-z_]\w+\b/g) ?? [],
+        );
+
+        return {
+          suggestions: [...words].map((word) => ({
+            label: word,
+            kind: monaco.languages.CompletionItemKind.Text,
+            insertText: word,
+          })),
+        };
+      },
+    });
     /* -----------------------------------------------------
        SCROLL / VIEWPORT (LargeDocument ready)
        --------------------------------------------------- */
@@ -58,77 +109,68 @@ export const EditorCore = {
     const editor = this.editor;
 
     // Comentário
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Slash,
-      () => editor.getAction("editor.action.commentLine")?.run()
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Slash, () =>
+      editor.getAction("editor.action.commentLine")?.run(),
     );
 
     // Duplicar linha
     editor.addCommand(
       monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.DownArrow,
-      () => editor.getAction("editor.action.copyLinesDownAction")?.run()
+      () => editor.getAction("editor.action.copyLinesDownAction")?.run(),
     );
 
     // Mover linhas
-    editor.addCommand(
-      monaco.KeyMod.Alt | monaco.KeyCode.DownArrow,
-      () => editor.getAction("editor.action.moveLinesDownAction")?.run()
+    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.DownArrow, () =>
+      editor.getAction("editor.action.moveLinesDownAction")?.run(),
     );
 
-    editor.addCommand(
-      monaco.KeyMod.Alt | monaco.KeyCode.UpArrow,
-      () => editor.getAction("editor.action.moveLinesUpAction")?.run()
+    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, () =>
+      editor.getAction("editor.action.moveLinesUpAction")?.run(),
     );
 
     // Busca / navegação
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF,
-      () => editor.getAction("actions.find")?.run()
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () =>
+      editor.getAction("actions.find")?.run(),
     );
 
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyH,
-      () => editor.getAction("editor.action.startFindReplaceAction")?.run()
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyH, () =>
+      editor.getAction("editor.action.startFindReplaceAction")?.run(),
     );
 
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG,
-      () => editor.getAction("editor.action.gotoLine")?.run()
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG, () =>
+      editor.getAction("editor.action.gotoLine")?.run(),
     );
 
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyL,
-      () => editor.getAction("editor.action.selectLine")?.run()
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyL, () =>
+      editor.getAction("editor.action.selectLine")?.run(),
     );
 
     // Ctrl+K Ctrl+D → format document
     editor.addCommand(
       monaco.KeyMod.chord(
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyD
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyD,
       ),
-      () => editor.getAction("editor.action.formatDocument")?.run()
+      () => editor.getAction("editor.action.formatDocument")?.run(),
     );
 
     // Go To Definition
-    editor.addCommand(
-      monaco.KeyCode.F12,
-      () => editor.getAction("editor.action.revealDefinition")?.run()
+    editor.addCommand(monaco.KeyCode.F12, () =>
+      editor.getAction("editor.action.revealDefinition")?.run(),
     );
 
-    editor.addCommand(
-      monaco.KeyMod.Alt | monaco.KeyCode.F12,
-      () => editor.getAction("editor.action.peekDefinition")?.run()
+    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.F12, () =>
+      editor.getAction("editor.action.peekDefinition")?.run(),
     );
 
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.F12,
-      () => editor.getAction("editor.action.goToImplementation")?.run()
+      () => editor.getAction("editor.action.goToImplementation")?.run(),
     );
 
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Alt | monaco.KeyCode.F12,
-      () => editor.getAction("editor.action.goToTypeDefinition")?.run()
+      () => editor.getAction("editor.action.goToTypeDefinition")?.run(),
     );
 
     // Ctrl + Click → Go to Definition
@@ -161,10 +203,7 @@ export const EditorCore = {
       document.language = language;
     }
 
-    this.model = monaco.editor.createModel(
-      document.getContent(),
-      language
-    );
+    this.model = monaco.editor.createModel(document.getContent(), language);
 
     this.editor.setModel(this.model);
 
@@ -192,8 +231,7 @@ export const EditorCore = {
     if (!this.model) return;
 
     const config =
-      LANGUAGE_INDENTATION[language] ||
-      LANGUAGE_INDENTATION.plaintext;
+      LANGUAGE_INDENTATION[language] || LANGUAGE_INDENTATION.plaintext;
 
     this.model.updateOptions({
       tabSize: config.tabSize,
@@ -205,36 +243,34 @@ export const EditorCore = {
     });
   },
 
- _setupAutoDetect() {
-  if (!this.model || !this.currentDocument) return;
+  _setupAutoDetect() {
+    if (!this.model || !this.currentDocument) return;
 
-  let timeout;
+    let timeout;
 
-  this.model.onDidChangeContent(() => {
-    // ✅ 1. SINCRONIZA o conteúdo do editor com o Document
-    const value = this.model.getValue();
-    this.currentDocument.setContent(value);
+    this.model.onDidChangeContent(() => {
+      // ✅ 1. SINCRONIZA o conteúdo do editor com o Document
+      const value = this.model.getValue();
+      this.currentDocument.setContent(value);
 
-    // ✅ 2. Se a linguagem foi escolhida manualmente, não auto-detecta
-    if (this.currentDocument.languageManuallySet) return;
+      // ✅ 2. Se a linguagem foi escolhida manualmente, não auto-detecta
+      if (this.currentDocument.languageManuallySet) return;
 
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      const detected = detectLanguageFromContent(value);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const detected = detectLanguageFromContent(value);
 
-      if (
-        detected &&
-        detected !== this.currentDocument.language
-      ) {
-        this.currentDocument.language = detected;
-        monaco.editor.setModelLanguage(this.model, detected);
-        this._applyIndentation(detected);
-      }
-    }, 400);
-  });
-},
+        if (detected && detected !== this.currentDocument.language) {
+          this.currentDocument.language = detected;
+          monaco.editor.setModelLanguage(this.model, detected);
+          this._applyIndentation(detected);
+        }
+      }, 400);
+    });
+  },
 
   getEditor() {
     return this.editor;
   },
+  ///Provides
 };

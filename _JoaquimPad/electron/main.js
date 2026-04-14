@@ -72,26 +72,40 @@ function createAppMenu() {
     {
       label: "Linguagem",
       submenu: [
-        "javascript",
-        "typescript",
-        "python",
-        "html",
-        "css",
-        "json",
-        "markdown",
-        "c",
-        "cpp",
-        "java",
-        "go",
-        "rust",
-        "php",
-        "sql",
-        "shell",
-        "yaml",
-      ].map((lang) => ({
-        label: lang.toUpperCase(),
-        click: () => mainWindow.webContents.send("menu:view:setLanguage", lang),
-      })),
+        { id: "javascript", label: "JavaScript" },
+        { id: "typescript", label: "TypeScript" },
+        { type: "separator" },
+
+        { id: "python", label: "Python" },
+        { id: "csharp", label: "C#" },
+        { id: "java", label: "Java" },
+        { type: "separator" },
+
+        { id: "sql", label: "SQL" },
+        { id: "json", label: "JSON" },
+        { id: "yaml", label: "YAML" },
+        { type: "separator" },
+
+        { id: "html", label: "HTML" },
+        { id: "css", label: "CSS" },
+        { type: "separator" },
+
+        { id: "c", label: "C" },
+        { id: "cpp", label: "C++" },
+        { id: "go", label: "Go" },
+        { id: "rust", label: "Rust" },
+        { id: "php", label: "PHP" },
+        { id: "shell", label: "Shell" },
+        { id: "markdown", label: "Markdown" },
+      ].map((item) =>
+        item.type === "separator"
+          ? item
+          : {
+              label: item.label,
+              click: () =>
+                mainWindow.webContents.send("menu:view:setLanguage", item.id),
+            },
+      ),
     },
     {
       label: "Configurações",
@@ -192,3 +206,6 @@ app.on("before-quit", () => {
     win.webContents.send("app:before-quit"),
   );
 });
+function sendLanguage(language) {
+  mainWindow.webContents.send("menu:view:setLanguage", language);
+}
