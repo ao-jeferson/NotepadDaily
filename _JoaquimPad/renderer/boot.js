@@ -45,20 +45,18 @@ window.createEditor = () => {
      FEATURES
      ===================================================== */
   const smartNewTab = new SmartNewTabFeature(tabManager, EditorCore);
-
   const cursorNav = new CursorNavigationFeature(EditorCore, tabManager);
   cursorNav.init();
 
-  // UI reage SOMENTE ao estado da feature
   cursorNav.onStateChange(({ canGoBack, canGoForward }) => {
     backBtn.disabled = !canGoBack;
     forwardBtn.disabled = !canGoForward;
   });
 
   /* =====================================================
-     CONFIGURAÇÕES – Smart New Tab
+     CONFIGURAÇÕES
      ===================================================== */
-  window.config?.onToggleSmartNewTab((enabled) => {
+  window.config?.onToggleSmartNewTab(enabled => {
     smartNewTab.setEnabled(enabled);
   });
 
@@ -73,7 +71,7 @@ window.createEditor = () => {
   /* =====================================================
      DOCUMENT ACTIVATION
      ===================================================== */
-  const activateDocument = (doc) => {
+  const activateDocument = doc => {
     if (!doc) return;
     tabManager.setActive(doc);
     EditorCore.setDocument(doc);
@@ -86,7 +84,7 @@ window.createEditor = () => {
      ===================================================== */
   const restoredDocs = session.load();
   if (restoredDocs.length) {
-    restoredDocs.forEach((doc) => tabManager.open(doc));
+    restoredDocs.forEach(doc => tabManager.open(doc));
     activateDocument(tabManager.getActive());
   } else {
     activateDocument(tabManager.createNew("Untitled"));
@@ -98,8 +96,8 @@ window.createEditor = () => {
      ACTIONS
      ===================================================== */
   newTabBtn.onclick = () => {
-    const doc = smartNewTab.handleNewDocument((name) =>
-      tabManager.createNew(name),
+    const doc = smartNewTab.handleNewDocument(name =>
+      tabManager.createNew(name)
     );
     activateDocument(doc);
     saveSession();
@@ -140,9 +138,8 @@ window.createEditor = () => {
   forwardBtn.onclick = () => cursorNav.forward();
 
   /* =====================================================
-     RENDER TABS + SORTABLE
+     SORTABLE (somente abas não pinadas)
      ===================================================== */
-
   function setupSortable() {
     if (!window.Sortable) return;
     if (sortable) sortable.destroy();
@@ -157,8 +154,8 @@ window.createEditor = () => {
       onEnd: ({ oldIndex, newIndex }) => {
         if (oldIndex === newIndex) return;
 
-        const pinned = tabManager.tabs.filter((t) => t.pinned);
-        const normal = tabManager.tabs.filter((t) => !t.pinned);
+        const pinned = tabManager.tabs.filter(t => t.pinned);
+        const normal = tabManager.tabs.filter(t => !t.pinned);
 
         const moved = normal.splice(oldIndex, 1)[0];
         normal.splice(newIndex, 0, moved);
@@ -170,10 +167,17 @@ window.createEditor = () => {
     });
   }
 
+  /* =====================================================
+     RENDER TABS (PINNED À ESQUERDA)
+     ===================================================== */
   function renderTabs() {
     tabContainer.innerHTML = "";
 
-    tabManager.tabs.forEach((doc) => {
+    const pinnedTabs = tabManager.tabs.filter(t => t.pinned);
+    const normalTabs = tabManager.tabs.filter(t => !t.pinned);
+    const orderedTabs = [...pinnedTabs, ...normalTabs];
+
+    orderedTabs.forEach(doc => {
       const tab = document.createElement("div");
       tab.className = "tab";
       if (doc === tabManager.getActive()) tab.classList.add("active");
@@ -184,7 +188,7 @@ window.createEditor = () => {
       btn.title = doc.filePath || doc.getFileName();
       btn.onclick = () => activateDocument(doc);
 
-      btn.onmousedown = (e) => {
+      btn.onmousedown = e => {
         if (e.button === 1 && !doc.pinned) {
           e.preventDefault();
           tabManager.close(doc.id);
@@ -203,7 +207,7 @@ window.createEditor = () => {
         const close = document.createElement("span");
         close.className = "close";
         close.textContent = "×";
-        close.onclick = (e) => {
+        close.onclick = e => {
           e.stopPropagation();
           tabManager.close(doc.id);
           activateDocument(tabManager.getActive());
@@ -212,7 +216,7 @@ window.createEditor = () => {
         tab.appendChild(close);
       }
 
-      tab.oncontextmenu = (e) => {
+      tab.oncontextmenu = e => {
         e.preventDefault();
         showContextMenu(e.clientX, e.clientY, doc);
       };
@@ -243,13 +247,21 @@ window.createEditor = () => {
 
     let i = 0;
 
+    // Pin / Unpin
     menu.children[i++].onclick = () => {
       doc.pinned = !doc.pinned;
+
+      tabManager.tabs = [
+        ...tabManager.tabs.filter(t => t.pinned),
+        ...tabManager.tabs.filter(t => !t.pinned),
+      ];
+
       renderTabs();
       saveSession();
       menu.remove();
     };
 
+    // Fechar
     if (!doc.pinned) {
       menu.children[i++].onclick = () => {
         tabManager.close(doc.id);
@@ -259,10 +271,12 @@ window.createEditor = () => {
       };
     }
 
+    // Fechar outras (preserva pinadas)
     menu.children[i].onclick = () => {
       tabManager.tabs
-        .filter((t) => t.id !== doc.id && !t.pinned)
-        .forEach((t) => tabManager.close(t.id));
+        .filter(t => t.id !== doc.id && !t.pinned)
+        .forEach(t => tabManager.close(t.id));
+
       activateDocument(tabManager.getActive());
       saveSession();
       menu.remove();
@@ -270,9 +284,8 @@ window.createEditor = () => {
 
     document.body.appendChild(menu);
     setTimeout(
-      () =>
-        document.addEventListener("click", () => menu.remove(), { once: true }),
-      0,
+      () => document.addEventListener("click", () => menu.remove(), { once: true }),
+      0
     );
   }
 

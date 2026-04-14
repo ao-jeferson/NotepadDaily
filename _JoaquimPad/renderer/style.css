@@ -107,7 +107,9 @@ body {
   stroke-width: 2;
   fill: none;
 
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .action-bar button:hover:not(:disabled) .nav-arrow {
@@ -152,9 +154,9 @@ body {
   height: 100%;
   padding: 0 8px;
 
-  flex: 1 1 auto;          /* 🔥 chave da responsividade */
-  min-width: 90px;         /* limite mínimo */
-  max-width: 220px;        /* limite máximo */
+  flex: 1 1 auto; /* 🔥 chave da responsividade */
+  min-width: 90px; /* limite mínimo */
+  max-width: 220px; /* limite máximo */
 
   font-size: 11.5px;
   color: var(--text-secondary);
@@ -190,7 +192,7 @@ body {
   align-items: center;
   gap: 6px;
 
-  min-width: 0;            /* 🔥 ESSENCIAL para ellipsis */
+  min-width: 0; /* 🔥 ESSENCIAL para ellipsis */
   flex: 1;
 
   overflow: hidden;
@@ -207,7 +209,7 @@ body {
   color: var(--text-primary);
   font-weight: 500;
 
-  flex: 1.3 1 auto;        /* ✅ destaque visual */
+  flex: 1.3 1 auto; /* ✅ destaque visual */
 }
 
 .tabs-bar .tab.active::after {
@@ -221,7 +223,6 @@ body {
   background: var(--accent);
 }
 
-
 .tabs-bar .tab:not(.active) {
   opacity: 0.75;
 }
@@ -231,13 +232,12 @@ body {
   background: var(--bg-tab-hover);
 }
 
-
 /* =====================================================
    BOTÃO FECHAR ABA
    ===================================================== */
 
 .tabs-bar .tab .close {
-  flex-shrink: 0;          /* nunca some */
+  flex-shrink: 0; /* nunca some */
   margin-left: 6px;
   font-size: 11px;
   color: #777;
@@ -324,4 +324,31 @@ body {
   font-size: 12px;
 
   border-top: 1px solid #374151;
+}
+
+.tabs-bar .tab.pinned:last-of-type::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 4px;
+  bottom: 4px;
+
+  width: 1px;
+  background: var(--border-color);
+}
+
+.tabs-bar .tab.pinned {
+  flex: 0 0 auto;
+  min-width: 100px;
+  max-width: 160px;
+  opacity: 1;
+}
+
+.tabs-bar .tab:not(.pinned) {
+  flex: 1 1 auto;
+}
+
+
+.tabs-bar .tab:not(.pinned) {
+  flex: 1 1 auto;    /* ✅ responsivas */
 }
