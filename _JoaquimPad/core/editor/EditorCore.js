@@ -9,11 +9,22 @@ export const EditorCore = {
       model,
       theme: "vs-dark",
       automaticLayout: true,
+
+      // ✅ garante atalhos e comandos padrão
+      readOnly: false,
+      renderWhitespace: "selection",
+      cursorBlinking: "blink",
+      multiCursorModifier: "ctrlCmd",
+      find: {
+        addExtraSpaceOnTop: false
+      }
     });
 
     this.editor.onDidChangeModelContent(() => {
       if (this.currentDocument) {
-        this.currentDocument.setContent(this.editor.getValue());
+        this.currentDocument.setContent(
+          this.editor.getValue()
+        );
       }
     });
   },
@@ -30,10 +41,14 @@ export const EditorCore = {
 
     const model = this.editor.getModel();
     if (model) {
-      monaco.editor.setModelLanguage(model, document.language || "plaintext");
+      monaco.editor.setModelLanguage(
+        model,
+        document.language || "plaintext"
+      );
     }
   },
+
   getEditor() {
     return this.editor;
-  },
+  }
 };
