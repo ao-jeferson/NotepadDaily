@@ -17,6 +17,27 @@ export default class TabManager {
     this.activeDocument = null;
   }
 
+  /* =========================
+     Snapshot para sessão
+     ========================= */
+
+  getSnapshot() {
+    return {
+      tabs: this.tabs.map((t) => t.toJSON()),
+      activeTabId: this.active?.id ?? null,
+    };
+  }
+
+  restoreSnapshot(snapshot) {
+    if (!snapshot) return;
+
+    this.tabs = snapshot.tabs.map((d) => Document.fromJSON(d));
+    this.active =
+      this.tabs.find((t) => t.id === snapshot.activeTabId) ??
+      this.tabs[0] ??
+      null;
+  }
+
   createNew(displayName) {
     const doc = new Document({
       id: crypto.randomUUID(),

@@ -63,9 +63,12 @@ window.createEditor = () => {
   /* =====================================================
      SESSION
      ===================================================== */
+
   const saveSession = () => {
-    session.save(tabManager.tabs);
-    session.saveCursorHistory(cursorNav.serialize());
+    session.saveSnapshot({
+      ...tabManager.getSnapshot(),
+      cursorHistory: cursorNav.serialize(),
+    });
   };
 
   /* =====================================================
@@ -82,21 +85,24 @@ window.createEditor = () => {
   /* =====================================================
      RESTORE SESSION
      ===================================================== */
-  const restoredDocs = session.load();
 
-  if (restoredDocs.length) {
-    restoredDocs.forEach((doc) => tabManager.open(doc));
-
-    // 🔒 garante pinadas à esquerda após restore
-    tabManager.tabs = [
-      ...tabManager.tabs.filter((t) => t.pinned),
-      ...tabManager.tabs.filter((t) => !t.pinned),
-    ];
-
+  const snapshot = session.loadSnapshot();
+  if (snapshot) {
+    tabManager.restoreSnapshot(snapshot);
     activateDocument(tabManager.getActive());
   }
 
-  cursorNav.restore(session.loadCursorHistory());
+  if (snapshot) {
+    tabManager.restoreSnapshot(snapshot);
+
+    if (snapshot.cursorHistory) {
+      cursorNav.restore(snapshot.cursorHistory);
+    }
+
+    activateDocument(tabManager.getActive());
+  } else {
+    activateDocument(tabManager.createNew("Untitled"));
+  }
 
   /* =====================================================
      ACTIONS
@@ -109,15 +115,15 @@ window.createEditor = () => {
     saveSession();
   };
 
-backBtn.onclick = () => {
-  if (!cursorNav.canGoBack()) return;
-  cursorNav.back();
-};
+  backBtn.onclick = () => {
+    if (!cursorNav.canGoBack()) return;
+    cursorNav.back();
+  };
 
-forwardBtn.onclick = () => {
-  if (!cursorNav.canGoForward()) return;
-  cursorNav.forward();
-};
+  forwardBtn.onclick = () => {
+    if (!cursorNav.canGoForward()) return;
+    cursorNav.forward();
+  };
 
   if (window.menu?.onNewFile) {
     window.menu.onNewFile(() => newTabBtn.onclick());
@@ -231,6 +237,7 @@ forwardBtn.onclick = () => {
         if (e.button === 1 && !doc.pinned) {
           e.preventDefault();
           tabManager.close(doc.id);
+          cursorNav.onTabClosed(doc.id);
           activateDocument(tabManager.getActive());
           saveSession();
         }
@@ -249,6 +256,7 @@ forwardBtn.onclick = () => {
         close.onclick = (e) => {
           e.stopPropagation();
           tabManager.close(doc.id);
+          cursorNav.onTabClosed(doc.id);
           activateDocument(tabManager.getActive());
           saveSession();
         };
@@ -304,6 +312,7 @@ forwardBtn.onclick = () => {
     if (!doc.pinned) {
       menu.children[i++].onclick = () => {
         tabManager.close(doc.id);
+        cursorNav.onTabClosed(doc.id);
         activateDocument(tabManager.getActive());
         saveSession();
         menu.remove();

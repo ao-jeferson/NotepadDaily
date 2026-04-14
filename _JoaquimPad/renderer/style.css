@@ -78,13 +78,13 @@ body {
 .tabs-bar .tab {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0px;
   height: 100%;
   padding: 0 8px;
 
   flex: 1 1 auto;
-  min-width: 90px;
-  max-width: 220px;
+  min-width: 100px;
+  max-width: 150px;
 
   font-size: 11.5px;
   color: var(--text-secondary);
