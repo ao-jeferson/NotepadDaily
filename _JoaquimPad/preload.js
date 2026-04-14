@@ -61,3 +61,7 @@ contextBridge.exposeInMainWorld("config", {
 contextBridge.exposeInMainWorld("appLifecycle", {
   onBeforeQuit: (cb) => ipcRenderer.on("app:before-quit", cb),
 });
+
+contextBridge.exposeInMainWorld("appLifecycle", {
+  saveSession: () => ipcRenderer.send("renderer:save-session"),
+});

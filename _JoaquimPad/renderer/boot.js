@@ -74,12 +74,12 @@ window.createEditor = () => {
      SESSION
      ===================================================== */
 
-  const saveSession = () => {
+  function saveSession() {
     session.saveSnapshot({
       ...tabManager.getSnapshot(),
       cursorHistory: cursorNav.serialize(),
     });
-  };
+  }
 
   /* =====================================================
      DOCUMENT ACTIVATION
@@ -204,15 +204,38 @@ window.createEditor = () => {
       preventOnFilter: false,
 
       onEnd: ({ oldIndex, newIndex }) => {
-        if (oldIndex === newIndex) return;
+        const allTabs = tabManager.tabs.filter(Boolean);
 
-        const pinned = tabManager.tabs.filter((t) => t.pinned);
-        const normal = tabManager.tabs.filter((t) => !t.pinned);
+        const pinned = allTabs.filter((t) => t.pinned);
+        const normal = allTabs.filter((t) => !t.pinned);
 
-        const moved = normal.splice(oldIndex, 1)[0];
-        normal.splice(newIndex, 0, moved);
+        const pinnedCount = pinned.length;
 
-        tabManager.tabs = [...pinned, ...normal];
+        // 🔒 força drop somente após as pinadas
+        let from = oldIndex - pinnedCount;
+        let to = newIndex - pinnedCount;
+
+        // se tentar soltar antes das pinadas → corrige
+        if (from < 0) from = 0;
+        if (to < 0) to = 0;
+
+        // valida limites
+        if (from >= normal.length || to > normal.length) {
+          renderTabs();
+          return;
+        }
+
+        const moved = normal[from];
+        if (!moved) {
+          renderTabs();
+          return;
+        }
+
+        const newNormal = normal.toSpliced(from, 1).toSpliced(to, 0, moved);
+
+        // ✅ pinadas sempre à esquerda
+        tabManager.tabs = [...pinned, ...newNormal];
+
         renderTabs();
         saveSession();
       },
@@ -396,3 +419,9 @@ window.createEditor = () => {
     saveSession();
   });
 };
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (typeof event.reason === "string" && event.reason.includes("Canceled")) {
+    event.preventDefault();
+  }
+});

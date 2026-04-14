@@ -21,22 +21,27 @@ export default class TabManager {
      Snapshot para sessão
      ========================= */
 
-  getSnapshot() {
-    return {
-      tabs: this.tabs.map((t) => t.toJSON()),
-      activeTabId: this.active?.id ?? null,
-    };
-  }
+getSnapshot() {
+  return {
+    activeTabId: this.active?.id ?? null,
+    tabs: this.tabs.map(t => t.toJSON()),
+  };
+}
 
-  restoreSnapshot(snapshot) {
-    if (!snapshot) return;
 
-    this.tabs = snapshot.tabs.map((d) => Document.fromJSON(d));
-    this.active =
-      this.tabs.find((t) => t.id === snapshot.activeTabId) ??
-      this.tabs[0] ??
-      null;
-  }
+restoreSnapshot(snapshot) {
+  // ✅ Fallback total
+  const tabs = Array.isArray(snapshot?.tabs) ? snapshot.tabs : [];
+
+  this.tabs = tabs.map(t => Document.fromJSON(t));
+
+  const activeId = snapshot?.activeTabId ?? null;
+
+  this.active =
+    this.tabs.find(t => t.id === activeId) ??
+    this.tabs[0] ??
+    null;
+}
 
   createNew(displayName = "") {
     displayName = formatNow();

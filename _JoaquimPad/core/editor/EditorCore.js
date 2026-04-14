@@ -187,30 +187,49 @@ export const EditorCore = {
   /* =====================================================
      DOCUMENT
      ===================================================== */
-  setDocument(document) {
-    this.currentDocument = document;
+  setDocument(doc) {
+    this.currentDocument = doc;
 
     if (this.model) {
       this.model.dispose();
     }
 
-    let language = document.language;
-    if (!document.languageManuallySet) {
-      language =
-        detectLanguageFromName(document.filePath) ??
-        detectLanguageFromContent(document.getContent()) ??
-        "plaintext";
-      document.language = language;
-    }
-
-    this.model = monaco.editor.createModel(document.getContent(), language);
+    this.model = monaco.editor.createModel(
+      doc.getContent(),
+      doc.language || "plaintext",
+    );
 
     this.editor.setModel(this.model);
 
-    this._applyIndentation(language);
-    this._setupAutoDetect();
+    // ✅ SINCRONIZA TEXTO → DOCUMENT
+    this.model.onDidChangeContent(() => {
+      this.currentDocument.setContent(this.model.getValue());
+    });
   },
+  _setModelSafe(doc) {
+    // 1. Salva conteúdo antes
+    if (this.model && this.currentDocument) {
+      this.currentDocument.setContent(this.model.getValue());
+    }
 
+    // 2. Dispose seguro
+    if (this.model && !this.model.isDisposed()) {
+      this.model.dispose();
+    }
+
+    // 3. Cria novo model
+    this.model = monaco.editor.createModel(
+      doc.getContent(),
+      doc.language || "plaintext",
+    );
+
+    this.editor.setModel(this.model);
+
+    // 4. Sincroniza mudanças
+    this.model.onDidChangeContent(() => {
+      this.currentDocument.setContent(this.model.getValue());
+    });
+  },
   /* =====================================================
      LANGUAGE / INDENTATION
      ===================================================== */
