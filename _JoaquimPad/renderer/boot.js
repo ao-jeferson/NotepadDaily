@@ -55,7 +55,7 @@ window.createEditor = () => {
       const content = EditorCore.getText();
       const fileName = fsService.getCurrentFilePath()
         ? fsService.getCurrentFilePath().split(/[\\/]/).pop()
-        : "Untitled";
+        : "";
       const lang = detectLanguage(fileName);
       const tab = tabManager.createTab(content, fileName, lang);
       renderTabs();

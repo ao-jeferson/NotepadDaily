@@ -20,41 +20,70 @@ html, body {
 /* Barra de abas */
 .tab-bar {
   display: flex;
+  flex-direction: row;
+  overflow-x: auto;       /* rolagem horizontal */
+  white-space: nowrap;    /* impede quebra de linha */
+  background: #fff;       /* tema branco */
+  border-bottom: 1px solid #ccc;
+  padding: 4px;
+}
+
+/* Personalização da barra de rolagem */
+.tab-bar::-webkit-scrollbar {
+  height: 6px;            /* menor altura */
+}
+
+.tab-bar::-webkit-scrollbar-track {
+  background: #eee;        /* trilho claro */
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background: blue;        /* cor azul */
+  border-radius: 3px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb:hover {
+  background: darkblue;    /* azul mais escuro ao passar o mouse */
+}
+
+.tab-bar .tab {
+  display: inline-flex;
   align-items: center;
-  background: #2d2d2d;
-  border-bottom: 1px solid #444;
-  height: 32px;
-  padding: 0 4px;
-  overflow-x: auto;
+  margin-right: 4px;
 }
 
 .tab-bar button {
-  background: #3c3c3c;
+  background: transparent;
+  color: #000;
   border: none;
-  color: #fff;
   padding: 6px 12px;
-  margin-right: 4px;
   cursor: pointer;
   font-size: 12px;
   border-radius: 4px 4px 0 0;
   transition: background 0.2s;
 }
 
-.tab-bar button:hover {
-  background: #505050;
+.tab-bar button.active {
+  border-bottom: 2px solid blue; /* destaque azul na aba ativa */
+  font-weight: bold;
 }
 
-.tab-bar button.active {
-  background: #007acc;
-  color: #fff;
-  font-weight: bold;
+.tab-bar .close {
+  margin-left: 6px;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.tab-bar .close:hover {
+  color: #ff5555;
 }
 
 /* Editor ocupa todo o espaço central */
 #editor {
-  flex: 1;          /* ocupa todo o espaço disponível */
+  flex: 1;
   width: 100%;
-  min-height: 0;    /* evita colapso */
+  min-height: 0;
 }
 
 /* Barra de status */
@@ -70,37 +99,4 @@ html, body {
   padding: 4px 8px;
   display: flex;
   align-items: center;
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  margin-right: 4px;
-}
-
-.tab button {
-  background: #3c3c3c;
-  border: none;
-  color: #fff;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 12px;
-  border-radius: 4px 4px 0 0;
-  transition: background 0.2s;
-}
-
-.tab button.active {
-  background: #007acc;
-  font-weight: bold;
-}
-
-.tab .close {
-  margin-left: 6px;
-  color: #ccc;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.tab .close:hover {
-  color: #ff5555;
 }
