@@ -14,6 +14,7 @@ export class Document {
     this._content = content;
     this._dirty = false;
     this._listeners = new Set();
+    this.languageManuallySet = false;
   }
 
   /* =========================
@@ -74,10 +75,13 @@ export class Document {
     this._emit();
   }
 
-  setLanguage(lang) {
-    this.language = lang;
-    this._emit();
+
+setLanguage(language, manual = true) {
+  this.language = language;
+  if (manual) {
+    this.languageManuallySet = true;
   }
+}
 
   /* =========================
    * Observers
@@ -102,12 +106,17 @@ export class Document {
       filePath: this.filePath,
       content: this._content,
       language: this.language,
-      displayName: this.displayName
+      displayName: this.displayName,
+    pinned: !!this.pinned
+
     };
   }
+ 
+static fromJSON(data) {
+  const doc = new Document(data);
+  doc.pinned = !!data.pinned;
+  return doc;
+}
 
-  static fromJSON(data) {
-    return new Document(data);
-  }
   
 }

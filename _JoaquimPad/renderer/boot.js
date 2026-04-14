@@ -56,7 +56,7 @@ window.createEditor = () => {
   /* =====================================================
      CONFIGURAÇÕES
      ===================================================== */
-  window.config?.onToggleSmartNewTab(enabled => {
+  window.config?.onToggleSmartNewTab((enabled) => {
     smartNewTab.setEnabled(enabled);
   });
 
@@ -71,7 +71,7 @@ window.createEditor = () => {
   /* =====================================================
      DOCUMENT ACTIVATION
      ===================================================== */
-  const activateDocument = doc => {
+  const activateDocument = (doc) => {
     if (!doc) return;
     tabManager.setActive(doc);
     EditorCore.setDocument(doc);
@@ -83,11 +83,17 @@ window.createEditor = () => {
      RESTORE SESSION
      ===================================================== */
   const restoredDocs = session.load();
+
   if (restoredDocs.length) {
-    restoredDocs.forEach(doc => tabManager.open(doc));
+    restoredDocs.forEach((doc) => tabManager.open(doc));
+
+    // 🔒 garante pinadas à esquerda após restore
+    tabManager.tabs = [
+      ...tabManager.tabs.filter((t) => t.pinned),
+      ...tabManager.tabs.filter((t) => !t.pinned),
+    ];
+
     activateDocument(tabManager.getActive());
-  } else {
-    activateDocument(tabManager.createNew("Untitled"));
   }
 
   cursorNav.restore(session.loadCursorHistory());
@@ -96,8 +102,8 @@ window.createEditor = () => {
      ACTIONS
      ===================================================== */
   newTabBtn.onclick = () => {
-    const doc = smartNewTab.handleNewDocument(name =>
-      tabManager.createNew(name)
+    const doc = smartNewTab.handleNewDocument((name) =>
+      tabManager.createNew(name),
     );
     activateDocument(doc);
     saveSession();
@@ -131,6 +137,22 @@ window.createEditor = () => {
     });
   }
 
+  if (window.menu?.onSetLanguage) {
+    window.menu.onSetLanguage((language) => {
+      const doc = tabManager.getActive();
+      if (!doc) return;
+
+      doc.setLanguage(language);
+      EditorCore.setLanguage(language);
+
+      // força atualização do highlight do Monaco
+      EditorCore.refreshModelLanguage?.();
+
+      renderTabs();
+      saveSession();
+    });
+  }
+
   /* =====================================================
      CURSOR NAVIGATION
      ===================================================== */
@@ -154,8 +176,8 @@ window.createEditor = () => {
       onEnd: ({ oldIndex, newIndex }) => {
         if (oldIndex === newIndex) return;
 
-        const pinned = tabManager.tabs.filter(t => t.pinned);
-        const normal = tabManager.tabs.filter(t => !t.pinned);
+        const pinned = tabManager.tabs.filter((t) => t.pinned);
+        const normal = tabManager.tabs.filter((t) => !t.pinned);
 
         const moved = normal.splice(oldIndex, 1)[0];
         normal.splice(newIndex, 0, moved);
@@ -173,22 +195,29 @@ window.createEditor = () => {
   function renderTabs() {
     tabContainer.innerHTML = "";
 
-    const pinnedTabs = tabManager.tabs.filter(t => t.pinned);
-    const normalTabs = tabManager.tabs.filter(t => !t.pinned);
+    const pinnedTabs = tabManager.tabs.filter((t) => t.pinned);
+    const normalTabs = tabManager.tabs.filter((t) => !t.pinned);
     const orderedTabs = [...pinnedTabs, ...normalTabs];
 
-    orderedTabs.forEach(doc => {
+    orderedTabs.forEach((doc) => {
       const tab = document.createElement("div");
       tab.className = "tab";
       if (doc === tabManager.getActive()) tab.classList.add("active");
       if (doc.pinned) tab.classList.add("pinned");
 
       const btn = document.createElement("button");
-      btn.textContent = `${languageIcons[doc.language] || "📄"} ${doc.getFileName()}`;
-      btn.title = doc.filePath || doc.getFileName();
+
+      if (doc.pinned) {
+        btn.innerHTML = `<span class="pin-icon">📌</span><span class="pin-name">${doc.getFileName()}</span>`;
+        btn.title = doc.filePath || doc.getFileName();
+      } else {
+        btn.textContent = `${languageIcons[doc.language] || "📄"} ${doc.getFileName()}`;
+        btn.title = doc.filePath || doc.getFileName();
+      }
+
       btn.onclick = () => activateDocument(doc);
 
-      btn.onmousedown = e => {
+      btn.onmousedown = (e) => {
         if (e.button === 1 && !doc.pinned) {
           e.preventDefault();
           tabManager.close(doc.id);
@@ -207,7 +236,7 @@ window.createEditor = () => {
         const close = document.createElement("span");
         close.className = "close";
         close.textContent = "×";
-        close.onclick = e => {
+        close.onclick = (e) => {
           e.stopPropagation();
           tabManager.close(doc.id);
           activateDocument(tabManager.getActive());
@@ -216,7 +245,7 @@ window.createEditor = () => {
         tab.appendChild(close);
       }
 
-      tab.oncontextmenu = e => {
+      tab.oncontextmenu = (e) => {
         e.preventDefault();
         showContextMenu(e.clientX, e.clientY, doc);
       };
@@ -252,8 +281,8 @@ window.createEditor = () => {
       doc.pinned = !doc.pinned;
 
       tabManager.tabs = [
-        ...tabManager.tabs.filter(t => t.pinned),
-        ...tabManager.tabs.filter(t => !t.pinned),
+        ...tabManager.tabs.filter((t) => t.pinned),
+        ...tabManager.tabs.filter((t) => !t.pinned),
       ];
 
       renderTabs();
@@ -274,8 +303,8 @@ window.createEditor = () => {
     // Fechar outras (preserva pinadas)
     menu.children[i].onclick = () => {
       tabManager.tabs
-        .filter(t => t.id !== doc.id && !t.pinned)
-        .forEach(t => tabManager.close(t.id));
+        .filter((t) => t.id !== doc.id && !t.pinned)
+        .forEach((t) => tabManager.close(t.id));
 
       activateDocument(tabManager.getActive());
       saveSession();
@@ -284,8 +313,9 @@ window.createEditor = () => {
 
     document.body.appendChild(menu);
     setTimeout(
-      () => document.addEventListener("click", () => menu.remove(), { once: true }),
-      0
+      () =>
+        document.addEventListener("click", () => menu.remove(), { once: true }),
+      0,
     );
   }
 
@@ -293,4 +323,15 @@ window.createEditor = () => {
      APP LIFECYCLE
      ===================================================== */
   window.appLifecycle?.onBeforeQuit(() => saveSession());
+
+  window.menu?.onSetLanguage?.((language) => {
+    const doc = tabManager.getActive();
+    if (!doc) return;
+
+    doc.setLanguage(language, true);
+    EditorCore.setLanguage(language);
+
+    renderTabs();
+    saveSession();
+  });
 };
