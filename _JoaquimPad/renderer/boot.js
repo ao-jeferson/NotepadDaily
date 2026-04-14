@@ -4,6 +4,7 @@ import { StatusBar } from "../core/statusbar/StatusBar.js";
 import TabManager from "../core/editor/TabManager.js";
 import SessionManager from "../core/session/SessionManager.js";
 import { SmartNewTabFeature } from "../features/smart-new-tab/SmartNewTabFeature.js";
+import { CursorNavigationFeature } from "../features/cursor-navigation/CursorNavigationFeature.js";
 
 window.createEditor = () => {
   const editorContainer = document.getElementById("editor");
@@ -23,11 +24,18 @@ window.createEditor = () => {
 
   const smartNewTab = new SmartNewTabFeature(tabManager, EditorCore);
 
+  const cursorNav = new CursorNavigationFeature(
+    EditorCore,
+    tabManager
+  );
+  cursorNav.init();
+
   /* ============================
    * Helpers
    * ============================ */
   function activateDocument(doc) {
     if (!doc) return;
+
     tabManager.setActive(doc);
     EditorCore.setDocument(doc);
     statusBar.bindDocument(doc);
@@ -43,18 +51,23 @@ window.createEditor = () => {
     restored.forEach(d => tabManager.open(d));
     activateDocument(tabManager.getActive());
   } else {
+    // ✅ cria novo documento apenas se não houver sessão
     const doc = tabManager.createNew(
-      smartNewTab.handleNewDocument
+      smartNewTab.getCurrentDisplayName()
     );
     activateDocument(doc);
   }
+
+  // ✅ restaura histórico global de cursor
+  const cursorHistory = session.loadCursorHistory();
+  cursorNav.restore(cursorHistory);
 
   /* ============================
    * New Tab Button
    * ============================ */
   newTabBtn.addEventListener("click", () => {
-    const doc = smartNewTab.handleNewDocument(
-      name => tabManager.createNew(name)
+    const doc = smartNewTab.handleNewDocument(name =>
+      tabManager.createNew(name)
     );
     activateDocument(doc);
     session.save(tabManager.tabs);
@@ -64,8 +77,8 @@ window.createEditor = () => {
    * Menu actions
    * ============================ */
   window.menu.onNewFile(() => {
-    const doc = smartNewTab.handleNewDocument(
-      name => tabManager.createNew(name)
+    const doc = smartNewTab.handleNewDocument(name =>
+      tabManager.createNew(name)
     );
     activateDocument(doc);
     session.save(tabManager.tabs);
@@ -106,6 +119,17 @@ window.createEditor = () => {
   });
 
   /* ============================
+   * Cursor navigation buttons
+   * ============================ */
+  document
+    .getElementById("cursorBack")
+    .addEventListener("click", () => cursorNav.back());
+
+  document
+    .getElementById("cursorForward")
+    .addEventListener("click", () => cursorNav.forward());
+
+  /* ============================
    * Render Tabs
    * ============================ */
   function renderTabs() {
@@ -116,8 +140,7 @@ window.createEditor = () => {
       tabEl.classList.add("tab");
 
       const btn = document.createElement("button");
-      btn.textContent =
-        `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
+      btn.textContent = `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
 
       if (doc === tabManager.getActive()) {
         btn.classList.add("active");
@@ -125,7 +148,7 @@ window.createEditor = () => {
 
       btn.onclick = () => activateDocument(doc);
 
-      // ✅ Fechar aba com roda do mouse
+      // Fechar aba com clique do meio
       btn.addEventListener("mousedown", e => {
         if (e.button === 1) {
           e.preventDefault();
@@ -150,7 +173,6 @@ window.createEditor = () => {
       tabContainer.appendChild(tabEl);
     });
 
-    // ✅ Drag & drop das abas
     if (window.Sortable) {
       Sortable.create(tabContainer, {
         animation: 150,
@@ -164,7 +186,7 @@ window.createEditor = () => {
   }
 
   /* ============================
-   * Atalhos da aplicação
+   * App Shortcuts
    * ============================ */
   document.addEventListener("keydown", e => {
     const ctrl = e.ctrlKey || e.metaKey;
@@ -201,8 +223,14 @@ window.createEditor = () => {
     if (tabs.length < 2) return;
 
     const index = tabs.indexOf(tabManager.getActive());
-    const next =
-      (index + direction + tabs.length) % tabs.length;
+    const next = (index + direction + tabs.length) % tabs.length;
     activateDocument(tabs[next]);
   }
+
+  /* ============================
+   * Persist cursor history
+   * ============================ */
+  window.addEventListener("beforeunload", () => {
+    session.saveCursorHistory(cursorNav.serialize());
+  });
 };

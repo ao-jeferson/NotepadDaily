@@ -42,9 +42,7 @@ export class SmartNewTabFeature {
 
     /* ✅ reutiliza SOMENTE se o nome for IGUAL */
     const existing = this.tabManager.tabs.find(
-      d =>
-        d.filePath === null &&
-        d.displayName === displayNameNow
+      (d) => d.filePath === null && d.displayName === displayNameNow,
     );
 
     if (existing) {
@@ -65,14 +63,25 @@ export class SmartNewTabFeature {
     if (!model) return;
 
     const lastLine = model.getLineCount();
-    const lastColumn =
-      model.getLineLength(lastLine) + 1;
+    const lastColumn = model.getLineLength(lastLine) + 1;
 
     editor.setPosition({
       lineNumber: lastLine,
-      column: lastColumn
+      column: lastColumn,
     });
 
     editor.focus();
   }
+  getCurrentDisplayName() {
+    const d = new Date();
+
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+
+    return `${dd}-${mm} ${hh}-${min}`;
+  }
+
+  /**/
 }

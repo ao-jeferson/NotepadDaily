@@ -1,8 +1,7 @@
-import { Document } from "../document/Document.js";
-
 export default class SessionManager {
   constructor() {
     this.key = "joaquimpad-session";
+    this.cursorKey = "joaquimpad-cursor-history";
   }
 
   save(documents) {
@@ -13,11 +12,36 @@ export default class SessionManager {
   load() {
     const raw = localStorage.getItem(this.key);
     if (!raw) return [];
+    try {
+      return JSON.parse(raw).map(Document.fromJSON);
+    } catch {
+      return [];
+    }
+  }
 
-    return JSON.parse(raw).map(Document.fromJSON);
+  /* =========================
+   * Cursor history
+   * ========================= */
+
+  saveCursorHistory(history) {
+    localStorage.setItem(
+      this.cursorKey,
+      JSON.stringify(history)
+    );
+  }
+
+  loadCursorHistory() {
+    const raw = localStorage.getItem(this.cursorKey);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   }
 
   clear() {
     localStorage.removeItem(this.key);
+    localStorage.removeItem(this.cursorKey);
   }
 }

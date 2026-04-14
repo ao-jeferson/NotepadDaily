@@ -18,65 +18,70 @@ html, body {
 }
 
 /* Barra de abas */
-.tab-bar {
+.top-bar {
   display: flex;
-  flex-direction: row;
-  overflow-x: auto;       /* rolagem horizontal */
-  white-space: nowrap;    /* impede quebra de linha */
-  background: #fff;       /* tema branco */
-  border-bottom: 1px solid #ccc;
-  padding: 4px;
-}
-
-/* Personalização da barra de rolagem */
-.tab-bar::-webkit-scrollbar {
-  height: 6px;            /* menor altura */
-}
-
-.tab-bar::-webkit-scrollbar-track {
-  background: #eee;        /* trilho claro */
-}
-
-.tab-bar::-webkit-scrollbar-thumb {
-  background: blue;        /* cor azul */
-  border-radius: 3px;
-}
-
-.tab-bar::-webkit-scrollbar-thumb:hover {
-  background: darkblue;    /* azul mais escuro ao passar o mouse */
-}
-
-.tab-bar .tab {
-  display: inline-flex;
   align-items: center;
-  margin-right: 4px;
+  height: 32px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #1e1e1e;
 }
 
-.tab-bar button {
-  background: transparent;
-  color: #000;
+/* -------- Navegação -------- */
+.nav-controls {
+  display: flex;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.nav-controls button {
+  background: none;
   border: none;
-  padding: 6px 12px;
+  color: #bdbdbd;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
-  font-size: 12px;
-  border-radius: 4px 4px 0 0;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tab-bar button.active {
-  border-bottom: 2px solid blue; /* destaque azul na aba ativa */
-  font-weight: bold;
+.nav-controls button:hover {
+  color: #ffffff;
+  background: #3a3a3a;
 }
 
-.tab-bar .close {
-  margin-left: 6px;
-  color: #666;
+.nav-controls svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* -------- Tabs -------- */
+.tabs-container {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow-x: auto;
+}
+
+/* -------- Ações -------- */
+.tab-actions {
+  padding: 0 6px;
+}
+
+.tab-actions button {
+  background: none;
+  border: none;
+  color: #bdbdbd;
+  font-size: 18px;
   cursor: pointer;
-  font-size: 14px;
+  width: 28px;
+  height: 28px;
 }
 
-.tab-bar .close:hover {
-  color: #ff5555;
+.tab-actions button:hover {
+  color: #ffffff;
+  background: #3a3a3a;
 }
 
 /* Editor ocupa todo o espaço central */
@@ -114,4 +119,26 @@ html, body {
 .tab.sortable-ghost {
   opacity: 0.3;
   border: 2px dashed #007acc;
+}
+#tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+#tab-actions button {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px;
+}
+
+#tab-actions button:hover {
+  color: #fff;
+}
+
+#tab-actions svg {
+  display: block;
 }

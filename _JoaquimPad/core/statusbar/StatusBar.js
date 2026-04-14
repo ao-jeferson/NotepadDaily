@@ -26,7 +26,7 @@ export class StatusBar {
     if (!this.document || !this.bar) return;
 
     this.bar.textContent =
-      `${this.document.getFileName()}${this.document.isDirty() ? "*" : ""} | ` +
+      // `${this.document.getFileName()}${this.document.isDirty() ? "*" : ""} | ` +
       `${this.cursorInfo} | ` +
       `Size ${this.document.getSizeInBytes()} B`;
   }

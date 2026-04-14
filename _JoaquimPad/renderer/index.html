@@ -1,42 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>_JoaquimPad</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <!-- Barra de menu -->
-  <div class="menu-bar">
-    <button id="newTabBtn" title="Nova Aba">+</button>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>_JoaquimPad</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Barra superior: navegação + ações -->
+    <div class="top-bar">
+      <!-- Navegação de cursor -->
+      <div class="nav-controls">
+        <button
+          id="cursorBack"
+          title="Voltar cursor"
+          aria-label="Voltar cursor"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M14 7l-5 5 5 5V7z"></path>
+          </svg>
+        </button>
 
-  <!-- Área das abas -->
-  <div class="tab-bar" id="tabs"></div>
+        <button
+          id="cursorForward"
+          title="Avançar cursor"
+          aria-label="Avançar cursor"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M10 17l5-5-5-5v10z"></path>
+          </svg>
+        </button>
+      </div>
 
-  <!-- Editor -->
-  <div id="editor"></div>
+      <!-- Abas -->
+      <div id="tabs" class="tabs-container"></div>
 
-  <!-- Barra de status -->
-  <div class="status-bar" id="statusbar"></div>
+      <!-- Ações -->
+      <div class="tab-actions">
+        <button id="newTabBtn" title="Nova aba" aria-label="Nova aba">+</button>
+      </div>
+    </div>
 
-  <!-- SortableJS via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Área das abas -->
+    <div class="tab-bar" id="tabs"></div>
 
-  <!-- Monaco Editor -->
-  <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
-  <script>
-    require.config({ paths: { 'vs': '../node_modules/monaco-editor/min/vs' } });
-    require(['vs/editor/editor.main'], function () {
-      // Carrega boot.js como módulo ES
-      import('./boot.js').then(() => {
-        if (window.createEditor) {
-          window.createEditor();
-        } else {
-          console.error("createEditor não encontrado em boot.js");
-        }
-      }).catch(err => console.error("Erro ao carregar boot.js:", err));
-    });
-  </script>
-</body>
+    <!-- Editor -->
+    <div id="editor"></div>
+
+    <!-- Barra de status -->
+    <div class="status-bar" id="statusbar"></div>
+
+    <!-- SortableJS via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <!-- Monaco Editor -->
+    <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script>
+      require.config({ paths: { vs: "../node_modules/monaco-editor/min/vs" } });
+      require(["vs/editor/editor.main"], function () {
+        // Carrega boot.js como módulo ES
+        import("./boot.js")
+          .then(() => {
+            if (window.createEditor) {
+              window.createEditor();
+            } else {
+              console.error("createEditor não encontrado em boot.js");
+            }
+          })
+          .catch((err) => console.error("Erro ao carregar boot.js:", err));
+      });
+    </script>
+  </body>
 </html>
