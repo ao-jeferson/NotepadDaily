@@ -87,10 +87,6 @@ window.createEditor = () => {
      ===================================================== */
 
   const snapshot = session.loadSnapshot();
-  if (snapshot) {
-    tabManager.restoreSnapshot(snapshot);
-    activateDocument(tabManager.getActive());
-  }
 
   if (snapshot) {
     tabManager.restoreSnapshot(snapshot);
@@ -99,9 +95,17 @@ window.createEditor = () => {
       cursorNav.restore(snapshot.cursorHistory);
     }
 
-    activateDocument(tabManager.getActive());
+    const active = tabManager.getActive();
+    if (active) {
+      activateDocument(active);
+    }
+
+    // ✅ GARANTE que a UI reflita a sessão imediatamente
+    renderTabs();
   } else {
-    activateDocument(tabManager.createNew("Untitled"));
+    const doc = tabManager.createNew("Untitled");
+    activateDocument(doc);
+    renderTabs();
   }
 
   /* =====================================================

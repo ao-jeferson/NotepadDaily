@@ -38,7 +38,8 @@ export default class TabManager {
       null;
   }
 
-  createNew(displayName) {
+  createNew(displayName = "") {
+    displayName = formatNow();
     const doc = new Document({
       id: crypto.randomUUID(),
       displayName,
