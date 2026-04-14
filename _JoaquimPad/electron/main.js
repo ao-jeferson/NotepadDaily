@@ -43,7 +43,7 @@ function createAppMenu() {
         { label: "Abrir…", accelerator: "Ctrl+O", click: () => mainWindow.webContents.send("menu:file:open") },
         { label: "Salvar", accelerator: "Ctrl+S", click: () => mainWindow.webContents.send("menu:file:save") },
         { label: "Salvar como…", accelerator: "Ctrl+Shift+S", click: () => mainWindow.webContents.send("menu:file:saveAs") },
-        { label: "Fechar aba", accelerator: "Ctrl+W", click: () => mainWindow.webContents.send("menu:file:closeTab") }, // ✅ novo
+        { label: "Fechar aba", accelerator: "Ctrl+W", click: () => mainWindow.webContents.send("menu:file:closeTab") },
         { type: "separator" },
         { label: "Sair", role: "quit" }
       ]
@@ -59,7 +59,16 @@ function createAppMenu() {
         { role: "zoomIn" },
         { role: "zoomOut" },
         { type: "separator" },
-        { role: "togglefullscreen" }
+        { role: "togglefullscreen" },
+        { type: "separator" },
+        {
+          label: "Word Wrap",
+          type: "checkbox",
+          checked: true, // começa ligado
+          click: (menuItem) => {
+            mainWindow.webContents.send("menu:view:wordWrap", menuItem.checked);
+          }
+        }
       ]
     }
   ];

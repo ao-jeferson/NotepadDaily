@@ -8,7 +8,8 @@ export const EditorCore = {
       automaticLayout: true,
       minimap: { enabled: true },
       fontSize: 14,
-      lineNumbers: "on"
+      lineNumbers: "on",wordWrap: "on"
+      
     });
   },
 

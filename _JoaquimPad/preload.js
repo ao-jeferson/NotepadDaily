@@ -5,8 +5,10 @@ contextBridge.exposeInMainWorld("menu", {
   onOpenFile: (cb) => ipcRenderer.on("menu:file:open", cb),
   onSaveFile: (cb) => ipcRenderer.on("menu:file:save", cb),
   onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb),
-  onCloseTab: (cb) => ipcRenderer.on("menu:file:closeTab", cb) // ✅ agora existe
+  onCloseTab: (cb) => ipcRenderer.on("menu:file:closeTab", cb),
+  onToggleWordWrap: (cb) => ipcRenderer.on("menu:view:wordWrap", (_, checked) => cb(checked))
 });
+
 
 contextBridge.exposeInMainWorld("fs", {
   openDialog: () => ipcRenderer.invoke("fs:open-dialog"),

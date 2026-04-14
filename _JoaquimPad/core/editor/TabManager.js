@@ -4,31 +4,33 @@ export default class TabManager {
     this.activeTabId = null;
   }
 
-  createTab(content = "") {
+  createTab(content = "", name = null) {
     const now = new Date();
-    const name = this.currentFilePath
-      ? this.currentFilePath.split(/[\\/]/).pop()
-      : now.toLocaleString("pt-BR");
-    const tab = { id: Date.now(), name, content, active: false };
+    const tabName = name || now.toLocaleString("pt-BR");
+    const tab = {
+      id: Date.now(),
+      name: tabName,
+      content,
+      active: false
+    };
     this.tabs.push(tab);
     this.switchTab(tab.id);
     return tab;
   }
 
-
   switchTab(id) {
     this.activeTabId = id;
-    this.tabs.forEach(t => t.active = (t.id === id));
+    this.tabs.forEach(t => (t.active = t.id === id));
   }
 
   getActiveTab() {
     return this.tabs.find(t => t.id === this.activeTabId);
   }
+
   closeTab(id) {
     this.tabs = this.tabs.filter(t => t.id !== id);
     if (this.activeTabId === id) {
       this.activeTabId = this.tabs.length ? this.tabs[0].id : null;
     }
   }
-
 }
