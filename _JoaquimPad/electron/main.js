@@ -70,28 +70,6 @@ function createAppMenu() {
       ],
     },
     {
-      label: "Exibir",
-      submenu: [
-        { role: "reload" },
-        { role: "forceReload" },
-        { role: "toggleDevTools" },
-        { type: "separator" },
-        { role: "resetZoom" },
-        { role: "zoomIn" },
-        { role: "zoomOut" },
-        { type: "separator" },
-        { role: "togglefullscreen" },
-        { type: "separator" },
-        {
-          label: "Word Wrap",
-          type: "checkbox",
-          checked: true,
-          click: (item) =>
-            mainWindow.webContents.send("menu:view:wordWrap", item.checked),
-        },
-      ],
-    },
-    {
       label: "Linguagem",
       submenu: [
         "javascript",
@@ -127,6 +105,28 @@ function createAppMenu() {
         },
       ],
     },
+    {
+      label: "Windows",
+      submenu: [
+        { role: "reload" },
+        { role: "forceReload" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+        { type: "separator" },
+        {
+          label: "Word Wrap",
+          type: "checkbox",
+          checked: true,
+          click: (item) =>
+            mainWindow.webContents.send("menu:view:wordWrap", item.checked),
+        },
+      ],
+    },
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -156,7 +156,7 @@ ipcMain.handle("fs:readFile", (_, filePath) => fs.readFile(filePath, "utf-8"));
 
 ipcMain.handle("fs:writeFile", (_, filePath, content) =>
   fs.writeFile(filePath, content, "utf-8"),
-); 
+);
 
 ipcMain.handle("fs:stat", async (_, path) => {
   return fs.stat(path);

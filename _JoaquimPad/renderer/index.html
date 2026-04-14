@@ -5,46 +5,40 @@
     <title>_JoaquimPad</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
+
   <body>
-    <!-- Barra superior: navegação + ações -->
+    <!-- Barra superior -->
     <div class="top-bar">
-      <!-- Barra de ações -->
       <div class="action-bar">
-        <button id="newTabBtn" title="Nova aba">⧉</button>
-
-        <button id="cursorBack" disabled title="Voltar no histórico">
-           ←
-        </button>
-
-        <button id="cursorForward" disabled title="Avançar no histórico">
-          →
-        </button>
+        <button id="newTabBtn">⧉</button>
+        <button id="cursorBack" disabled>←</button>
+        <button id="cursorForward" disabled>→</button>
       </div>
 
-      <!-- Barra de abas -->
       <div id="tabs" class="tabs-bar"></div>
-
-      <!-- Ações -->
     </div>
-
-    <!-- Área das abas -->
-    <div class="tab-bar" id="tabs"></div>
 
     <!-- Editor -->
     <div id="editor"></div>
 
-    <!-- Barra de status -->
+    <!-- Status bar -->
     <div class="status-bar" id="statusbar"></div>
 
-    <!-- SortableJS via CDN -->
+    <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-    <!-- Monaco Editor -->
+    <!-- Monaco AMD loader -->
     <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+
+    <!-- Monaco + App bootstrap -->
     <script>
-      require.config({ paths: { vs: "../node_modules/monaco-editor/min/vs" } });
+      require.config({
+        paths: {
+          vs: "../node_modules/monaco-editor/min/vs",
+        },
+      });
+
       require(["vs/editor/editor.main"], function () {
-        // Carrega boot.js como módulo ES
         import("./boot.js")
           .then(() => {
             if (window.createEditor) {
@@ -53,7 +47,9 @@
               console.error("createEditor não encontrado em boot.js");
             }
           })
-          .catch((err) => console.error("Erro ao carregar boot.js:", err));
+          .catch((err) => {
+            console.error("Erro ao carregar boot.js:", err);
+          });
       });
     </script>
   </body>
