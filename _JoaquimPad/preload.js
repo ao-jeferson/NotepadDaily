@@ -37,3 +37,7 @@ contextBridge.exposeInMainWorld("fs", {
 contextBridge.exposeInMainWorld("app", {
   setWindowTitle: (title) => ipcRenderer.invoke("window:set-title", title)
 });
+contextBridge.exposeInMainWorld("config", {
+  onToggleSmartNewTab: (cb) =>
+    ipcRenderer.on("config:smart-new-tab", (_, v) => cb(v))
+});

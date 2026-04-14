@@ -1,10 +1,4 @@
-const {
-  app,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-  Menu
-} = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 
 const path = require("path");
 const fs = require("fs/promises");
@@ -19,8 +13,8 @@ function createMainWindow() {
     webPreferences: {
       preload: path.join(__dirname, "../preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
 
   mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
@@ -39,14 +33,34 @@ function createAppMenu() {
     {
       label: "Arquivo",
       submenu: [
-        { label: "Novo", accelerator: "Ctrl+N", click: () => mainWindow.webContents.send("menu:file:new") },
-        { label: "Abrir…", accelerator: "Ctrl+O", click: () => mainWindow.webContents.send("menu:file:open") },
-        { label: "Salvar", accelerator: "Ctrl+S", click: () => mainWindow.webContents.send("menu:file:save") },
-        { label: "Salvar como…", accelerator: "Ctrl+Shift+S", click: () => mainWindow.webContents.send("menu:file:saveAs") },
-        { label: "Fechar aba", accelerator: "Ctrl+W", click: () => mainWindow.webContents.send("menu:file:closeTab") },
+        {
+          label: "Novo",
+          accelerator: "Ctrl+N",
+          click: () => mainWindow.webContents.send("menu:file:new"),
+        },
+        {
+          label: "Abrir…",
+          accelerator: "Ctrl+O",
+          click: () => mainWindow.webContents.send("menu:file:open"),
+        },
+        {
+          label: "Salvar",
+          accelerator: "Ctrl+S",
+          click: () => mainWindow.webContents.send("menu:file:save"),
+        },
+        {
+          label: "Salvar como…",
+          accelerator: "Ctrl+Shift+S",
+          click: () => mainWindow.webContents.send("menu:file:saveAs"),
+        },
+        {
+          label: "Fechar aba",
+          accelerator: "Ctrl+W",
+          click: () => mainWindow.webContents.send("menu:file:closeTab"),
+        },
         { type: "separator" },
-        { label: "Sair", role: "quit" }
-      ]
+        { label: "Sair", role: "quit" },
+      ],
     },
     {
       label: "Exibir",
@@ -67,36 +81,113 @@ function createAppMenu() {
           checked: true, // começa ligado
           click: (menuItem) => {
             mainWindow.webContents.send("menu:view:wordWrap", menuItem.checked);
-          }
-        }
-      ]
-    },{
+          },
+        },
+      ],
+    },
+    {
       label: "Linguagem",
       submenu: [
-        { label: "JavaScript", click: () => mainWindow.webContents.send("menu:view:setLanguage", "javascript") },
-        { label: "TypeScript", click: () => mainWindow.webContents.send("menu:view:setLanguage", "typescript") },
-        { label: "Python", click: () => mainWindow.webContents.send("menu:view:setLanguage", "python") },
-        { label: "HTML", click: () => mainWindow.webContents.send("menu:view:setLanguage", "html") },
-        { label: "CSS", click: () => mainWindow.webContents.send("menu:view:setLanguage", "css") },
-        { label: "JSON", click: () => mainWindow.webContents.send("menu:view:setLanguage", "json") },
-        { label: "Markdown", click: () => mainWindow.webContents.send("menu:view:setLanguage", "markdown") },
-        { label: "C", click: () => mainWindow.webContents.send("menu:view:setLanguage", "c") },
-        { label: "C++", click: () => mainWindow.webContents.send("menu:view:setLanguage", "cpp") },
-        { label: "Java", click: () => mainWindow.webContents.send("menu:view:setLanguage", "java") },
-        { label: "Go", click: () => mainWindow.webContents.send("menu:view:setLanguage", "go") },
-        { label: "Rust", click: () => mainWindow.webContents.send("menu:view:setLanguage", "rust") },
-        { label: "PHP", click: () => mainWindow.webContents.send("menu:view:setLanguage", "php") },
-        { label: "SQL", click: () => mainWindow.webContents.send("menu:view:setLanguage", "sql") },
-        { label: "Shell", click: () => mainWindow.webContents.send("menu:view:setLanguage", "shell") },
-        { label: "YAML", click: () => mainWindow.webContents.send("menu:view:setLanguage", "yaml") }
-      ]
-    }
+        {
+          label: "JavaScript",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "javascript"),
+        },
+        {
+          label: "TypeScript",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "typescript"),
+        },
+        {
+          label: "Python",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "python"),
+        },
+        {
+          label: "HTML",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "html"),
+        },
+        {
+          label: "CSS",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "css"),
+        },
+        {
+          label: "JSON",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "json"),
+        },
+        {
+          label: "Markdown",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "markdown"),
+        },
+        {
+          label: "C",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "c"),
+        },
+        {
+          label: "C++",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "cpp"),
+        },
+        {
+          label: "Java",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "java"),
+        },
+        {
+          label: "Go",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "go"),
+        },
+        {
+          label: "Rust",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "rust"),
+        },
+        {
+          label: "PHP",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "php"),
+        },
+        {
+          label: "SQL",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "sql"),
+        },
+        {
+          label: "Shell",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "shell"),
+        },
+        {
+          label: "YAML",
+          click: () =>
+            mainWindow.webContents.send("menu:view:setLanguage", "yaml"),
+        },
+      ],
+    },
+    {
+      label: "Configurações",
+      submenu: [
+        {
+          label: "Arquivo incremental",
+          type: "checkbox",
+          checked: true,
+          click: (item) => {
+            mainWindow.webContents.send("config:smart-new-tab", item.checked);
+          },
+        },
+      ],
+    },
   ];
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
-
 
 app.setName("_JoaquimPad");
 app.whenReady().then(createMainWindow);
@@ -115,8 +206,8 @@ ipcMain.handle("fs:open-dialog", async () => {
     properties: ["openFile"],
     filters: [
       { name: "Text files", extensions: ["txt", "js", "ts", "json", "md"] },
-      { name: "All files", extensions: ["*"] }
-    ]
+      { name: "All files", extensions: ["*"] },
+    ],
   });
   if (result.canceled) return null;
   return result.filePaths[0];
@@ -128,7 +219,9 @@ ipcMain.handle("fs:save-dialog", async () => {
 });
 
 ipcMain.handle("fs:readFile", (_, path) => fs.readFile(path, "utf-8"));
-ipcMain.handle("fs:writeFile", (_, path, content) => fs.writeFile(path, content, "utf-8"));
+ipcMain.handle("fs:writeFile", (_, path, content) =>
+  fs.writeFile(path, content, "utf-8"),
+);
 
 ipcMain.handle("window:set-title", (_, title) => {
   if (mainWindow) mainWindow.setTitle(title);

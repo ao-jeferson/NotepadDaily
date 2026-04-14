@@ -1,8 +1,9 @@
-import { EditorCore } from "../core/editor/EditorCore.js";
 import { FileSystemService } from "../core/filesystem/FileSystemService.js";
 import { StatusBar } from "../core/statusbar/StatusBar.js";
 import TabManager from "../core/editor/TabManager.js";
 import SessionManager from "../core/session/SessionManager.js";
+import { SmartNewTabFeature } from "../features/smart-new-tab/SmartNewTabFeature.js";
+import { EditorCore } from "../core/editor/EditorCore.js";
 
 window.createEditor = () => {
   const container = document.getElementById("editor");
@@ -21,6 +22,8 @@ window.createEditor = () => {
   const statusBar = new StatusBar(EditorCore);
   statusBar.init();
 
+  const smartNewTab = new SmartNewTabFeature(tabManager, EditorCore);
+
   /* ============================
    * Helpers
    * ============================ */
@@ -37,7 +40,7 @@ window.createEditor = () => {
   const docs = session.load();
 
   if (docs.length > 0) {
-    docs.forEach(d => tabManager.open(d));
+    docs.forEach((d) => tabManager.open(d));
     activateDocument(tabManager.getActive());
   } else {
     const doc = tabManager.createNew();
@@ -47,20 +50,37 @@ window.createEditor = () => {
   /* ============================
    * New tab button
    * ============================ */
-  newTabBtn.addEventListener("click", () => {
-    const doc = tabManager.createNew();
-    activateDocument(doc);
-    session.save(tabManager.tabs);
-  });
+
+newTabBtn.addEventListener("click", () => {
+  const doc = smartNewTab.handleNewDocument(
+    (name) => tabManager.createNew(name)
+  );
+
+  EditorCore.setDocument(doc);
+  statusBar.bindDocument(doc);
+  renderTabs();
+  session.save(tabManager.tabs);
+});
 
   /* ============================
    * Menu actions
    * ============================ */
 
-  window.menu.onNewFile(() => {
-    const doc = tabManager.createNew();
-    activateDocument(doc);
-    session.save(tabManager.tabs);
+
+window.menu.onNewFile(() => {
+  const doc = smartNewTab.handleNewDocument(
+    (name) => tabManager.createNew(name)
+  );
+
+  EditorCore.setDocument(doc);
+  statusBar.bindDocument(doc);
+  renderTabs();
+  session.save(tabManager.tabs);
+});
+
+
+  window.config.onToggleSmartNewTab((enabled) => {
+    smartNewTab.setEnabled(enabled);
   });
 
   window.menu.onOpenFile(async () => {
@@ -95,7 +115,7 @@ window.createEditor = () => {
     session.save(tabManager.tabs);
   });
 
-  window.menu.onSetLanguage(lang => {
+  window.menu.onSetLanguage((lang) => {
     const doc = tabManager.getActive();
     if (!doc) return;
 
@@ -108,66 +128,66 @@ window.createEditor = () => {
   /* ============================
    * Render tabs
    * ============================ */
- function renderTabs() {
-  tabContainer.innerHTML = "";
+  function renderTabs() {
+    tabContainer.innerHTML = "";
 
-  tabManager.tabs.forEach(doc => {
-    const el = document.createElement("div");
-    el.classList.add("tab");
+    tabManager.tabs.forEach((doc) => {
+      const el = document.createElement("div");
+      el.classList.add("tab");
 
-    const btn = document.createElement("button");
-    btn.textContent =
-      `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
+      const btn = document.createElement("button");
+      btn.textContent = `${doc.getFileName()}${doc.isDirty() ? "*" : ""}`;
 
-    if (doc === tabManager.getActive()) {
-      btn.classList.add("active");
-    }
+      if (doc === tabManager.getActive()) {
+        btn.classList.add("active");
+      }
 
-    // ✅ trocar de aba
-    btn.onclick = () => activateDocument(doc);
+      // ✅ trocar de aba
+      btn.onclick = () => activateDocument(doc);
 
-    // ✅ FECHAR ABA COM CLIQUE DA RODA DO MOUSE
-    btn.addEventListener("mousedown", e => {
-      if (e.button === 1) { // botão do meio
-        e.preventDefault();
+      // ✅ FECHAR ABA COM CLIQUE DA RODA DO MOUSE
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button === 1) {
+          // botão do meio
+          e.preventDefault();
+          tabManager.close(doc.id);
+
+          const next = tabManager.getActive();
+          if (next) activateDocument(next);
+          session.save(tabManager.tabs);
+        }
+      });
+
+      // botão X
+      const close = document.createElement("span");
+      close.textContent = "×";
+      close.classList.add("close");
+      close.onclick = (e) => {
+        e.stopPropagation();
         tabManager.close(doc.id);
 
         const next = tabManager.getActive();
         if (next) activateDocument(next);
         session.save(tabManager.tabs);
-      }
+      };
+
+      el.appendChild(btn);
+      el.appendChild(close);
+      tabContainer.appendChild(el);
     });
 
-    // botão X
-    const close = document.createElement("span");
-    close.textContent = "×";
-    close.classList.add("close");
-    close.onclick = e => {
-      e.stopPropagation();
-      tabManager.close(doc.id);
-
-      const next = tabManager.getActive();
-      if (next) activateDocument(next);
-      session.save(tabManager.tabs);
-    };
-
-    el.appendChild(btn);
-    el.appendChild(close);
-    tabContainer.appendChild(el);
-  });
-
-  /* ============================
-   * ✅ DRAG & DROP DAS ABAS
-   * ============================ */
-  if (window.Sortable) {
-    Sortable.create(tabContainer, {
-      animation: 150,
-      onEnd: evt => {
-        const [moved] = tabManager.tabs.splice(evt.oldIndex, 1);
-        tabManager.tabs.splice(evt.newIndex, 0, moved);
-        renderTabs();
-      }
-    });
+    /* ============================
+     * ✅ DRAG & DROP DAS ABAS
+     * ============================ */
+    if (window.Sortable) {
+      Sortable.create(tabContainer, {
+        animation: 150,
+        onEnd: (evt) => {
+          const [moved] = tabManager.tabs.splice(evt.oldIndex, 1);
+          tabManager.tabs.splice(evt.newIndex, 0, moved);
+          renderTabs();
+        },
+      });
+    }
   }
-}
 };
