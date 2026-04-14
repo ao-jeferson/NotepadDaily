@@ -3,6 +3,8 @@ import {
   detectLanguageFromContent,
 } from "./detectLanguage.js";
 
+import { LANGUAGE_INDENTATION } from "./languageIndentation.js";
+
 export const EditorCore = {
   editor: null,
   model: null,
@@ -59,6 +61,22 @@ export const EditorCore = {
   /* =====================================================
      DOCUMENT
      ===================================================== */
+
+  _applyIndentation(language) {
+    if (!this.model || !this.editor) return;
+
+    const config =
+      LANGUAGE_INDENTATION[language] || LANGUAGE_INDENTATION.plaintext;
+
+    this.model.updateOptions({
+      tabSize: config.tabSize,
+      insertSpaces: config.insertSpaces,
+    });
+
+    this.editor.updateOptions({
+      autoIndent: "advanced",
+    });
+  },
   setDocument(document) {
     this.currentDocument = document;
 
@@ -83,20 +101,24 @@ export const EditorCore = {
     this.editor.setModel(this.model);
 
     this._setupAutoDetect();
+    this._applyIndentation(document.language || "plaintext");
   },
   /* =====================================================
      LANGUAGE / HIGHLIGHT
      ===================================================== */
+
   setLanguage(language) {
     if (!this.model) return;
 
     monaco.editor.setModelLanguage(this.model, language);
+    this._applyIndentation(detected);
 
     if (this.currentDocument) {
       this.currentDocument.language = language;
     }
-  },
 
+    this._applyIndentation(language);
+  },
   refreshModelLanguage() {
     if (!this.model || !this.currentDocument) return;
 
@@ -104,6 +126,7 @@ export const EditorCore = {
       this.model,
       this.currentDocument.language || "plaintext",
     );
+    this._applyIndentation(detected);
   },
 
   /* =====================================================
@@ -128,6 +151,7 @@ export const EditorCore = {
         if (detected && detected !== this.currentDocument.language) {
           this.currentDocument.language = detected;
           monaco.editor.setModelLanguage(this.model, detected);
+          this._applyIndentation(detected);
         }
       }, 400);
     });
