@@ -14,6 +14,9 @@ export class CursorNavigationFeature {
     this.ignoreNext = false;
   }
 
+  /* =====================================================
+     INIT
+     ===================================================== */
   init() {
     this.editor = this.editorCore.getEditor();
     if (!this.editor) return;
@@ -43,34 +46,18 @@ export class CursorNavigationFeature {
         col: e.position.column,
       });
 
+      if (this.backStack.length > MAX_HISTORY) {
+        this.backStack.shift();
+      }
+
       this.forwardStack.length = 0;
-      this.emit();
+      this._emitState();
     });
   }
 
-  /* ===== API pública ===== */
-
-  back() {
-    if (!this.canGoBack()) return;
-
-    this.ignoreNext = true;
-    const current = this.backStack.pop();
-    this.forwardStack.push(current);
-
-    this.goTo(this.backStack.at(-1));
-    this.emit();
-  }
-
-  forward() {
-    if (!this.canGoForward()) return;
-
-    this.ignoreNext = true;
-    const next = this.forwardStack.pop();
-    this.backStack.push(next);
-
-    this.goTo(next);
-    this.emit();
-  }
+  /* =====================================================
+     API PÚBLICA (UI)
+     ===================================================== */
 
   canGoBack() {
     return this.backStack.length > 1;
@@ -78,6 +65,27 @@ export class CursorNavigationFeature {
 
   canGoForward() {
     return this.forwardStack.length > 0;
+  }
+
+  back() {
+    if (!this.canGoBack()) return;
+
+    const current = this.backStack.pop();
+    this.forwardStack.push(current);
+
+    const target = this.backStack.at(-1);
+    this._goTo(target);
+    this._emitState();
+  }
+
+  forward() {
+    if (!this.canGoForward()) return;
+
+    const target = this.forwardStack.pop();
+    this.backStack.push(target);
+
+    this._goTo(target);
+    this._emitState();
   }
 
   onStateChange(cb) {
@@ -92,40 +100,65 @@ export class CursorNavigationFeature {
     };
   }
 
-  /* ===== Interno ===== */
+  /* =====================================================
+     ✅ LIMPEZA AO FECHAR ABA
+     ===================================================== */
+  onTabClosed(tabId) {
+    this.backStack = this.backStack.filter(
+      (h) => h.docId !== tabId
+    );
 
-goTo(entry) {
-  const doc = this.tabManager.tabs.find(d => d.id === entry.docId);
-  if (!doc) return;
+    this.forwardStack = this.forwardStack.filter(
+      (h) => h.docId !== tabId
+    );
 
-  this.tabManager.setActive(doc);
-  this.editorCore.setDocument(doc);
+    this._emitState();
+  }
 
-  const editor = this.editor;
-  if (!editor) return;
+  /* =====================================================
+     NAVEGAÇÃO REAL
+     ===================================================== */
+  _goTo(entry) {
+    if (!entry) return;
 
-  const model = editor.getModel();
-  if (!model) return;
+    const doc = this.tabManager.tabs.find(
+      (t) => t.id === entry.docId
+    );
+    if (!doc) return;
 
-  const maxLine = model.getLineCount();
-  let line = Math.min(entry.line, maxLine);
-  let column = Math.max(1, entry.col);
+    this.ignoreNext = true;
 
-  const maxColumn = model.getLineLength(line) + 1;
-  column = Math.min(column, maxColumn);
+    this.tabManager.setActive(doc);
+    this.editorCore.setDocument(doc);
 
-  const position = { lineNumber: line, column };
+    const editor = this.editor;
+    if (!editor) return;
 
-  editor.setPosition(position);
-  editor.revealPositionInCenter(position);
-  editor.focus();
-}
+    const model = editor.getModel();
+    if (!model) return;
 
-  emit() {
+    const maxLine = model.getLineCount();
+    let line = Math.min(entry.line, maxLine);
+    let column = Math.max(1, entry.col);
+
+    const maxColumn = model.getLineLength(line) + 1;
+    column = Math.min(column, maxColumn);
+
+    const position = { lineNumber: line, column };
+
+    editor.setPosition(position);
+    editor.revealPositionInCenter(position);
+    editor.focus();
+  }
+
+  _emitState() {
     const state = this.state();
     this.listeners.forEach((l) => l(state));
   }
 
+  /* =====================================================
+     SESSION
+     ===================================================== */
   serialize() {
     return {
       back: this.backStack,
@@ -135,8 +168,9 @@ goTo(entry) {
 
   restore(data) {
     if (!data) return;
+
     this.backStack = data.back || [];
     this.forwardStack = data.forward || [];
-    this.emit();
+    this._emitState();
   }
 }

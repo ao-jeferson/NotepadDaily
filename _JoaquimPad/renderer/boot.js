@@ -109,6 +109,16 @@ window.createEditor = () => {
     saveSession();
   };
 
+backBtn.onclick = () => {
+  if (!cursorNav.canGoBack()) return;
+  cursorNav.back();
+};
+
+forwardBtn.onclick = () => {
+  if (!cursorNav.canGoForward()) return;
+  cursorNav.forward();
+};
+
   if (window.menu?.onNewFile) {
     window.menu.onNewFile(() => newTabBtn.onclick());
   }

@@ -275,3 +275,11 @@ body {
   font-size: 12px;
   border-top: 1px solid #374151;
 }
+.action-bar button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.action-bar button:disabled svg {
+  stroke: #999;
+}
