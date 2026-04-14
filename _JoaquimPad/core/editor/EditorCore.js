@@ -9,6 +9,16 @@ export const EditorCore = {
       model,
       theme: "vs-white",
       automaticLayout: true,
+
+      // ✅ performance
+      minimap: { enabled: false }, // DESLIGAR
+      renderWhitespace: "none",
+      renderControlCharacters: false,
+      wordWrap: "off", // MUITO importante
+      folding: false, // opcional
+      smoothScrolling: false,
+      cursorSmoothCaretAnimation: "off",
+
       // ✅ garante atalhos e comandos padrão
       readOnly: false,
       renderWhitespace: "selection",
@@ -16,39 +26,53 @@ export const EditorCore = {
       multiCursorModifier: "ctrlCmd",
       mouseWheelZoom: true,
       find: {
-        addExtraSpaceOnTop: false
+        addExtraSpaceOnTop: false,
       },
+
+      // ✅ arquivos grandes
+      largeFileOptimizations: true,
+      detectIndentation: false,
     });
 
-    this.editor.onDidChangeModelContent(() => {
-      if (this.currentDocument) {
-        this.currentDocument.setContent(
-          this.editor.getValue()
-        );
-      }
+    this.editor.onDidScrollChange(() => {
+      const editor = this.editor; // ✅ NÃO o model
+      if (!editor) return;
+
+      const ranges = editor.getVisibleRanges();
+      if (!ranges || ranges.length === 0) return;
+
+      const visible = ranges[0];
+      console.log(
+        "Linhas visíveis:",
+        visible.startLineNumber,
+        visible.endLineNumber,
+      );
+
+      // Aqui você chama o LargeDocument / FileSystemService
     });
   },
 
   setDocument(document) {
     this.currentDocument = document;
 
-    if (!document) {
-      this.editor.setValue("");
-      return;
+    if (document.isLargeFile) {
+      this.editor.updateOptions({
+        readOnly: true,
+        wordWrap: "off",
+        minimap: { enabled: false },
+      });
+    } else {
+      this.editor.updateOptions({
+        readOnly: false,
+      });
     }
 
     this.editor.setValue(document.getContent());
-
-    const model = this.editor.getModel();
-    if (model) {
-      monaco.editor.setModelLanguage(
-        model,
-        document.language || "plaintext"
-      );
-    }
   },
 
   getEditor() {
     return this.editor;
-  }
+  },
+
+  /** */
 };

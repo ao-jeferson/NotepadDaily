@@ -109,4 +109,5 @@ export class Document {
   static fromJSON(data) {
     return new Document(data);
   }
+  
 }

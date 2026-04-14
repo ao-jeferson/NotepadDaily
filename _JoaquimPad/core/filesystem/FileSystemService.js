@@ -19,8 +19,7 @@ function detectLanguage(fileName) {
   if (fileName.endsWith(".rs")) return "rust";
   if (fileName.endsWith(".php")) return "php";
   if (fileName.endsWith(".sql")) return "sql";
-  if (fileName.endsWith(".yml") || fileName.endsWith(".yaml"))
-    return "yaml";
+  if (fileName.endsWith(".yml") || fileName.endsWith(".yaml")) return "yaml";
   return "plaintext";
 }
 
@@ -33,11 +32,23 @@ export class FileSystemService {
     const fileName = path.split(/[\\/]/).pop();
     const language = detectLanguage(fileName);
 
+    const stats = await window.fs.stat(path);
+
+    const LARGE_FILE_LIMIT = 5 * 1024 * 1024; // 5MB
+
+    if (stats.size > LARGE_FILE_LIMIT) {
+      return this.openLargeFile(path);
+    }
+
+fs.createReadStream(path, {
+  start,
+  end
+});
     return new Document({
       id: crypto.randomUUID(),
       filePath: path,
       content,
-      language
+      language,
     });
   }
 
@@ -46,10 +57,7 @@ export class FileSystemService {
       return this.saveAs(document);
     }
 
-    await window.fs.writeFile(
-      document.filePath,
-      document.getContent()
-    );
+    await window.fs.writeFile(document.filePath, document.getContent());
 
     document.markClean();
   }
@@ -65,4 +73,21 @@ export class FileSystemService {
 
     await this.save(document);
   }
+  async openLargeFile(path) {
+  const content = await window.fs.readFile(path);
+
+  const doc = new Document({
+    id: crypto.randomUUID(),
+    filePath: path,
+    content,
+    language: "plaintext"
+  });
+
+  doc.isLargeFile = true;
+
+  return doc;
+}
+async readChunk(path, start, size) {
+  return window.fs.readChunk(path, start, size);
+}
 }
