@@ -5,15 +5,15 @@ export default class TabManager {
   }
 
   createTab(content = "") {
-  const now = new Date();
-  const name = this.currentFilePath
-    ? this.currentFilePath.split(/[\\/]/).pop()
-    : now.toLocaleString("pt-BR");
-  const tab = { id: Date.now(), name, content, active: false };
-  this.tabs.push(tab);
-  this.switchTab(tab.id);
-  return tab;
-}
+    const now = new Date();
+    const name = this.currentFilePath
+      ? this.currentFilePath.split(/[\\/]/).pop()
+      : now.toLocaleString("pt-BR");
+    const tab = { id: Date.now(), name, content, active: false };
+    this.tabs.push(tab);
+    this.switchTab(tab.id);
+    return tab;
+  }
 
 
   switchTab(id) {
@@ -24,4 +24,11 @@ export default class TabManager {
   getActiveTab() {
     return this.tabs.find(t => t.id === this.activeTabId);
   }
+  closeTab(id) {
+    this.tabs = this.tabs.filter(t => t.id !== id);
+    if (this.activeTabId === id) {
+      this.activeTabId = this.tabs.length ? this.tabs[0].id : null;
+    }
+  }
+
 }

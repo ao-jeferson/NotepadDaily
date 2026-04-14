@@ -43,6 +43,7 @@ function createAppMenu() {
         { label: "Abrir…", accelerator: "Ctrl+O", click: () => mainWindow.webContents.send("menu:file:open") },
         { label: "Salvar", accelerator: "Ctrl+S", click: () => mainWindow.webContents.send("menu:file:save") },
         { label: "Salvar como…", accelerator: "Ctrl+Shift+S", click: () => mainWindow.webContents.send("menu:file:saveAs") },
+        { label: "Fechar aba", accelerator: "Ctrl+W", click: () => mainWindow.webContents.send("menu:file:closeTab") }, // ✅ novo
         { type: "separator" },
         { label: "Sair", role: "quit" }
       ]
@@ -66,6 +67,7 @@ function createAppMenu() {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
+
 
 app.setName("_JoaquimPad");
 app.whenReady().then(createMainWindow);

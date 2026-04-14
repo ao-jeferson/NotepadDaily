@@ -83,4 +83,20 @@ window.createEditor = () => {
       tabContainer.appendChild(el);
     });
   }
+
+window.menu.onCloseTab(() => {
+  const active = tabManager.getActiveTab();
+  if (active) {
+    tabManager.closeTab(active.id);
+    renderTabs();
+    const newActive = tabManager.getActiveTab();
+    if (newActive) {
+      EditorCore.setText(newActive.content);
+    } else {
+      EditorCore.setText(""); // sem abas abertas
+    }
+  }
+});
+
+
 };

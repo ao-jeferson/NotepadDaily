@@ -3,11 +3,12 @@ let editor;
 export const EditorCore = {
   init(container) {
     editor = monaco.editor.create(container, {
-      value: "",
       language: "plaintext",
-      theme: "vs-dark",
+      theme: "vs-blue",
       automaticLayout: true,
-      
+      minimap: { enabled: true },
+      fontSize: 14,
+      lineNumbers: "on"
     });
   },
 

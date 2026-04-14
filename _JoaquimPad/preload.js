@@ -4,7 +4,8 @@ contextBridge.exposeInMainWorld("menu", {
   onNewFile: (cb) => ipcRenderer.on("menu:file:new", cb),
   onOpenFile: (cb) => ipcRenderer.on("menu:file:open", cb),
   onSaveFile: (cb) => ipcRenderer.on("menu:file:save", cb),
-  onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb)
+  onSaveAsFile: (cb) => ipcRenderer.on("menu:file:saveAs", cb),
+  onCloseTab: (cb) => ipcRenderer.on("menu:file:closeTab", cb) // ✅ agora existe
 });
 
 contextBridge.exposeInMainWorld("fs", {
