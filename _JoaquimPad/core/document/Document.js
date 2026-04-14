@@ -4,16 +4,21 @@ export class Document {
     filePath = null,
     content = "",
     language = "plaintext",
-    displayName = null
+    displayName = null,
+    pinned = false,
   }) {
     this.id = id;
     this.filePath = filePath;
     this.language = language;
     this.displayName = displayName;
+    this.pinned = pinned;
 
+    /* ✅ FONTE ÚNICA DE VERDADE */
     this._content = content;
+
     this._dirty = false;
     this._listeners = new Set();
+
     this.languageManuallySet = false;
   }
 
@@ -33,19 +38,17 @@ export class Document {
   }
 
   /* =========================
-   * Content
+   * Content (SINGLE SOURCE)
    * ========================= */
 
   getContent() {
-    return this._content;
+    return this._content || "";
   }
 
-  setContent(content, silent = false) {
+  setContent(content) {
+    if (content === this._content) return;
     this._content = content;
-    if (!silent) {
-      this._dirty = true;
-      this._emit();
-    }
+    this.markDirty();
   }
 
   getSizeInBytes() {
@@ -60,6 +63,11 @@ export class Document {
     return this._dirty;
   }
 
+  markDirty() {
+    this._dirty = true;
+    this._emit();
+  }
+
   markClean() {
     this._dirty = false;
     this._emit();
@@ -71,17 +79,17 @@ export class Document {
 
   setFilePath(path) {
     this.filePath = path;
-    this.displayName = null; // ✅ troca nome temporário pelo real
+    this.displayName = null;
     this._emit();
   }
 
-
-setLanguage(language, manual = true) {
-  this.language = language;
-  if (manual) {
-    this.languageManuallySet = true;
+  setLanguage(language, manual = true) {
+    this.language = language;
+    if (manual) {
+      this.languageManuallySet = true;
+    }
+    this._emit();
   }
-}
 
   /* =========================
    * Observers
@@ -93,30 +101,29 @@ setLanguage(language, manual = true) {
   }
 
   _emit() {
-    this._listeners.forEach(l => l(this));
+    this._listeners.forEach((l) => l(this));
   }
 
   /* =========================
-   * Session
+   * Session (PERSISTÊNCIA)
    * ========================= */
 
   toJSON() {
     return {
       id: this.id,
       filePath: this.filePath,
-      content: this._content,
+      content: this._content,              // ✅ correto
       language: this.language,
       displayName: this.displayName,
-    pinned: !!this.pinned
-
+      pinned: !!this.pinned,
+      languageManuallySet: !!this.languageManuallySet,
     };
   }
- 
-static fromJSON(data) {
-  const doc = new Document(data);
-  doc.pinned = !!data.pinned;
-  return doc;
-}
 
-  
+  static fromJSON(data) {
+    const doc = new Document(data);
+    doc.languageManuallySet = !!data.languageManuallySet;
+    doc._dirty = false; // sessão começa limpa
+    return doc;
+  }
 }

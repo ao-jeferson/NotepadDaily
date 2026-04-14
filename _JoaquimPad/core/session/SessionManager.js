@@ -1,47 +1,28 @@
 import { Document } from "../document/Document.js";
-
 export default class SessionManager {
-  constructor() {
-    this.key = "joaquimpad-session";
-    this.cursorKey = "joaquimpad-cursor-history";
-  }
-
-  save(documents) {
-    const data = documents.map(d => d.toJSON());
-    localStorage.setItem(this.key, JSON.stringify(data));
+  save(tabs) {
+    const serialized = tabs.map((doc) => doc.toJSON());
+    localStorage.setItem("session", JSON.stringify(serialized));
   }
 
   load() {
-    const raw = localStorage.getItem(this.key);
+    const raw = localStorage.getItem("session");
     if (!raw) return [];
+
     try {
-      const parsed = JSON.parse(raw);
-      return parsed.map(Document.fromJSON);
-    } catch (e) {
-    
+      const data = JSON.parse(raw);
+      return data.map((d) => Document.fromJSON(d));
+    } catch {
       return [];
     }
   }
 
   saveCursorHistory(history) {
-    localStorage.setItem(
-      this.cursorKey,
-      JSON.stringify(history)
-    );
+    localStorage.setItem("cursorHistory", JSON.stringify(history));
   }
 
   loadCursorHistory() {
-    const raw = localStorage.getItem(this.cursorKey);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  clear() {
-    localStorage.removeItem(this.key);
-    localStorage.removeItem(this.cursorKey);
+    const raw = localStorage.getItem("cursorHistory");
+    return raw ? JSON.parse(raw) : [];
   }
 }
