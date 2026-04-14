@@ -1,4 +1,20 @@
 const { contextBridge, ipcRenderer } = require("electron");
+const { webFrame } = require('electron');
+
+window.addEventListener('wheel', (e) => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+
+    // pega o nível atual
+    let currentZoom = webFrame.getZoomLevel();
+
+    if (e.deltaY < 0) {
+      webFrame.setZoomLevel(currentZoom + 0.1); // zoom in
+    } else {
+      webFrame.setZoomLevel(currentZoom - 0.1); // zoom out
+    }
+  }
+}, { passive: false });
 
 contextBridge.exposeInMainWorld("menu", {
   onNewFile: (cb) => ipcRenderer.on("menu:file:new", cb),

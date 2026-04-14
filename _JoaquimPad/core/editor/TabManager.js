@@ -4,12 +4,12 @@ export default class TabManager {
     this.counter = 0;
   }
 
-  createTab(content = "", name = "Untitled", language = "plaintext") {
+  createTab(content = "", name = "Untitled", language = "") {
     const tab = {
       id: String(this.counter++),
       name,
       content,
-      language,
+      language ,
       active: true
     };
     this.tabs.forEach(t => (t.active = false));

@@ -11,10 +11,24 @@ window.createEditor = () => {
 
   // inicializa editor
   EditorCore.init(container);
-  EditorCore.layout();
-  window.addEventListener("resize", () => EditorCore.layout());
+  // Zoom com Ctrl + roda do mouse
+const editorContainer = document.getElementById("editor");
+editorContainer.addEventListener("wheel", (e) => {
+  if (e.ctrlKey && EditorCore.editor) {
+    e.preventDefault(); // evita zoom da página
+    let fontSize = EditorCore.editor.getOption(monaco.editor.EditorOption.fontSize);
 
-  // filesystem
+    if (e.deltaY < 0) {
+      fontSize = Math.min(fontSize + 1, 40); // zoom in
+    } else {
+      fontSize = Math.max(fontSize - 1, 8);  // zoom out
+    }
+
+    EditorCore.editor.updateOptions({ fontSize });
+  }
+}, { passive: false });
+
+   // filesystem
   const fsService = new FileSystemService(EditorCore);
   fsService.attachEditorListeners();
 
@@ -134,64 +148,61 @@ window.createEditor = () => {
   });
 
   // renderização das abas
+  function renderTabs() {
+    tabContainer.innerHTML = "";
+    tabManager.tabs.forEach(tab => {
+      const el = document.createElement("div");
+      el.classList.add("tab");
 
-function renderTabs() {
-  tabContainer.innerHTML = "";
-  tabManager.tabs.forEach(tab => {
-    const el = document.createElement("div");
-    el.classList.add("tab");
+      const btn = document.createElement("button");
+      btn.textContent = `${tab.name} [${tab.language}]`;
+      if (tab.active) btn.classList.add("active");
 
-    const btn = document.createElement("button");
-    btn.textContent = `${tab.name} [${tab.language}]`;
-    if (tab.active) btn.classList.add("active");
+      btn.onclick = () => {
+        tabManager.switchTab(tab.id);
+        EditorCore.setText(tab.content);
+        const model = EditorCore.editor.getModel();
+        if (model) monaco.editor.setModelLanguage(model, tab.language);
+        renderTabs();
+      };
 
-    btn.onclick = () => {
-      tabManager.switchTab(tab.id);
-      EditorCore.setText(tab.content);
-      const model = EditorCore.editor.getModel();
-      if (model) monaco.editor.setModelLanguage(model, tab.language);
-      renderTabs();
-    };
+      // fechar com roda do mouse
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button === 1) {
+          e.preventDefault();
+          tabManager.closeTab(tab.id);
+          renderTabs();
+          const newActive = tabManager.getActiveTab();
+          EditorCore.setText(newActive ? newActive.content : "");
+        }
+      });
 
-    // fechar com roda do mouse
-    btn.addEventListener("mousedown", (e) => {
-      if (e.button === 1) {
-        e.preventDefault();
+      const closeBtn = document.createElement("span");
+      closeBtn.textContent = "×";
+      closeBtn.classList.add("close");
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
         tabManager.closeTab(tab.id);
         renderTabs();
         const newActive = tabManager.getActiveTab();
         EditorCore.setText(newActive ? newActive.content : "");
-      }
+      };
+
+      el.appendChild(btn);
+      el.appendChild(closeBtn);
+      tabContainer.appendChild(el);
     });
 
-    const closeBtn = document.createElement("span");
-    closeBtn.textContent = "×";
-    closeBtn.classList.add("close");
-    closeBtn.onclick = (e) => {
-      e.stopPropagation();
-      tabManager.closeTab(tab.id);
-      renderTabs();
-      const newActive = tabManager.getActiveTab();
-      EditorCore.setText(newActive ? newActive.content : "");
-    };
-
-    el.appendChild(btn);
-    el.appendChild(closeBtn);
-    tabContainer.appendChild(el);
-  });
-
-  // ✅ inicializa SortableJS
- Sortable.create(tabContainer, {
-  animation: 150,
-  onEnd: (evt) => {
-    const [movedTab] = tabManager.tabs.splice(evt.oldIndex, 1);
-    tabManager.tabs.splice(evt.newIndex, 0, movedTab);
-    renderTabs();
+    // ✅ inicializa SortableJS
+    Sortable.create(tabContainer, {
+      animation: 150,
+      onEnd: (evt) => {
+        const [movedTab] = tabManager.tabs.splice(evt.oldIndex, 1);
+        tabManager.tabs.splice(evt.newIndex, 0, movedTab);
+        renderTabs();
+      }
+    });
   }
-});
-}
-
-
 
   // detecção automática de linguagem pelo nome do arquivo
   function detectLanguage(fileName) {

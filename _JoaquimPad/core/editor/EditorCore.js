@@ -7,11 +7,17 @@ export const EditorCore = {
     this.editor = monaco.editor.create(container, {
       model,
       theme: "vs-dark",
-      automaticLayout: true,
-      minimap: { enabled: true },
+      automaticLayout: true,      
       fontSize: 14,
       lineNumbers: "on",
-      wordWrap: "on"
+      wordWrap: "on",     
+      autoIndent: "advanced",
+      formatOnPaste: true,
+      formatOnType: true,
+      tabSize: 2,
+      insertSpaces: true,
+      wordWrap: "on",
+      mouseWheelZoom: true,
     });
   },
 
