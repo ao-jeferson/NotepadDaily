@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
-
+ 
 const path = require("path");
 const fs = require("fs/promises");
 
@@ -225,4 +225,11 @@ ipcMain.handle("fs:writeFile", (_, path, content) =>
 
 ipcMain.handle("window:set-title", (_, title) => {
   if (mainWindow) mainWindow.setTitle(title);
+});
+
+
+app.on("before-quit", () => {
+  BrowserWindow.getAllWindows().forEach(win => {
+    win.webContents.send("app:before-quit");
+  });
 });

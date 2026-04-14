@@ -19,16 +19,22 @@ window.createEditor = () => {
   const tabManager = new TabManager();
   const fsService = new FileSystemService();
   const session = new SessionManager();
+
   const statusBar = new StatusBar(EditorCore);
   statusBar.init();
 
   const smartNewTab = new SmartNewTabFeature(tabManager, EditorCore);
 
-  const cursorNav = new CursorNavigationFeature(
-    EditorCore,
-    tabManager
-  );
+  const cursorNav = new CursorNavigationFeature(EditorCore, tabManager);
   cursorNav.init();
+
+  /* ============================
+   * Session persistence (✅ CENTRALIZADO)
+   * ============================ */
+  function saveSession() {
+    session.save(tabManager.tabs);
+    session.saveCursorHistory(cursorNav.serialize());
+  }
 
   /* ============================
    * Helpers
@@ -45,20 +51,19 @@ window.createEditor = () => {
   /* ============================
    * Restore session
    * ============================ */
+  /* ============================
+   * Restore session (CORRETO)
+   * ============================ */
   const restored = session.load();
 
   if (restored.length > 0) {
-    restored.forEach(d => tabManager.open(d));
+    restored.forEach((d) => tabManager.open(d));
     activateDocument(tabManager.getActive());
   } else {
-    // ✅ cria novo documento apenas se não houver sessão
-    const doc = tabManager.createNew(
-      smartNewTab.getCurrentDisplayName()
-    );
+    // ✅ documento inicial neutro
+    const doc = tabManager.createNew("Untitled");
     activateDocument(doc);
   }
-
-  // ✅ restaura histórico global de cursor
   const cursorHistory = session.loadCursorHistory();
   cursorNav.restore(cursorHistory);
 
@@ -66,30 +71,31 @@ window.createEditor = () => {
    * New Tab Button
    * ============================ */
   newTabBtn.addEventListener("click", () => {
-    const doc = smartNewTab.handleNewDocument(name =>
-      tabManager.createNew(name)
+    const doc = smartNewTab.handleNewDocument((name) =>
+      tabManager.createNew(name),
     );
     activateDocument(doc);
-    session.save(tabManager.tabs);
+    saveSession();
   });
-
   /* ============================
    * Menu actions
    * ============================ */
+
   window.menu.onNewFile(() => {
-    const doc = smartNewTab.handleNewDocument(name =>
-      tabManager.createNew(name)
+    const doc = smartNewTab.handleNewDocument((name) =>
+      tabManager.createNew(name),
     );
     activateDocument(doc);
-    session.save(tabManager.tabs);
+    saveSession();
   });
 
   window.menu.onOpenFile(async () => {
     const doc = await fsService.open();
     if (!doc) return;
+
     tabManager.open(doc);
     activateDocument(doc);
-    session.save(tabManager.tabs);
+    saveSession();
   });
 
   window.menu.onSaveFile(() => {
@@ -108,13 +114,13 @@ window.createEditor = () => {
 
     tabManager.close(active.id);
     activateDocument(tabManager.getActive());
-    session.save(tabManager.tabs);
+    saveSession();
   });
 
   /* ============================
    * Config menu
    * ============================ */
-  window.config.onToggleSmartNewTab(enabled => {
+  window.config.onToggleSmartNewTab((enabled) => {
     smartNewTab.setEnabled(enabled);
   });
 
@@ -135,7 +141,7 @@ window.createEditor = () => {
   function renderTabs() {
     tabContainer.innerHTML = "";
 
-    tabManager.tabs.forEach(doc => {
+    tabManager.tabs.forEach((doc) => {
       const tabEl = document.createElement("div");
       tabEl.classList.add("tab");
 
@@ -148,24 +154,23 @@ window.createEditor = () => {
 
       btn.onclick = () => activateDocument(doc);
 
-      // Fechar aba com clique do meio
-      btn.addEventListener("mousedown", e => {
+      btn.addEventListener("mousedown", (e) => {
         if (e.button === 1) {
           e.preventDefault();
           tabManager.close(doc.id);
           activateDocument(tabManager.getActive());
-          session.save(tabManager.tabs);
+          saveSession();
         }
       });
 
       const close = document.createElement("span");
       close.textContent = "×";
       close.classList.add("close");
-      close.onclick = e => {
+      close.onclick = (e) => {
         e.stopPropagation();
         tabManager.close(doc.id);
         activateDocument(tabManager.getActive());
-        session.save(tabManager.tabs);
+        saveSession();
       };
 
       tabEl.appendChild(btn);
@@ -176,61 +181,28 @@ window.createEditor = () => {
     if (window.Sortable) {
       Sortable.create(tabContainer, {
         animation: 150,
-        onEnd: evt => {
+        onEnd: (evt) => {
           const [moved] = tabManager.tabs.splice(evt.oldIndex, 1);
           tabManager.tabs.splice(evt.newIndex, 0, moved);
           renderTabs();
-        }
+          saveSession();
+        },
       });
     }
   }
 
   /* ============================
-   * App Shortcuts
+   * App lifecycle (✅ CORRETO PARA ELECTRON)
    * ============================ */
-  document.addEventListener("keydown", e => {
-    const ctrl = e.ctrlKey || e.metaKey;
-    if (!ctrl) return;
 
-    switch (e.key) {
-      case "n":
-        e.preventDefault();
-        window.menu.onNewFile();
-        break;
-      case "o":
-        e.preventDefault();
-        window.menu.onOpenFile();
-        break;
-      case "s":
-        e.preventDefault();
-        e.shiftKey
-          ? window.menu.onSaveAsFile()
-          : window.menu.onSaveFile();
-        break;
-      case "w":
-        e.preventDefault();
-        window.menu.onCloseTab();
-        break;
-      case "Tab":
-        e.preventDefault();
-        switchTab(e.shiftKey ? -1 : 1);
-        break;
-    }
-  });
-
-  function switchTab(direction) {
-    const tabs = tabManager.tabs;
-    if (tabs.length < 2) return;
-
-    const index = tabs.indexOf(tabManager.getActive());
-    const next = (index + direction + tabs.length) % tabs.length;
-    activateDocument(tabs[next]);
+  function saveSession() {
+    console.log("[SESSION] saveSession()");
+    session.save(tabManager.tabs);
+    session.saveCursorHistory(cursorNav.serialize());
   }
 
-  /* ============================
-   * Persist cursor history
-   * ============================ */
-  window.addEventListener("beforeunload", () => {
-    session.saveCursorHistory(cursorNav.serialize());
+  window.appLifecycle?.onBeforeQuit(() => {
+    console.log("[SESSION] before-quit recebido");
+    saveSession();
   });
 };

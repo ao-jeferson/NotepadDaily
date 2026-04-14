@@ -1,3 +1,5 @@
+import { Document } from "../document/Document.js";
+
 export default class SessionManager {
   constructor() {
     this.key = "joaquimpad-session";
@@ -5,6 +7,7 @@ export default class SessionManager {
   }
 
   save(documents) {
+    console.log("[SESSION] Salvando documentos:", documents.length);
     const data = documents.map(d => d.toJSON());
     localStorage.setItem(this.key, JSON.stringify(data));
   }
@@ -13,15 +16,13 @@ export default class SessionManager {
     const raw = localStorage.getItem(this.key);
     if (!raw) return [];
     try {
-      return JSON.parse(raw).map(Document.fromJSON);
-    } catch {
+      const parsed = JSON.parse(raw);
+      return parsed.map(Document.fromJSON);
+    } catch (e) {
+      console.error("[SESSION] Erro ao carregar sessão", e);
       return [];
     }
   }
-
-  /* =========================
-   * Cursor history
-   * ========================= */
 
   saveCursorHistory(history) {
     localStorage.setItem(

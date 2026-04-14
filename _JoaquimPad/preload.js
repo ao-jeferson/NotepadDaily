@@ -41,3 +41,7 @@ contextBridge.exposeInMainWorld("config", {
   onToggleSmartNewTab: (cb) =>
     ipcRenderer.on("config:smart-new-tab", (_, v) => cb(v))
 });
+contextBridge.exposeInMainWorld("appLifecycle", {
+  onBeforeQuit: (cb) =>
+    ipcRenderer.on("app:before-quit", cb)
+});
