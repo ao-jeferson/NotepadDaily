@@ -7,9 +7,11 @@ from ui.status_bar import StatusBar
 from ui.status_controller import StatusController
 from core.settings import Settings
 from datetime import datetime
-from PySide6.QtGui import QTextCursor
+from PySide6.QtGui import QIcon, QTextCursor
 from core.session_manager import SessionManager
 from ui.find_replace_dialog import FindReplaceDialog
+from PySide6.QtWidgets import QToolBar
+from PySide6.QtGui import QAction
 
 
 class MainWindow(QMainWindow):
@@ -18,6 +20,15 @@ class MainWindow(QMainWindow):
                     
         self.setWindowTitle("JoaquimPad — Text Editor")
         self.resize(900, 600)
+       
+       
+        self._cursor_history = []
+        self._cursor_history_index = -1
+        self._ignore_cursor_history = False
+
+        self._tab_history = []
+        self._history_index = -1
+        self._ignore_history = False
 
         # ✅ 1. Cria o gerenciador de abas PRIMEIRO
         self.tabs = TabManager()
@@ -27,6 +38,8 @@ class MainWindow(QMainWindow):
         self.menu_builder = MenuBarBuilder(self)
         self.menu_builder.build()
 
+        self.create_toolbar()
+        
         # ✅ 3. Restaura sessão ou cria uma nova aba
         from core.session_manager import SessionManager
         session = SessionManager.load()
@@ -104,10 +117,22 @@ class MainWindow(QMainWindow):
         editor.setPlainText(content)
         editor.file_path = path
         
-    def on_tab_changed(self):
-            editor = self.tabs.current_editor()
-            if editor:
-                self.status_controller.connect_editor(editor)  
+    def on_tab_changed(self, index):
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        # conecta mudança de cursor
+        editor.cursorPositionChanged.connect(self._register_cursor_position)
+
+        # registra posição inicial da aba
+        self._register_cursor_position()
+
+        # mantém status bar
+        editor.set_word_wrap(editor.word_wrap_enabled)
+        self.status_controller.connect_editor(editor)
+
+
 
     def new_file(self):
         print("NEW_FILE:", Settings.USE_DATETIME_TAB_NAME)
@@ -276,3 +301,106 @@ class MainWindow(QMainWindow):
         index = session.get("current_index", len(tabs) - 1)
         if 0 <= index < self.tabs.count():
             self.tabs.setCurrentIndex(index)
+            
+    def go_back_tab(self):
+        if self._cursor_history_index > 0:
+            self._ignore_cursor_history = True
+            self._cursor_history_index -= 1
+
+            entry = self._cursor_history[self._cursor_history_index]
+            editor = entry["editor"]
+            pos = entry["position"]
+
+            # muda para a aba correta
+            self.tabs.setCurrentWidget(editor)
+
+            cursor = editor.textCursor()
+            cursor.setPosition(pos)
+            editor.setTextCursor(cursor)
+            editor.setFocus()
+
+            self._ignore_cursor_history = False            
+            
+    def go_forward_tab(self):
+        if self._cursor_history_index < len(self._cursor_history) - 1:
+            self._ignore_cursor_history = True
+            self._cursor_history_index += 1
+
+            entry = self._cursor_history[self._cursor_history_index]
+            editor = entry["editor"]
+            pos = entry["position"]
+
+            self.tabs.setCurrentWidget(editor)
+
+            cursor = editor.textCursor()
+            cursor.setPosition(pos)
+            editor.setTextCursor(cursor)
+            editor.setFocus()
+
+            self._ignore_cursor_history = False
+        
+    def create_toolbar(self):
+        toolbar = QToolBar("Navegação")
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+
+        # -----------------------------
+        # Voltar
+        # -----------------------------
+       
+        back_action = QAction(QIcon("assets/icons/back.svg"), "", self)
+        back_action.setToolTip("Voltar")
+        back_action.triggered.connect(self.go_back_tab)
+        toolbar.addAction(back_action)
+
+        # -----------------------------
+        # Avançar
+        # -----------------------------        
+        forward_action = QAction(QIcon("assets/icons/forward.svg"), "", self)
+        forward_action.setToolTip("Avançar")
+        forward_action.triggered.connect(self.go_forward_tab)
+        toolbar.addAction(forward_action)
+
+        toolbar.addSeparator()
+
+        # -----------------------------
+        # Nova aba
+        # -----------------------------
+        new_tab_action = QAction("+", self)
+        new_tab_action.setToolTip("Nova aba")
+        new_tab_action.triggered.connect(self.new_file)
+        toolbar.addAction(new_tab_action)
+    def toggle_word_wrap(self, checked: bool):
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        editor.set_word_wrap(checked)
+    def _register_cursor_position(self):
+        if self._ignore_cursor_history:
+            return
+
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        cursor = editor.textCursor()
+        pos = cursor.position()
+
+        # evita duplicar posição
+        if (
+            self._cursor_history_index >= 0
+            and self._cursor_history[self._cursor_history_index]["editor"] == editor
+            and self._cursor_history[self._cursor_history_index]["position"] == pos
+        ):
+            return
+
+        # remove "futuro" se navegar após voltar
+        self._cursor_history = self._cursor_history[: self._cursor_history_index + 1]
+
+        self._cursor_history.append({
+            "editor": editor,
+            "position": pos
+        })
+
+        self._cursor_history_index += 1

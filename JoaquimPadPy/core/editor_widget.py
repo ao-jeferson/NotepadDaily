@@ -11,6 +11,10 @@ class EditorWidget(QTextEdit):
         self.file_path = None
 
         self.is_pinned = False
+        
+        self.word_wrap_enabled = True
+        self.setLineWrapMode(QTextEdit.WidgetWidth)
+
         self.cursorPositionChanged.connect(self.emit_cursor_position)
         self.textChanged.connect(self.emit_modified)
 
@@ -24,3 +28,16 @@ class EditorWidget(QTextEdit):
 
     def emit_modified(self):
         self.text_modified.emit(self.document().isModified())
+        
+    def set_word_wrap(self, enabled: bool):
+            self.word_wrap_enabled = enabled
+            self.setLineWrapMode(
+                QTextEdit.WidgetWidth if enabled else QTextEdit.NoWrap
+            )
+        
+    def toggle_word_wrap(self, checked: bool):
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        editor.set_word_wrap(checked)

@@ -166,3 +166,22 @@ QDialog#FindReplaceDialog QListWidget::item:selected {
     background-color: #add6ff;
     color: #000000;
 }
+/* ==============================
+   Status Bar – VS Code White
+   ============================== */
+
+QStatusBar {
+    background-color: #f3f3f3;
+    color: #333333;
+    border-top: 1px solid #d4d4d4;
+    min-height: 22px;
+}
+
+QStatusBar QLabel {
+    padding: 2px 8px;
+    border-right: 1px solid #e0e0e0;
+}
+
+QStatusBar QLabel:last {
+    border-right: none;
+}
