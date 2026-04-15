@@ -24,20 +24,18 @@ class TabManager(QTabWidget):
     # ============================
     # Criar nova aba
     # ============================
+
     def new_tab(self, title="Novo Documento", pinned=False):
         editor = EditorWidget()
         editor.is_pinned = pinned
 
-        if pinned:
-            index = self._pinned_count()
-        else:
-            index = self.count()
-
+        index = self._pinned_count() if pinned else self.count()
         self.insertTab(index, editor, title)
         self.setCurrentIndex(index)
 
         self._update_tab_ui()
         return editor
+
 
     # ============================
     # Atualizar aparência das abas

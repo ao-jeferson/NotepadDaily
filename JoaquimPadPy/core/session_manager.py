@@ -1,7 +1,6 @@
 import json
 from core.app_storage import AppStorage
 
-
 class SessionManager:
     SESSION_FILE = "session.json"
 
@@ -9,9 +8,6 @@ class SessionManager:
     def _session_path():
         return AppStorage.app_dir() / SessionManager.SESSION_FILE
 
-    # ============================
-    # Salvar sessão
-    # ============================
     @staticmethod
     def save(tabs, current_index: int):
         session = {
@@ -23,9 +19,10 @@ class SessionManager:
             editor = tabs.widget(i)
 
             session["tabs"].append({
-                "title": tabs.tabText(i),
-                "file_path": getattr(editor, "file_path", None),
-                "content": editor.toPlainText()
+                "title": tabs.tabText(i).replace("📌 ", ""),
+                "file_path": editor.file_path,
+                "content": editor.toPlainText(),
+                "is_pinned": editor.is_pinned  # ✅ SALVA PIN
             })
 
         path = SessionManager._session_path()
@@ -34,13 +31,9 @@ class SessionManager:
             encoding="utf-8"
         )
 
-    # ============================
-    # Carregar sessão
-    # ============================
     @staticmethod
     def load():
         path = SessionManager._session_path()
-
         if not path.exists():
             return None
 

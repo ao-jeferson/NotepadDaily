@@ -254,21 +254,25 @@ class MainWindow(QMainWindow):
         if index >= 0:
             self.tabs.toggle_pin(index)
     def restore_session(self, session: dict):
-        pinned_tabs = []
-        normal_tabs = []
+        tabs = session.get("tabs", [])
+        if not tabs:
+            self.tabs.new_tab()
+            return
 
-        for tab in session.get("tabs", []):
-            if tab.get("is_pinned"):
-                pinned_tabs.append(tab)
-            else:
-                normal_tabs.append(tab)
+        # ✅ Separe pinadas e normais
+        pinned_tabs = [t for t in tabs if t.get("is_pinned")]
+        normal_tabs = [t for t in tabs if not t.get("is_pinned")]
 
         for tab in pinned_tabs + normal_tabs:
-            editor = self.tabs.new_tab(tab["title"], pinned=tab.get("is_pinned", False))
+            editor = self.tabs.new_tab(
+                tab["title"],
+                pinned=tab.get("is_pinned", False)
+            )
             editor.setPlainText(tab["content"])
             editor.file_path = tab.get("file_path")
             editor.is_pinned = tab.get("is_pinned", False)
 
-        index = session.get("current_index", len(pinned_tabs + normal_tabs) - 1)
+        # ✅ Restaura foco
+        index = session.get("current_index", len(tabs) - 1)
         if 0 <= index < self.tabs.count():
             self.tabs.setCurrentIndex(index)
