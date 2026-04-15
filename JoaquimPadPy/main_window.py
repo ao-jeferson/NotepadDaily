@@ -1,4 +1,3 @@
-
 from PySide6.QtWidgets import QMainWindow, QFileDialog
 from core.tab_manager import TabManager
 from core.util import Util
@@ -9,13 +8,32 @@ from ui.status_controller import StatusController
 from core.settings import Settings
 from datetime import datetime
 from PySide6.QtGui import QTextCursor
+from core.session_manager import SessionManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super().__init__()
-        
+        super().__init__()     
+                    
         self.setWindowTitle("JoaquimPad — Text Editor")
-        self.resize(1000, 650)
+        self.resize(900, 600)
+
+        # ✅ 1. Cria o gerenciador de abas PRIMEIRO
+        self.tabs = TabManager()
+        self.setCentralWidget(self.tabs)
+
+        # ✅ 2. Cria o menu (mantendo referência!)
+        self.menu_builder = MenuBarBuilder(self)
+        self.menu_builder.build()
+
+        # ✅ 3. Restaura sessão ou cria uma nova aba
+        from core.session_manager import SessionManager
+        session = SessionManager.load()
+
+        if session:
+            self.restore_session(session)
+        else:
+            self.tabs.new_tab()
+
 
         # =============================
         # SERVIÇOS / UI BASE
@@ -37,16 +55,38 @@ class MainWindow(QMainWindow):
         # ✅ Menus        
         self.menu_builder = MenuBarBuilder(self)
         self.menu_builder.build()
+  
+        # =============================
+        # Sessão
+        # =============================
+       
+        session = SessionManager.load()
 
-
-        # ✅ Só agora crie a primeira aba
-        self.tabs.new_tab()
+        if session:
+            self.restore_session(session)
+        else:
+            self.tabs.new_tab()
 
     # ----------------------
 
     # ======================
     # Arquivo
     # ======================
+    def restore_session(self, session: dict):
+        tabs = session.get("tabs", [])
+
+        for tab in tabs:
+            editor = self.tabs.new_tab(tab["title"])
+            editor.setPlainText(tab["content"])
+            editor.file_path = tab.get("file_path")
+        # -----------------------------
+        # ✅ Focar na última aba usada
+        # -----------------------------
+        index = session.get("current_index", len(tabs) - 1)
+
+        if 0 <= index < self.tabs.count():
+            self.tabs.setCurrentIndex(index)
+
     def open_file(self, path: str):
         # Evita abrir o mesmo arquivo duas vezes
         for i in range(self.tabs.count()):
@@ -94,24 +134,62 @@ class MainWindow(QMainWindow):
             # ✅ config DESLIGADA → sempre cria nova aba
             self.tabs.new_tab(Util.current_datetime_tab_name())
                        
+   
     def save_file(self):
         editor = self.tabs.current_editor()
-        if editor.file_path:
-            self.file_service.save_file(editor.file_path, editor.toPlainText())
-        else:
+        if editor is None:
+            return
+
+        path = getattr(editor, "file_path", None)
+
+        if not path:
             self.save_file_as()
+            return
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(editor.toPlainText())
+        except Exception as e:
+            print("Erro ao salvar:", e)
+
 
     def save_file_as(self):
         editor = self.tabs.current_editor()
+        if editor is None:
+            return
+
         path, _ = QFileDialog.getSaveFileName(
-            self, "Salvar arquivo", "", "Text Files (*.txt);;All Files (*)"
+            self,
+            "Salvar como",
+            "",
+            "Arquivos de texto (*.txt);;Todos os arquivos (*)",
         )
-        if path:
-            self.file_service.save_file(path, editor.toPlainText())
-            editor.file_path = path
-            self.tabs.setTabText(
-                self.tabs.currentIndex(), path.split("/")[-1]
-            )
+
+        if not path:
+            return
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(editor.toPlainText())
+        except Exception as e:
+            print("Erro ao salvar:", e)
+            return
+
+        editor.file_path = path
+
+        # Atualiza o nome da aba
+        self.tabs.setTabText(
+            self.tabs.currentIndex(),
+            path.split("/")[-1]
+        )
+
+        # Atualiza arquivos recentes
+        from core.recent_files import RecentFiles
+        RecentFiles.add(path)
+
+        # Atualiza o menu
+        if hasattr(self, "menu_builder"):
+            self.menu_builder.update_recent_files_menu()
 
     # ======================
     # Editar
@@ -133,3 +211,19 @@ class MainWindow(QMainWindow):
 
     def select_all(self):
         self.tabs.current_editor().selectAll()
+    
+
+    def closeEvent(self, event):
+        """
+        Salva a sessão atual ao fechar o JoaquimPad
+        """
+        try:
+            SessionManager.save(
+                self.tabs,
+                self.tabs.currentIndex()
+            )
+            print("✅ Sessão salva com sucesso")
+        except Exception as e:
+            print("❌ Erro ao salvar sessão:", e)
+
+        event.accept()

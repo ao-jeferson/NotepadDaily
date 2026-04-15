@@ -1,5 +1,6 @@
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog
+
 from core.recent_files import RecentFiles
 from core.settings import Settings
 
@@ -10,25 +11,58 @@ class MenuBarBuilder:
         self.menu_bar = main_window.menuBar()
         self.recent_menu = None
 
+    # ============================
+    # Builder principal
+    # ============================
     def build(self):
+        self.menu_bar.clear()
         self.create_file_menu()
         self.create_settings_menu()
 
+    # ============================
+    # MENU ARQUIVO
+    # ============================
     def create_file_menu(self):
         file_menu = self.menu_bar.addMenu("Arquivo")
 
+        # Novo
         file_menu.addAction("Novo", self.main_window.new_file)
 
+        # Abrir
         open_action = QAction("Abrir…", self.main_window)
         open_action.triggered.connect(self.open_file)
         file_menu.addAction(open_action)
 
+        file_menu.addSeparator()
+
+        # Salvar
+        save_action = QAction("Salvar", self.main_window)
+        save_action.triggered.connect(self.main_window.save_file)
+        file_menu.addAction(save_action)
+
+        # Salvar como…
+        save_as_action = QAction("Salvar como…", self.main_window)
+        save_as_action.triggered.connect(self.main_window.save_file_as)
+        file_menu.addAction(save_as_action)
+
+        file_menu.addSeparator()
+
+        # Arquivos recentes
         self.recent_menu = file_menu.addMenu("Arquivos recentes")
         self.update_recent_files_menu()
 
+        clear_recent = QAction("Limpar arquivos recentes", self.main_window)
+        clear_recent.triggered.connect(self.clear_recent_files)
+        file_menu.addAction(clear_recent)
+
         file_menu.addSeparator()
+
+        # Sair
         file_menu.addAction("Sair", self.main_window.close)
 
+    # ============================
+    # MENU CONFIGURAÇÕES
+    # ============================
     def create_settings_menu(self):
         settings_menu = self.menu_bar.addMenu("Configurações")
 
@@ -45,6 +79,9 @@ class MenuBarBuilder:
     def on_toggle_datetime(self, checked: bool):
         Settings.USE_DATETIME_TAB_NAME = checked
 
+    # ============================
+    # AÇÕES
+    # ============================
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(
             self.main_window,
@@ -74,3 +111,7 @@ class MenuBarBuilder:
                 lambda _, p=path: self.main_window.open_file(p)
             )
             self.recent_menu.addAction(action)
+
+    def clear_recent_files(self):
+        RecentFiles.clear()
+        self.update_recent_files_menu()

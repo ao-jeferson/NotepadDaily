@@ -44,3 +44,7 @@ class RecentFiles:
     @classmethod
     def list(cls) -> list[str]:
         return cls._files.copy()
+    @classmethod
+    def clear(cls):
+        cls._files = []
+        cls.save()

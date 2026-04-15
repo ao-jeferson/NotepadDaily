@@ -4,10 +4,13 @@ from main_window import MainWindow
 from core.recent_files import RecentFiles
 
 def main():
+    
+    RecentFiles.load()
     app = QApplication(sys.argv)
 
     with open("themes/dark.qss") as f:
         app.setStyleSheet(f.read())
+    
     RecentFiles.load()
     window = MainWindow()
     window.show()
