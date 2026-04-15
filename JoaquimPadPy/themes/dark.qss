@@ -1,0 +1,22 @@
+QMainWindow {
+    background-color: #1e1e1e;
+}
+
+QTextEdit {
+    background-color: #252526;
+    color: #d4d4d4;
+    font-size: 14px;
+    border: none;
+}
+
+QTabBar::tab {
+    background: #2d2d30;
+    padding: 8px 14px;
+    margin: 2px;
+    border-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background: #007acc;
+    color: white;
+}
