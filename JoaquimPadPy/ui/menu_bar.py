@@ -1,77 +1,76 @@
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QFileDialog
+from core.recent_files import RecentFiles
+from core.settings import Settings
 
 
 class MenuBarBuilder:
     def __init__(self, main_window):
         self.main_window = main_window
         self.menu_bar = main_window.menuBar()
+        self.recent_menu = None
 
     def build(self):
         self.create_file_menu()
-        self.create_edit_menu()
+        self.create_settings_menu()
 
-    # ----------------------
-    # Arquivo
-    # ----------------------
     def create_file_menu(self):
-        file_menu = self.menu_bar.addMenu("&Arquivo")
+        file_menu = self.menu_bar.addMenu("Arquivo")
 
-        file_menu.addAction(self.action(
-            "Novo", self.main_window.new_file, QKeySequence.New
-        ))
-        file_menu.addAction(self.action(
-            "Abrir…", self.main_window.open_file, QKeySequence.Open
-        ))
-        file_menu.addAction(self.action(
-            "Salvar", self.main_window.save_file, QKeySequence.Save
-        ))
-        file_menu.addAction(self.action(
-            "Salvar como…", self.main_window.save_file_as, QKeySequence.SaveAs
-        ))
+        file_menu.addAction("Novo", self.main_window.new_file)
+
+        open_action = QAction("Abrir…", self.main_window)
+        open_action.triggered.connect(self.open_file)
+        file_menu.addAction(open_action)
+
+        self.recent_menu = file_menu.addMenu("Arquivos recentes")
+        self.update_recent_files_menu()
 
         file_menu.addSeparator()
+        file_menu.addAction("Sair", self.main_window.close)
 
-        file_menu.addAction(self.action(
-            "Sair", self.main_window.close, QKeySequence.Quit
-        ))
+    def create_settings_menu(self):
+        settings_menu = self.menu_bar.addMenu("Configurações")
 
-    # ----------------------
-    # Editar
-    # ----------------------
-    def create_edit_menu(self):
-        edit_menu = self.menu_bar.addMenu("&Editar")
+        self.datetime_action = QAction(
+            "Usar data/hora como nome da nova aba",
+            self.main_window
+        )
+        self.datetime_action.setCheckable(True)
+        self.datetime_action.setChecked(Settings.USE_DATETIME_TAB_NAME)
+        self.datetime_action.toggled.connect(self.on_toggle_datetime)
 
-        edit_menu.addAction(self.action(
-            "Desfazer", self.main_window.undo, QKeySequence.Undo
-        ))
-        edit_menu.addAction(self.action(
-            "Refazer", self.main_window.redo, QKeySequence.Redo
-        ))
+        settings_menu.addAction(self.datetime_action)
 
-        edit_menu.addSeparator()
+    def on_toggle_datetime(self, checked: bool):
+        Settings.USE_DATETIME_TAB_NAME = checked
 
-        edit_menu.addAction(self.action(
-            "Recortar", self.main_window.cut, QKeySequence.Cut
-        ))
-        edit_menu.addAction(self.action(
-            "Copiar", self.main_window.copy, QKeySequence.Copy
-        ))
-        edit_menu.addAction(self.action(
-            "Colar", self.main_window.paste, QKeySequence.Paste
-        ))
+    def open_file(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self.main_window,
+            "Abrir arquivo",
+            "",
+            "Arquivos de texto (*.txt);;Todos os arquivos (*)",
+        )
 
-        edit_menu.addSeparator()
+        if path:
+            self.main_window.open_file(path)
+            RecentFiles.add(path)
+            self.update_recent_files_menu()
 
-        edit_menu.addAction(self.action(
-            "Selecionar tudo", self.main_window.select_all, QKeySequence.SelectAll
-        ))
+    def update_recent_files_menu(self):
+        self.recent_menu.clear()
+        files = RecentFiles.list()
 
-    # ----------------------
-    # Helper
-    # ----------------------
-    def action(self, text, slot, shortcut=None):
-        action = QAction(text, self.main_window)
-        action.triggered.connect(slot)
-        if shortcut:
-            action.setShortcut(shortcut)
-        return action
+        if not files:
+            action = QAction("(Nenhum arquivo)", self.main_window)
+            action.setEnabled(False)
+            self.recent_menu.addAction(action)
+            return
+
+        for path in files:
+            action = QAction(path, self.main_window)
+            action.triggered.connect(
+                lambda _, p=path: self.main_window.open_file(p)
+            )
+            self.recent_menu.addAction(action)

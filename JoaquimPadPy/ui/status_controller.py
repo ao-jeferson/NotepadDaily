@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject
+import shiboken6
 
 
 class StatusController(QObject):
@@ -7,9 +8,10 @@ class StatusController(QObject):
         self.status_bar = status_bar
         self.editor = None
 
+    # ============================
     def connect_editor(self, editor):
         # 🔒 Desconecta editor anterior com segurança
-        if self.editor is not None:
+        if self.editor is not None and shiboken6.isValid(self.editor):
             try:
                 self.editor.cursorPositionChanged.disconnect(self.update_cursor_position)
                 self.editor.textChanged.disconnect(self.update_file_size)
@@ -19,12 +21,12 @@ class StatusController(QObject):
 
         self.editor = editor
 
-        # ✅ Conexões explícitas (NUNCA use disconnect() genérico)
+        # ✅ Conexões explícitas
         editor.cursorPositionChanged.connect(self.update_cursor_position)
         editor.textChanged.connect(self.update_file_size)
         editor.selectionChanged.connect(self.update_selection_size)
 
-        # ✅ Se o editor morrer, limpamos a referência
+        # ✅ Se o editor for destruído, limpamos a referência
         editor.destroyed.connect(self.on_editor_destroyed)
 
         self.update_all()
@@ -32,7 +34,7 @@ class StatusController(QObject):
     def on_editor_destroyed(self):
         self.editor = None
 
-    # ---------------------
+    # ============================
     def update_all(self):
         self.update_cursor_position()
         self.update_file_size()
@@ -64,5 +66,10 @@ class StatusController(QObject):
         selected_chars = len(cursor.selectedText())
         self.status_bar.set_selection_size(selected_chars)
 
+    # ============================
     def _can_update(self):
-        return self.editor is not None and not self.editor.isDestroyed()
+        return (
+            self.editor is not None
+            and shiboken6.isValid(self.editor)
+            and shiboken6.isValid(self.status_bar)
+        )
