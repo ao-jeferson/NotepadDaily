@@ -129,6 +129,12 @@ class MenuBarBuilder:
 
         edit_menu.addSeparator()
 
+        format_action = QAction("Formatar Documento", self.main_window)
+        format_action.setShortcut("Ctrl+Shift+F")  # atalho alternativo
+        format_action.triggered.connect(self.main_window.format_document)
+
+        edit_menu.addSeparator()
+
         # Fixar / Desafixar aba
         pin_action = QAction(
             self.icon("pin.svg"),
@@ -217,4 +223,21 @@ class MenuBarBuilder:
         RecentFiles.clear()
         self.update_recent_files_menu()
         
+    def create_language_menu(self):
+        lang_menu = self.menu_bar.addMenu("Linguagem")
+
+        languages = ["Plain Text", "Python"]
+
+        for lang in languages:
+            action = QAction(lang, self.main_window)
+            action.setCheckable(True)
+            action.triggered.connect(
+                lambda _, l=lang: self.main_window.set_language(l)
+            )
+            lang_menu.addAction(action)
+    
+    def update_language_status(self):
+        editor = self.tabs.current_editor()
+        if editor:
+            self.status_bar.language_label.setText(editor.language)
         

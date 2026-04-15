@@ -1,8 +1,7 @@
-from PySide6.QtWidgets import QTabWidget, QMenu
-from PySide6.QtCore import Qt, QPoint
-from core.editor_widget import EditorWidget
 from PySide6.QtWidgets import QTabWidget, QMenu, QTabBar
 from PySide6.QtCore import Qt, QPoint
+
+from core.editor_widget import EditorWidget
 
 
 class TabManager(QTabWidget):
@@ -11,6 +10,8 @@ class TabManager(QTabWidget):
 
         self.setTabsClosable(True)
         self.setMovable(True)
+
+        self._handling_move = False  # evita loop de tabMoved
 
         self.tabCloseRequested.connect(self._on_tab_close)
         self.tabBar().tabMoved.connect(self._on_tab_moved)
@@ -24,7 +25,6 @@ class TabManager(QTabWidget):
     # ============================
     # Criar nova aba
     # ============================
-
     def new_tab(self, title="Novo Documento", pinned=False):
         editor = EditorWidget()
         editor.is_pinned = pinned
@@ -36,32 +36,28 @@ class TabManager(QTabWidget):
         self._update_tab_ui()
         return editor
 
-
     # ============================
     # Atualizar aparência das abas
     # ============================
     def _update_tab_ui(self):
         for i in range(self.count()):
             editor = self.widget(i)
+            if not editor:
+                continue
+
+            base_title = self.tabText(i).replace("📌 ", "")
 
             if editor.is_pinned:
-                # Remove botão de fechar
                 self.tabBar().setTabButton(
                     i,
                     QTabBar.ButtonPosition.RightSide,
                     None
                 )
-
-                # Tooltip
                 self.tabBar().setTabToolTip(i, "Aba fixada")
-
-                # Indicador visual
-                if not self.tabText(i).startswith("📌 "):
-                    self.setTabText(i, "📌 " + self.tabText(i))
+                self.setTabText(i, "📌 " + base_title)
             else:
-                # Restaura texto normal
-                self.setTabText(i, self.tabText(i).replace("📌 ", ""))
                 self.tabBar().setTabToolTip(i, "")
+                self.setTabText(i, base_title)
 
     # ============================
     # Pin / Unpin
@@ -76,12 +72,7 @@ class TabManager(QTabWidget):
 
         self.removeTab(index)
 
-        new_index = (
-            self._pinned_count()
-            if editor.is_pinned
-            else self.count()
-        )
-
+        new_index = self._pinned_count() if editor.is_pinned else self.count()
         self.insertTab(new_index, editor, title)
         self.setCurrentIndex(new_index)
 
@@ -93,28 +84,41 @@ class TabManager(QTabWidget):
     def _on_tab_close(self, index):
         editor = self.widget(index)
         if editor and editor.is_pinned:
-            return  # ❌ não fecha pinada
+            return  # não fecha aba fixada
         self.removeTab(index)
 
     # ============================
     # Reordenação com drag & drop
     # ============================
     def _on_tab_moved(self, from_index, to_index):
-        pinned_count = self._pinned_count()
+        if self._handling_move:
+            return
+
         editor = self.widget(to_index)
+        if not editor:
+            return
 
-        if editor.is_pinned and to_index >= pinned_count:
-            self.tabBar().moveTab(to_index, pinned_count - 1)
+        pinned_count = self._pinned_count()
 
-        if not editor.is_pinned and to_index < pinned_count:
-            self.tabBar().moveTab(to_index, pinned_count)
+        self._handling_move = True
+        try:
+            # Aba pinada não pode ir depois das não-pinadas
+            if editor.is_pinned and to_index >= pinned_count:
+                self.tabBar().moveTab(to_index, pinned_count - 1)
+
+            # Aba normal não pode ir antes das pinadas
+            elif not editor.is_pinned and to_index < pinned_count:
+                self.tabBar().moveTab(to_index, pinned_count)
+        finally:
+            self._handling_move = False
 
     # ============================
     # Fechar outras abas
     # ============================
     def _close_other_tabs(self, keep_index: int):
         for i in reversed(range(self.count())):
-            if i != keep_index and not self.widget(i).is_pinned:
+            editor = self.widget(i)
+            if editor and i != keep_index and not editor.is_pinned:
                 self.removeTab(i)
 
     # ============================
@@ -126,19 +130,17 @@ class TabManager(QTabWidget):
             return
 
         editor = self.widget(index)
+        if not editor:
+            return
 
         menu = QMenu(self)
 
-        pin_text = (
-            "Desafixar aba" if editor.is_pinned else "Fixar aba"
-        )
+        pin_text = "Desafixar aba" if editor.is_pinned else "Fixar aba"
         menu.addAction(pin_text, lambda: self.toggle_pin(index))
 
         if not editor.is_pinned:
             menu.addSeparator()
-            menu.addAction(
-                "Fechar", lambda: self.removeTab(index)
-            )
+            menu.addAction("Fechar", lambda: self.removeTab(index))
             menu.addAction(
                 "Fechar outras abas",
                 lambda: self._close_other_tabs(index)
@@ -147,25 +149,18 @@ class TabManager(QTabWidget):
         menu.exec(self.tabBar().mapToGlobal(pos))
 
     # ============================
-    # Utilitário
+    # Utilitários
     # ============================
     def _pinned_count(self):
         return sum(
             1 for i in range(self.count())
-            if self.widget(i).is_pinned
+            if self.widget(i) and self.widget(i).is_pinned
         )
+
     def current_editor(self):
-        """
-        Retorna o editor (QTextEdit) da aba atualmente selecionada,
-        ou None se não houver abas.
-        """
         return self.currentWidget()
 
     def find_tab_by_title(self, title: str):
-        """
-        Retorna o índice da aba com o título informado,
-        ou None se não existir.
-        """
         for i in range(self.count()):
             if self.tabText(i) == title:
                 return i
