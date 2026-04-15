@@ -8,7 +8,7 @@ def main():
     RecentFiles.load()
     app = QApplication(sys.argv)
 
-    with open("themes/dark.qss") as f:
+    with open("themes/white.qss") as f:
         app.setStyleSheet(f.read())
     
     RecentFiles.load()
@@ -19,3 +19,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def apply_theme(app, theme_path):
+    with open(theme_path, "r", encoding="utf-8") as f:
+        app.setStyleSheet(f.read())
