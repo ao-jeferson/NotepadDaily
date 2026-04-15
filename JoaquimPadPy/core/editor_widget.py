@@ -10,6 +10,7 @@ class EditorWidget(QTextEdit):
         super().__init__()
         self.file_path = None
 
+        self.is_pinned = False
         self.cursorPositionChanged.connect(self.emit_cursor_position)
         self.textChanged.connect(self.emit_modified)
 

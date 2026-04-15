@@ -17,19 +17,24 @@ class MenuBarBuilder:
     def build(self):
         self.menu_bar.clear()
         self.create_file_menu()
+        self.create_edit_menu()
         self.create_settings_menu()
 
-    # ============================
-    # MENU ARQUIVO
-    # ============================
+        # ============================
+        # MENU ARQUIVO
+        # ============================
     def create_file_menu(self):
         file_menu = self.menu_bar.addMenu("Arquivo")
 
         # Novo
-        file_menu.addAction("Novo", self.main_window.new_file)
+        new_action = QAction("Novo", self.main_window)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self.main_window.new_file)
+        file_menu.addAction(new_action)
 
         # Abrir
         open_action = QAction("Abrir…", self.main_window)
+        open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self.open_file)
         file_menu.addAction(open_action)
 
@@ -37,11 +42,13 @@ class MenuBarBuilder:
 
         # Salvar
         save_action = QAction("Salvar", self.main_window)
+        save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.main_window.save_file)
         file_menu.addAction(save_action)
 
-        # Salvar como…
+        # Salvar como
         save_as_action = QAction("Salvar como…", self.main_window)
+        save_as_action.setShortcut("Ctrl+Shift+S")
         save_as_action.triggered.connect(self.main_window.save_file_as)
         file_menu.addAction(save_as_action)
 
@@ -57,8 +64,29 @@ class MenuBarBuilder:
 
         file_menu.addSeparator()
 
+        
+        close_tab_action = QAction("Fechar aba", self.main_window)
+        close_tab_action.setShortcut("Ctrl+W")
+        close_tab_action.triggered.connect(self.main_window.close_current_tab)
+
+        file_menu.addAction(close_tab_action)
+
+        
+        # Fechar todas as abas
+        close_all_action = QAction("Fechar todas as abas", self.main_window)
+        close_all_action.setShortcut("Ctrl+Shift+W")
+        close_all_action.triggered.connect(self.main_window.close_all_tabs)
+        file_menu.addAction(close_all_action)
+
+        file_menu.addSeparator()
+
         # Sair
-        file_menu.addAction("Sair", self.main_window.close)
+        exit_action = QAction("Sair", self.main_window)
+        exit_action.setShortcut("Ctrl+Q")
+        exit_action.triggered.connect(self.main_window.close)
+        file_menu.addAction(exit_action)
+        
+       
 
     # ============================
     # MENU CONFIGURAÇÕES
@@ -115,3 +143,12 @@ class MenuBarBuilder:
     def clear_recent_files(self):
         RecentFiles.clear()
         self.update_recent_files_menu()
+    
+    def create_edit_menu(self):
+        edit_menu = self.menu_bar.addMenu("Editar")
+
+        find_action = QAction("Buscar / Substituir", self.main_window)
+        find_action.setShortcut("Ctrl+F")
+        find_action.triggered.connect(self.main_window.open_find_replace)
+
+        edit_menu.addAction(find_action)

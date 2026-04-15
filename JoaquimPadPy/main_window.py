@@ -9,6 +9,8 @@ from core.settings import Settings
 from datetime import datetime
 from PySide6.QtGui import QTextCursor
 from core.session_manager import SessionManager
+from ui.find_replace_dialog import FindReplaceDialog
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -51,11 +53,7 @@ class MainWindow(QMainWindow):
 
         # ✅ DEPOIS conecte sinais
         self.tabs.currentChanged.connect(self.on_tab_changed)
-
-        # ✅ Menus        
-        self.menu_builder = MenuBarBuilder(self)
-        self.menu_builder.build()
-  
+          
         # =============================
         # Sessão
         # =============================
@@ -227,3 +225,50 @@ class MainWindow(QMainWindow):
             print("❌ Erro ao salvar sessão:", e)
 
         event.accept()
+    def close_all_tabs(self):
+        self.tabs.close_all_tabs()
+            
+    def open_find_replace(self):
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        # ✅ manter referência para evitar GC
+        if not hasattr(self, "_find_replace_dialog"):
+            self._find_replace_dialog = FindReplaceDialog(editor, self)
+        else:
+            # se mudar de aba, atualiza o editor alvo
+            self._find_replace_dialog.editor = editor
+
+        self._find_replace_dialog.show()
+        self._find_replace_dialog.raise_()
+        self._find_replace_dialog.activateWindow()
+
+        dialog = FindReplaceDialog(editor, self)
+        dialog.show
+    def close_current_tab(self):
+        self.tabs.close_current_tab()
+
+    def toggle_pin_current_tab(self):
+        index = self.tabs.currentIndex()
+        if index >= 0:
+            self.tabs.toggle_pin(index)
+    def restore_session(self, session: dict):
+        pinned_tabs = []
+        normal_tabs = []
+
+        for tab in session.get("tabs", []):
+            if tab.get("is_pinned"):
+                pinned_tabs.append(tab)
+            else:
+                normal_tabs.append(tab)
+
+        for tab in pinned_tabs + normal_tabs:
+            editor = self.tabs.new_tab(tab["title"], pinned=tab.get("is_pinned", False))
+            editor.setPlainText(tab["content"])
+            editor.file_path = tab.get("file_path")
+            editor.is_pinned = tab.get("is_pinned", False)
+
+        index = session.get("current_index", len(pinned_tabs + normal_tabs) - 1)
+        if 0 <= index < self.tabs.count():
+            self.tabs.setCurrentIndex(index)
