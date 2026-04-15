@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editor="clr-namespace:joaquimpad.Features.Editor;assembly=joaquimpad.Features"
+        x:Class="joaquimpad.App.Shell.MainWindow"
+        Width="1100"
+        Height="700"
+        Title="joaquimpad">
+
+    <!-- Layout simples, expansível -->
+    <Grid>
+        <editor:EditorView />
+    </Grid>
+
+</Window>

@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:webview="clr-namespace:Avalonia.WebView;assembly=Avalonia.WebView"
+             x:Class="joaquimpad.Features.Editor.EditorView">
+
+  <webview:WebView x:Name="EditorWebView"/>
+
+</UserControl>

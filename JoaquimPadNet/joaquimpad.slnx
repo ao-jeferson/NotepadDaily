@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="joaquimpad/joaquimpad.App/joaquimpad.App.csproj" />
+  <Project Path="joaquimpad/joaquimpad.Features/joaquimpad.Features.csproj" />
+  <Project Path="joaquimpad/joaquimpad.Shared/joaquimpad.Shared.csproj" />
+</Solution>
