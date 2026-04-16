@@ -1,7 +1,7 @@
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QActionGroup, QIcon
 from PySide6.QtWidgets import QFileDialog
 from pathlib import Path
-
+from PySide6.QtGui import QActionGroup
 from core.recent_files import RecentFiles
 from core.settings import Settings
 
@@ -27,15 +27,14 @@ class MenuBarBuilder:
 
         self.create_file_menu()
         self.create_edit_menu()
+        self.create_language_menu()
         self.create_settings_menu()
 
     # ============================
     # MENU ARQUIVO
     # ============================
     def create_file_menu(self):
-        file_menu = self.menu_bar.addMenu(
-            self.icon("file.svg"), "Arquivo"
-        )
+        file_menu = self.menu_bar.addMenu("File")
 
         # Novo
         new_action = QAction(
@@ -98,6 +97,15 @@ class MenuBarBuilder:
         file_menu.addAction(close_all_action)
 
         file_menu.addSeparator()
+        
+        format_action = QAction(
+            "Format", self.main_window
+        )
+        format_action.setShortcut("Ctrl+Shift+F")
+        
+        format_action.triggered.connect(           
+             self.main_window.format_document
+        )
 
         # Sair
         exit_action = QAction(
@@ -111,9 +119,7 @@ class MenuBarBuilder:
     # MENU EDITAR
     # ============================
     def create_edit_menu(self):
-        edit_menu = self.menu_bar.addMenu(
-            self.icon("edit.svg"), "Editar"
-        )
+        edit_menu = self.menu_bar.addMenu("Editar")
 
         # Buscar / Substituir
         find_action = QAction(
@@ -162,9 +168,7 @@ class MenuBarBuilder:
     # MENU CONFIGURAÇÕES
     # ============================
     def create_settings_menu(self):
-        settings_menu = self.menu_bar.addMenu(
-            self.icon("settings.svg"), "Configurações"
-        )
+        settings_menu = self.menu_bar.addMenu("Configurações")
 
         datetime_action = QAction(
             "Usar data/hora como nome da nova aba",
@@ -179,9 +183,6 @@ class MenuBarBuilder:
         )
 
         settings_menu.addAction(datetime_action)
-        
-       
-
 
     # ============================
     # AÇÕES
@@ -221,20 +222,33 @@ class MenuBarBuilder:
 
     def clear_recent_files(self):
         RecentFiles.clear()
-        self.update_recent_files_menu()
-        
-    def create_language_menu(self):
-        lang_menu = self.menu_bar.addMenu("Linguagem")
+        self.update_recent_files_menu() 
 
-        languages = ["Plain Text", "Python"]
+    def create_language_menu(self):
+        language_menu = self.menu_bar.addMenu("Linguagem")
+
+        group = QActionGroup(self.main_window)
+        group.setExclusive(True)
+
+        languages = [
+            "Plain Text",
+            "Python",
+            "C#",
+            "JavaScript",
+            "JSON",
+        ]
 
         for lang in languages:
-            action = QAction(lang, self.main_window)
+            action = language_menu.addAction(lang)
             action.setCheckable(True)
+            group.addAction(action)
+
             action.triggered.connect(
-                lambda _, l=lang: self.main_window.set_language(l)
+                lambda checked, l=lang: self.main_window.set_language(l)
             )
-            lang_menu.addAction(action)
+
+        # Opcional: marcar Plain Text por padrão
+        group.actions()[0].setChecked(True)
     
     def update_language_status(self):
         editor = self.tabs.current_editor()

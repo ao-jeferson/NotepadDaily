@@ -20,12 +20,32 @@ class CSharpHighlighter(BaseHighlighter):
 
     def highlightBlock(self, text):
         for kw in self.KEYWORDS:
-            expr = QRegularExpression(rf"\\b{kw}\\b")
-            for m in expr.globalMatch(text):
-                self.setFormat(m.capturedStart(), m.capturedLength(), self.keyword_format)
+            expr = QRegularExpression(rf"\b{kw}\b")
+            it = expr.globalMatch(text)
+            while it.hasNext():
+                m = it.next()
+                self.setFormat(
+                    m.capturedStart(),
+                    m.capturedLength(),
+                    self.keyword_format
+                )
 
-        for m in QRegularExpression(r"//.*").globalMatch(text):
-            self.setFormat(m.capturedStart(), m.capturedLength(), self.comment_format)
+        comment_expr = QRegularExpression(r"//.*")
+        it = comment_expr.globalMatch(text)
+        while it.hasNext():
+            m = it.next()
+            self.setFormat(
+                m.capturedStart(),
+                m.capturedLength(),
+                self.comment_format
+            )
 
-        for m in QRegularExpression(r"\".*?\"").globalMatch(text):
-            self.setFormat(m.capturedStart(), m.capturedLength(), self.string_format)
+        string_expr = QRegularExpression(r"\".*?\"")
+        it = string_expr.globalMatch(text)
+        while it.hasNext():
+            m = it.next()
+            self.setFormat(
+                m.capturedStart(),
+                m.capturedLength(),
+                self.string_format
+            )
