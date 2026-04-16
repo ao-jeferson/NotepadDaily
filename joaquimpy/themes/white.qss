@@ -1,0 +1,187 @@
+/* =================================================
+   JoaquimPad — VS Code White (Light)
+   Inspirado no VS Code Default Light
+   ================================================= */
+
+/* ===== Janela principal ===== */
+QMainWindow {
+    background-color: #ffffff;
+}
+
+/* ===== Menu Bar ===== */
+QMenuBar {
+    background-color: #f3f3f3;
+    color: #333333;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+QMenuBar::item {
+    padding: 4px 10px;
+    background: transparent;
+}
+
+QMenuBar::item:selected {
+    background-color: #e6e6e6;
+}
+
+/* ===== Menus dropdown ===== */
+QMenu {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #d4d4d4;
+}
+
+QMenu::item {
+    padding: 6px 20px;
+}
+
+QMenu::item:selected {
+    background-color: #e6f2ff;
+    color: #000000;
+}
+
+/* ===== Editor de texto ===== */
+QTextEdit {
+    background-color: #ffffff;
+    color: #1e1e1e;
+    border: none;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 14px;
+
+    selection-background-color: #add6ff;
+    selection-color: #000000;
+}
+
+/* ===== Abas ===== */
+QTabWidget::pane {
+    border-top: 1px solid #d4d4d4;
+}
+
+QTabBar {
+    background-color: #f3f3f3;
+}
+
+QTabBar::tab {
+    background-color: #ececec;
+    color: #333333;
+    padding: 8px 16px;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+}
+
+QTabBar::tab:selected {
+    background-color: #ffffff;
+    font-weight: 600;
+}
+
+QTabBar::tab:hover {
+    background-color: #e6e6e6;
+}
+
+/* ===== Barra de status ===== */
+QStatusBar {
+    background-color: #f3f3f3;
+    color: #333333;
+    border-top: 1px solid #d4d4d4;
+}
+
+QStatusBar QLabel {
+    padding: 2px 8px;
+}
+
+/* ===== Scrollbars ===== */
+QScrollBar:vertical {
+    background: #f3f3f3;
+    width: 12px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #c2c2c2;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #a0a0a0;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+    background: none;
+}
+/* ==============================
+   Buscar / Substituir (VS Code)
+   ============================== */
+
+QDialog#FindReplaceDialog {
+    background-color: #ffffff;
+    border: 1px solid #d4d4d4;
+}
+
+QDialog#FindReplaceDialog QLabel {
+    color: #333333;
+}
+
+QDialog#FindReplaceDialog QLineEdit {
+    background-color: #ffffff;
+    color: #1e1e1e;
+    border: 1px solid #d4d4d4;
+    padding: 4px 6px;
+    selection-background-color: #add6ff;
+}
+
+QDialog#FindReplaceDialog QLineEdit:focus {
+    border: 1px solid #007acc; /* azul VS Code */
+}
+
+QDialog#FindReplaceDialog QCheckBox {
+    color: #333333;
+    padding: 4px 0;
+}
+
+QDialog#FindReplaceDialog QPushButton {
+    background-color: #e7e7e7;
+    color: #000000;
+    border: 1px solid #c8c8c8;
+    padding: 4px 10px;
+}
+
+QDialog#FindReplaceDialog QPushButton:hover {
+    background-color: #dcdcdc;
+}
+
+QDialog#FindReplaceDialog QPushButton:pressed {
+    background-color: #c8c8c8;
+}
+
+/* Lista de resultados */
+QDialog#FindReplaceDialog QListWidget {
+    background-color: #ffffff;
+    border: 1px solid #d4d4d4;
+    color: #1e1e1e;
+}
+
+QDialog#FindReplaceDialog QListWidget::item:selected {
+    background-color: #add6ff;
+    color: #000000;
+}
+/* ==============================
+   Status Bar – VS Code White
+   ============================== */
+
+QStatusBar {
+    background-color: #f3f3f3;
+    color: #333333;
+    border-top: 1px solid #d4d4d4;
+    min-height: 22px;
+}
+
+QStatusBar QLabel {
+    padding: 2px 8px;
+    border-right: 1px solid #e0e0e0;
+}
+
+QStatusBar QLabel:last {
+    border-right: none;
+}

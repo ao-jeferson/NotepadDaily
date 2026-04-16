@@ -4,6 +4,7 @@ from app.signals import AppSignals
 from .editors.editor_manager import EditorManager
 from .menus.file_menu import FileMenu
 from .actions.file_actions import FileActions
+from .menus.config_menu import ConfigMenu
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -37,3 +38,8 @@ class MainWindow(QMainWindow):
         self.signals.open_file.connect(self.file_actions.open_file)
         self.signals.save_file.connect(self.file_actions.save_file)
         self.signals.save_as_file.connect(self.file_actions.save_as_file)
+    
+    def _create_menus(self):
+        menu_bar = self.menuBar()
+        menu_bar.addMenu(FileMenu(self.signals, self))
+        menu_bar.addMenu(ConfigMenu(self.settings, self))
