@@ -1,57 +1,32 @@
-import subprocess
-import tempfile
-import os
-from core.formatters.base import BaseFormatter
-
-
+import re
+from .base_formatter import BaseFormatter, BLUE, GREEN, GRAY, RESET
 class CSharpFormatter(BaseFormatter):
-    language = "C#"
+    KEYWORDS = [
+        "using","namespace","class","public","private","protected",
+        "static","void","int","string","return","new","if","else",
+        "for","foreach","while"
+    ]
 
-    def format(self, text: str) -> str:
-        """
-        Formata código C# usando 'dotnet format'.
+    def format_and_highlight(self, code: str) -> str:
+        output = []
 
-        Requisitos:
-        - .NET SDK instalado
-        - dotnet disponível no PATH
+        for raw in code.splitlines():
+            line = raw.strip()
 
-        Se 'dotnet format' não estiver disponível,
-        retorna o texto original sem erro.
-        """
+            if line.startswith("//"):
+                output.append(self.indent_line(f"{GRAY}{line}{RESET}"))
+                continue
 
-        try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                csproj_path = os.path.join(tmpdir, "Temp.csproj")
-                cs_file_path = os.path.join(tmpdir, "Temp.cs")
+            if "}" in line:
+                self.indent_level = max(0, self.indent_level - 1)
 
-                # 1️⃣ cria arquivo .csproj mínimo
-                with open(csproj_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        """<Project Sdk="Microsoft.NET.Sdk">
-                          <PropertyGroup>
-                            <TargetFramework>net8.0</TargetFramework>
-                          </PropertyGroup>
-                        </Project>"""
-                    )
+            line = self.colorize_keywords(line, self.KEYWORDS, BLUE)
+            line = re.sub(r'".*?"',
+                          lambda m: f"{GREEN}{m.group(0)}{RESET}", line)
 
-                # 2️⃣ cria arquivo .cs
-                with open(cs_file_path, "w", encoding="utf-8") as f:
-                    f.write(text)
+            output.append(self.indent_line(line))
 
-                # 3️⃣ executa dotnet format
-                subprocess.run(
-                    ["dotnet", "format", csproj_path, "--no-restore"],
-                    cwd=tmpdir,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    check=True
-                )
+            if "{" in line:
+                self.indent_level += 1
 
-                # 4️⃣ lê código formatado
-                with open(cs_file_path, "r", encoding="utf-8") as f:
-                    return f.read()
-
-        except Exception:
-            # ✅ fallback seguro
-            return text
+        return "\n".join(output)

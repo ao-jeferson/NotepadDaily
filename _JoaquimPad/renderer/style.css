@@ -1,8 +1,9 @@
 /* =====================================================
-   VARIÁVEIS DE TEMA
+   THEME VARIABLES
    ===================================================== */
 
 :root {
+
   --bg-main: #ffffff;
   --bg-secondary: #f3f3f3;
   --bg-tab-hover: #eaeaea;
@@ -12,9 +13,11 @@
 
   --text-primary: #111;
   --text-secondary: #666;
+
 }
 
 [data-theme="dark"] {
+
   --bg-main: #1e1e1e;
   --bg-secondary: #252526;
   --bg-tab-hover: #2d2d30;
@@ -24,22 +27,78 @@
 
   --text-primary: #e5e7eb;
   --text-secondary: #9ca3af;
+
 }
 
 /* =====================================================
-   RESET / BASE
+   RESET
    ===================================================== */
 
 html,
 body {
+
   margin: 0;
   padding: 0;
+
   height: 100%;
+
+  font-family:
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+
+  background:
+    var(--bg-main);
+
+  color:
+    var(--text-primary);
+
+}
+
+/* =====================================================
+   LAYOUT ROOT
+   ===================================================== */
+
+#layout {
+
   display: flex;
+
+  height: 100vh;
+
+}
+
+/* =====================================================
+   SIDEBAR (Explorer)
+   ===================================================== */
+
+#sidebar {
+
+  width: 260px;
+
+  background: #1e1e1e;
+
+  color: white;
+
+  overflow: auto;
+
+  border-right:
+    1px solid
+    var(--border-color);
+
+}
+
+/* =====================================================
+   MAIN AREA
+   ===================================================== */
+
+#main {
+
+  flex: 1;
+
+  display: flex;
+
   flex-direction: column;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  background: var(--bg-main);
-  color: var(--text-primary);
+
 }
 
 /* =====================================================
@@ -47,170 +106,217 @@ body {
    ===================================================== */
 
 .action-bar {
+
   display: flex;
+
   align-items: center;
+
   gap: 8px;
+
   padding: 6px 10px;
-  background: var(--bg-main);
-  border-bottom: 1px solid var(--border-color);
+
+  background:
+    var(--bg-main);
+
+  border-bottom:
+    1px solid
+    var(--border-color);
+
+}
+
+.action-bar button:disabled {
+
+  opacity: 0.35;
+
+  cursor: not-allowed;
+
 }
 
 /* =====================================================
    TABS BAR
    ===================================================== */
 
-.tabs-bar {
+#tabs {
+
   display: flex;
+
   align-items: stretch;
+
   height: 26px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+
+  background:
+    var(--bg-secondary);
+
+  border-bottom:
+    1px solid
+    var(--border-color);
+
   overflow-x: auto;
-  overflow-y: hidden;
+
   white-space: nowrap;
-  scrollbar-width: thin;
+
 }
 
 /* =====================================================
-   ABA (BASE)
+   TAB BASE
    ===================================================== */
 
-.tabs-bar .tab {
+.tab {
+
   display: flex;
+
   align-items: center;
-  gap: 0px;
+
   height: 100%;
+
   padding: 0 8px;
 
-  flex: 1 1 auto;
   min-width: 100px;
   max-width: 150px;
 
   font-size: 11.5px;
-  color: var(--text-secondary);
+
+  color:
+    var(--text-secondary);
 
   cursor: pointer;
+
   position: relative;
+
   user-select: none;
-  background: transparent;
 
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  border-right:
+    1px solid rgba(0,0,0,0.08);
+
 }
 
-[data-theme="dark"] .tabs-bar .tab {
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+[data-theme="dark"] .tab {
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
+
 }
 
-.tabs-bar .tab:hover {
-  background: var(--bg-tab-hover);
+.tab:hover {
+
+  background:
+    var(--bg-tab-hover);
+
 }
 
 /* =====================================================
-   CONTEÚDO DA ABA
+   ACTIVE TAB
    ===================================================== */
 
-.tabs-bar .tab button {
+.tab.active {
+
+  background:
+    var(--bg-main);
+
+  color:
+    var(--text-primary);
+
+  font-weight: 500;
+
+}
+
+.tab.active::after {
+
+  content: "";
+
+  position: absolute;
+
+  bottom: 0;
+
+  left: 0;
+
+  right: 0;
+
+  height: 2px;
+
+  background:
+    var(--accent);
+
+}
+
+/* =====================================================
+   TAB CONTENT
+   ===================================================== */
+
+.tab button {
+
   all: unset;
+
   display: flex;
+
   align-items: center;
+
   gap: 6px;
 
-  min-width: 0;
   flex: 1;
 
   overflow: hidden;
+
+}
+
+.tab-icon {
+
+  width: 14px;
+
+  height: 14px;
+
+  flex-shrink: 0;
+
+}
+
+.tab-title {
+
   white-space: nowrap;
-  text-overflow: ellipsis;
-}
 
-/* =====================================================
-   ABA ATIVA
-   ===================================================== */
-
-.tabs-bar .tab.active {
-  background: var(--bg-main);
-  color: var(--text-primary);
-  font-weight: 500;
-  flex: 1.3 1 auto;
-}
-
-.tabs-bar .tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent);
-}
-
-.tabs-bar .tab:not(.active) {
-  opacity: 0.75;
-}
-
-.tabs-bar .tab:hover {
-  opacity: 1;
-}
-
-/* =====================================================
-   BOTÃO FECHAR
-   ===================================================== */
-
-.tabs-bar .tab .close {
-  flex-shrink: 0;
-  margin-left: 6px;
-  font-size: 11px;
-  color: #777;
-}
-
-.tabs-bar .tab .close:hover {
-  color: #c62828;
-}
-
-/* =====================================================
-   ABA PINADA (📌 + nome)
-   ===================================================== */
-
-.tabs-bar .tab.pinned {
-  flex: 0 0 auto;
-  min-width: 100px;
-  max-width: 160px;
-  padding: 0 6px;
-  opacity: 1;
-}
-
-.tabs-bar .tab.pinned button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tabs-bar .tab.pinned .pin-icon {
-  flex-shrink: 0;
-  font-size: 13px;
-}
-
-.tabs-bar .tab.pinned .pin-name {
   overflow: hidden;
-  white-space: nowrap;
+
   text-overflow: ellipsis;
-  max-width: 100px;
+
+}
+
+/* =====================================================
+   CLOSE BUTTON
+   ===================================================== */
+
+.tab .close {
+
+  margin-left: 6px;
+
   font-size: 11px;
+
+  color: #777;
+
 }
 
-.tabs-bar .tab.pinned .close {
+.tab .close:hover {
+
+  color: #c62828;
+
+}
+
+/* =====================================================
+   PINNED TAB
+   ===================================================== */
+
+.tab.pinned {
+
+  flex: 0 0 auto;
+
+  min-width: 100px;
+
+  max-width: 160px;
+
+}
+
+.tab.pinned .close {
+
   display: none;
-}
 
-/* separador visual após última pinada */
-.tabs-bar .tab.pinned:last-of-type::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  top: 4px;
-  bottom: 4px;
-  width: 1px;
-  background: var(--border-color);
 }
 
 /* =====================================================
@@ -218,13 +324,20 @@ body {
    ===================================================== */
 
 .tab.sortable-chosen {
+
   opacity: 0.85;
+
   transform: scale(1.04);
+
 }
 
 .tab.sortable-ghost {
+
   opacity: 0.3;
-  border: 2px dashed var(--accent);
+
+  border: 2px dashed
+    var(--accent);
+
 }
 
 /* =====================================================
@@ -232,22 +345,40 @@ body {
    ===================================================== */
 
 .tab-context-menu {
+
   position: fixed;
-  background: var(--bg-main);
-  border: 1px solid var(--border-color);
+
+  background:
+    var(--bg-main);
+
+  border:
+    1px solid
+    var(--border-color);
+
   border-radius: 6px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+
+  box-shadow:
+    0 6px 12px rgba(0,0,0,0.15);
+
   font-size: 13px;
+
   z-index: 9999;
+
 }
 
 .tab-context-menu .item {
+
   padding: 6px 12px;
+
   cursor: pointer;
+
 }
 
 .tab-context-menu .item:hover {
-  background: var(--bg-tab-hover);
+
+  background:
+    var(--bg-tab-hover);
+
 }
 
 /* =====================================================
@@ -255,10 +386,11 @@ body {
    ===================================================== */
 
 #editor {
+
   flex: 1;
-  min-height: 0;
-  width: 100%;
+
   background: #1e1e1e;
+
 }
 
 /* =====================================================
@@ -266,37 +398,56 @@ body {
    ===================================================== */
 
 .status-bar {
+
   height: 22px;
+
   padding: 2px 10px;
+
   display: flex;
+
   align-items: center;
+
   background: #1f2933;
+
   color: #e5e7eb;
+
   font-size: 12px;
-  border-top: 1px solid #374151;
-}
-.action-bar button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+
+  border-top:
+    1px solid #374151;
+
 }
 
-.action-bar button:disabled svg {
-  stroke: #999;
-}
-.tab button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* =====================================================
+   FILE EXPLORER TREE
+   ===================================================== */
+
+.file-tree {
+
+  list-style: none;
+
+  padding-left: 12px;
+
+  font-size: 13px;
+
 }
 
-.tab-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
+.file-tree li {
+
+  cursor: pointer;
+
+  padding: 2px 0;
+
 }
 
-.tab-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.file-tree li.folder > span::before {
+
+  content: "📁 ";
+
+}
+
+.file-tree li.file > span::before {
+
+  content: "📄 ";
+
 }

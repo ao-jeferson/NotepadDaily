@@ -1,15 +1,40 @@
 ﻿{
-  "ActiveTabIndex": 1,
+  "ActiveTabIndex": 6,
   "Tabs": [
     {
-      "FilePath": "C:\\workspace\\others\\NotePD\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_022e73d659bc48da96bba3bd1956681d.txt",
-      "TabTitle": "07-04 19:37",
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_cd689f93e4ac455eb295b27b447593c1.txt",
+      "TabTitle": "16-04 01:51",
       "IsTemporary": true
     },
     {
-      "FilePath": "C:\\workspace\\others\\NotePD\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_0abf31712f964bc3a4e5ce3bfd759493.txt",
-      "TabTitle": "08-04 07:49",
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_a70b44e98eb4415f9b39a52f55fdef97.txt",
+      "TabTitle": "16-04 01:51",
       "IsTemporary": true
+    },
+    {
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_af78a9aff7574ee1a59b1433ce431d1a.txt",
+      "TabTitle": "16-04 01:51",
+      "IsTemporary": true
+    },
+    {
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\Curriculo-Jeferson-Araujo-Oliveira.pdf",
+      "TabTitle": "Curriculo-Jeferson-Araujo-Oliveira.pdf",
+      "IsTemporary": false
+    },
+    {
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\main.js",
+      "TabTitle": "main.js",
+      "IsTemporary": false
+    },
+    {
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\_temp\\unsaved_64561b250ffa4ac18334338597049dc6.txt",
+      "TabTitle": "16-04 01:52",
+      "IsTemporary": true
+    },
+    {
+      "FilePath": "C:\\workspace\\NotepadDaily\\NotePD\\Editor\\bin\\Debug\\1mb.json",
+      "TabTitle": "1mb.json",
+      "IsTemporary": false
     }
   ]
 }

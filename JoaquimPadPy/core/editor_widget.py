@@ -1,36 +1,18 @@
+
 from PySide6.QtWidgets import QTextEdit
 from PySide6.QtCore import Signal
-
-from core.highlighters.plaintext import PlainTextHighlighter
-from core.highlighters.python import PythonHighlighter
-from core.highlighters.csharp import CSharpHighlighter
-from core.highlighters.javascript import JavaScriptHighlighter
-
-from core.formatters.python import PythonFormatter
-from core.formatters.json import JsonFormatter
-from core.formatters.csharp import CSharpFormatter
-
-
+from PySide6.QtGui import QKeySequence, QShortcut
 # ============================
-# Registro de Highlighters
+# Formatters
 # ============================
-HIGHLIGHTERS = {
-    "Plain Text": PlainTextHighlighter,
-    "Python": PythonHighlighter,
-    "C#": CSharpHighlighter,
-    "JavaScript": JavaScriptHighlighter,
-}
+from core.formatters.registry import discover_formatters
+from core.highlighters.registry import discover_highlighters
 
-# ============================
+# =====================================================
 # Registro de Formatters
-# ============================
-FORMATTERS = {
-    "Python": PythonFormatter(),
-    "JSON": JsonFormatter(),
-    "C#": CSharpFormatter(),
-}
-
-
+# =====================================================
+FORMATTERS = discover_formatters() 
+HIGHLIGHTERS = discover_highlighters()
 class EditorWidget(QTextEdit):
     """
     Editor de texto de uma aba.
@@ -65,47 +47,72 @@ class EditorWidget(QTextEdit):
         # Cursor
         self.cursorPositionChanged.connect(self._emit_cursor_position)
 
-    # ============================
-    # Linguagem / Highlight
-    # ============================
+    
+    # ==================================================
+    # Linguagem / Formatter / Highlighter
+    # ==================================================
+    
+    def register_formatter(cls):
+        FORMATTERS[cls.language] = cls()
+        return cls
+   
+   
     def set_language(self, language: str):
         self.language = language
 
+        # remove highlighter atual
         if self._highlighter:
             self._highlighter.setParent(None)
             self._highlighter = None
 
+        # aplica novo highlighter
         highlighter_cls = HIGHLIGHTERS.get(language)
         if highlighter_cls:
             self._highlighter = highlighter_cls(self.document())
 
-    # ============================
+    # ==================================================
     # Formatter
-    # ============================
+    # ==================================================
     def format_document(self):
         formatter = FORMATTERS.get(self.language)
         if not formatter:
             return
 
+        cursor = self.textCursor()
+        position = cursor.position()
+
         try:
-            formatted = formatter.format(self.toPlainText())
+            original = self.toPlainText()
+            formatted = formatter.format(original)
+
+            # evita alterações desnecessárias
+            if formatted == original:
+                return
+
             self.setPlainText(formatted)
+
+            # restaura cursor
+            cursor = self.textCursor()
+            cursor.setPosition(min(position, len(formatted)))
+            self.setTextCursor(cursor)
+
         except Exception:
-            # nunca quebra o editor
+            # formatter NUNCA pode quebrar o editor
             pass
 
-    # ============================
+    
+    # ==================================================
     # Cursor
-    # ============================
+    # ==================================================
     def _emit_cursor_position(self):
         cursor = self.textCursor()
         line = cursor.blockNumber() + 1
         column = cursor.columnNumber() + 1
         self.cursor_position_changed.emit(line, column)
 
-    # ============================
+    # ==================================================
     # Word Wrap
-    # ============================
+    # ==================================================
     def set_word_wrap(self, enabled: bool):
         self.word_wrap_enabled = enabled
         self.setLineWrapMode(

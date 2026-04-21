@@ -9,3 +9,15 @@ C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\Newtonsoft.Json.xml
 C:\workspace\others\NotePD\NotePD\Domain\obj\Debug\Domain.csproj.CopyComplete
 C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\ScintillaNET.dll
 C:\workspace\others\NotePD\NotePD\Domain\bin\Debug\ScintillaNET.xml
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\Domain.dll
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\Domain.pdb
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\JsonToEntityClass.dll
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\Newtonsoft.Json.dll
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\ScintillaNET.dll
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\Newtonsoft.Json.xml
+C:\workspace\NotepadDaily\NotePD\Domain\bin\Debug\ScintillaNET.xml
+C:\workspace\NotepadDaily\NotePD\Domain\obj\Debug\Domain.csproj.AssemblyReference.cache
+C:\workspace\NotepadDaily\NotePD\Domain\obj\Debug\Domain.csproj.CoreCompileInputs.cache
+C:\workspace\NotepadDaily\NotePD\Domain\obj\Debug\Domain.csproj.Up2Date
+C:\workspace\NotepadDaily\NotePD\Domain\obj\Debug\Domain.dll
+C:\workspace\NotepadDaily\NotePD\Domain\obj\Debug\Domain.pdb

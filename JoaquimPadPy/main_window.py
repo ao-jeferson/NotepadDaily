@@ -1,5 +1,5 @@
+
 from pathlib import Path
-from datetime import datetime
 
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -13,12 +13,13 @@ from core.language_detection import detect_language_from_path
 from core.session_manager import SessionManager
 from core.settings import Settings
 from core.util import Util
-from services.file_service import FileService
 
+from file_system.file_service import FileService
 from ui.menu_bar import MenuBarBuilder
 from ui.status_bar import StatusBar
 from ui.status_controller import StatusController
 from ui.find_replace_dialog import FindReplaceDialog
+
 
 
 class MainWindow(QMainWindow):
@@ -142,10 +143,22 @@ class MainWindow(QMainWindow):
         editor.setPlainText(content)
         editor.file_path = path
 
-        # Auto-detecção de linguagem
-        language = detect_language_from_path(path)
+        # Auto-detecção de linguagem        
+        language = detect_language_from_path(path)        
         editor.set_language(language)
+        editor.format_document()
+        self.update_language_status()
 
+    # main_window.py
+
+    
+    def set_language(self, language: str):
+        editor = self.tabs.current_editor()
+        if not editor:
+            return
+
+        editor.set_language(language)
+        editor.format_document()
         self.update_language_status()
 
     def new_file(self):
@@ -224,11 +237,22 @@ class MainWindow(QMainWindow):
         self.status_controller.connect_editor(editor)
         self.update_language_status()
 
-        # registra posição inicial no histórico
+        # ✅ sincroniza menu de linguagem
+        if hasattr(self.menu_builder, "language_actions"):
+            action = self.menu_builder.language_actions.get(editor.language)
+            if action:
+                action.setChecked(True)
+
         self._register_cursor_position()
 
     def close_current_tab(self):
         self.tabs.close_current_tab()
+        
+    def format_all_tabs(self):
+        for i in range(self.tabs.count()):
+            editor = self.tabs.widget(i)
+            if editor:
+                editor.format_document()
 
     def close_all_tabs(self):
         self.tabs.close_all_tabs()
@@ -258,12 +282,7 @@ class MainWindow(QMainWindow):
     # ======================================================
     # Linguagem / Formatter
     # ======================================================
-    def set_language(self, language: str):
-        editor = self.tabs.current_editor()
-        if editor:
-            editor.set_language(language)
-            self.update_language_status()
-
+        
     def update_language_status(self):
         editor = self.tabs.current_editor()
         if editor:

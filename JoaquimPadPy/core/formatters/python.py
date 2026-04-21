@@ -1,21 +1,37 @@
-try:
-    import black
-except ImportError:
-    black = None
+import re
+import keyword
+from .base_formatter import BaseFormatter, CYAN, GREEN, GRAY, RESET
 
+class PythonFormatter(BaseFormatter):
+    def format_and_highlight(self, code: str) -> str:
+        output = []
 
-class PythonFormatter:
-    language = "Python"
+        for raw in code.splitlines():
+            line = raw.strip()
 
-    def format(self, text: str) -> str:
-        if not black:
-            # black não instalado → não formata, mas não quebra
-            return text
+            if line.startswith("#"):
+                output.append(self.indent_line(f"{GRAY}{line}{RESET}"))
+                continue
 
-        try:
-            return black.format_str(
-                text,
-                mode=black.FileMode()
-            )
-        except Exception:
-            return text
+            if line.endswith(":"):
+                colored = self.colorize_keywords(
+                    line, keyword.kwlist, CYAN
+                )
+                output.append(self.indent_line(colored))
+                self.indent_level += 1
+                continue
+
+            if line == "":
+                output.append("")
+                continue
+
+            if re.match(r"(return|pass|break|continue)", line):
+                self.indent_level = max(0, self.indent_level - 1)
+
+            line = self.colorize_keywords(line, keyword.kwlist, CYAN)
+            line = re.sub(r'".*?"|\'.*?\'',
+                          lambda m: f"{GREEN}{m.group(0)}{RESET}", line)
+
+            output.append(self.indent_line(line))
+
+        return "\n".join(output)

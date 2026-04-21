@@ -1,9 +1,18 @@
 import json
-from core.formatters.base import BaseFormatter
-
+import re
+from .base_formatter import BaseFormatter, GREEN, CYAN, RESET
 
 class JsonFormatter(BaseFormatter):
-    language = "JSON"
+    def format_and_highlight(self, code: str) -> str:
+        parsed = json.loads(code)
+        pretty = json.dumps(parsed, indent=4, ensure_ascii=False)
+        output = []
 
-    def format(self, text: str) -> str:
-        return json.dumps(json.loads(text), indent=2)
+        for line in pretty.splitlines():
+            line = re.sub(r'".*?"(?=:)',
+                          lambda m: f"{CYAN}{m.group(0)}{RESET}", line)
+            line = re.sub(r'\b\d+\b',
+                          lambda m: f"{GREEN}{m.group(0)}{RESET}", line)
+            output.append(line)
+
+        return "\n".join(output)

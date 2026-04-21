@@ -1,10 +1,19 @@
+/* =====================================================
+   CORE
+   ===================================================== */
 import { EditorCore } from "../core/editor/EditorCore.js";
 import { FileSystemService } from "../core/filesystem/FileSystemService.js";
 import { StatusBar } from "../core/statusbar/StatusBar.js";
 import TabManager from "../core/editor/TabManager.js";
 import SessionManager from "../core/session/SessionManager.js";
+/* =====================================================
+   FEATURES
+   ===================================================== */
+
 import { SmartNewTabFeature } from "../features/smart-new-tab/SmartNewTabFeature.js";
 import { CursorNavigationFeature } from "../features/cursor-navigation/CursorNavigationFeature.js";
+import { FileExplorerFeature } from "../features/file-explorer/FileExplorerFeature.js";
+import { SearchFeature } from "../features/search/SearchFeature.js";
 
 window.createEditor = () => {
   /* =====================================================
@@ -15,7 +24,7 @@ window.createEditor = () => {
   const newTabBtn = document.getElementById("newTabBtn");
   const backBtn = document.getElementById("cursorBack");
   const forwardBtn = document.getElementById("cursorForward");
-
+  const sidebarContainer = document.getElementById("sidebar");
   let sortable = null;
 
   const languageIcons = {
@@ -47,10 +56,27 @@ window.createEditor = () => {
   const tabManager = new TabManager();
   const fsService = new FileSystemService();
   const session = new SessionManager();
-
   const statusBar = new StatusBar(EditorCore);
-  statusBar.init();
 
+  statusBar.init();
+  
+  /* =====================================================
+     🧭 FILE EXPLORER && (TREEVIEW)
+     ===================================================== */
+  const sidebar =
+    document.getElementById("sidebar");
+
+  const explorer =
+    new FileExplorerFeature({
+
+      fileSystem: fsService,
+      tabManager
+
+    });
+
+  explorer.mount(
+    sidebarContainer
+  );
   /* =====================================================
      FEATURES
      ===================================================== */
@@ -61,6 +87,41 @@ window.createEditor = () => {
   cursorNav.onStateChange(({ canGoBack, canGoForward }) => {
     backBtn.disabled = !canGoBack;
     forwardBtn.disabled = !canGoForward;
+  });
+
+
+
+
+  /* =====================================================
+     🔎 SEARCH FEATURE
+     ===================================================== */
+
+  const searchFeature =
+    new SearchFeature({
+
+      fileSystem: fsService,
+      tabManager
+
+    });
+
+  searchFeature.mount(
+    document.body
+  );
+
+  /* =====================================================
+     ⌨️ SHORTCUT CTRL+SHIFT+F
+     ===================================================== */
+
+  window.addEventListener("keydown", (e) => {
+
+    if (e.ctrlKey && e.shiftKey && e.key === "F") {
+
+      e.preventDefault();
+
+      searchFeature.open();
+
+    }
+
   });
 
   /* =====================================================
@@ -121,6 +182,8 @@ window.createEditor = () => {
   /* =====================================================
      ACTIONS
      ===================================================== */
+
+
   newTabBtn.onclick = () => {
     const doc = smartNewTab.handleNewDocument((name) =>
       tabManager.createNew(name),
@@ -142,6 +205,14 @@ window.createEditor = () => {
   if (window.menu?.onNewFile) {
     window.menu.onNewFile(() => newTabBtn.onclick());
   }
+
+  window.menu?.onCloseFolder?.(() => {
+
+    console.log("Fechando pasta...");
+
+    sidebarContainer.innerHTML = "";
+
+  });
 
   if (window.menu?.onOpenFile) {
     window.menu.onOpenFile(async () => {
@@ -182,7 +253,34 @@ window.createEditor = () => {
       saveSession();
     });
   }
+  /* =====================================================
+    MENU EVENTS
+    ===================================================== */
 
+  /* OPEN FOLDER */
+
+  window.menu?.onOpenFolder?.(
+    async () => {
+      await fileExplorer
+        .controller
+        .initialize();
+
+    }
+  );
+
+  /* CLOSE FOLDER */
+
+  window.menu?.onCloseFolder?.(
+    () => {
+
+      console.log(
+        "Fechando pasta..."
+      );
+
+      sidebarContainer.innerHTML = "";
+
+    }
+  );
   /* =====================================================
      CURSOR NAVIGATION
      ===================================================== */

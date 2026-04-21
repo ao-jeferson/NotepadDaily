@@ -1,7 +1,9 @@
+from functools import partial
 from PySide6.QtGui import QAction, QActionGroup, QIcon
 from PySide6.QtWidgets import QFileDialog
 from pathlib import Path
 from PySide6.QtGui import QActionGroup
+from core.editor_widget import FORMATTERS
 from core.recent_files import RecentFiles
 from core.settings import Settings
 
@@ -224,31 +226,84 @@ class MenuBarBuilder:
         RecentFiles.clear()
         self.update_recent_files_menu() 
 
+    
     def create_language_menu(self):
         language_menu = self.menu_bar.addMenu("Linguagem")
 
-        group = QActionGroup(self.main_window)
-        group.setExclusive(True)
+        self.language_action_group = QActionGroup(self.main_window)
+        self.language_action_group.setExclusive(True)
 
-        languages = [
-            "Plain Text",
-            "Python",
-            "C#",
-            "JavaScript",
-            "JSON",
-        ]
+        self.language_actions = {}
 
-        for lang in languages:
-            action = language_menu.addAction(lang)
+        # ✅ gera linguagens dinamicamente
+        for language in sorted(FORMATTERS.keys()):
+            action = language_menu.addAction(language)
             action.setCheckable(True)
-            group.addAction(action)
 
+            self.language_action_group.addAction(action)
+            self.language_actions[language] = action
+
+            # ✅ CORREÇÃO AQUI
             action.triggered.connect(
-                lambda checked, l=lang: self.main_window.set_language(l)
+                partial(self.main_window.set_language, language)
             )
 
-        # Opcional: marcar Plain Text por padrão
-        group.actions()[0].setChecked(True)
+        # ✅ marca Plain Text por padrão (se existir)
+        if "Plain Text" in self.language_actions:
+            self.language_actions["Plain Text"].setChecked(True)
+
+            language_menu = self.menu_bar.addMenu("Linguagem")
+
+            self.language_action_group = QActionGroup(self.main_window)
+            self.language_action_group.setExclusive(True)
+
+            # ✅ gera dinamicamente a partir dos formatters registrados
+            languages = sorted(FORMATTERS.keys())
+
+            self.language_actions = {}
+
+            for language in languages:
+                action = language_menu.addAction(language)
+                action.setCheckable(True)
+
+                self.language_action_group.addAction(action)
+                self.language_actions[language] = action
+
+                action.triggered.connect(
+                    lambda checked, lang=language:
+                        self.main_window.set_language(lang)
+                )
+
+            # ✅ marca Plain Text se existir
+            if "Plain Text" in self.language_actions:
+                self.language_actions["Plain Text"].setChecked(True)   
+            language_menu = self.menu_bar.addMenu("Linguagem")
+
+            group = QActionGroup(self.main_window)
+            group.setExclusive(True)
+
+            languages = [
+                "Plain Text",
+                "Python",
+                "C#",
+                "JavaScript",
+                "JSON",
+            ]
+
+            for lang in languages:
+                action = language_menu.addAction(lang)
+                action.setCheckable(True)
+                group.addAction(action)
+
+                
+                action.triggered.connect(
+                    lambda checked, lang=language:
+                        self.main_window.set_language(lang)
+                )
+
+
+            # Opcional: marcar Plain Text por padrão
+            group.actions()[0].setChecked(True)
     
     def update_language_status(self):
         editor = self.tabs.current_editor()

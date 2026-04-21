@@ -117,4 +117,117 @@ export class FileSystemService {
   async readChunk(path, start, size) {
     return window.fs.readChunk(path, start, size);
   }
+
+  async readDirectoryTree(dir) {
+
+    const entries = await fs.readdir(dir, {
+      withFileTypes: true
+    });
+
+    const nodes = [];
+
+    for (const entry of entries) {
+
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+
+        nodes.push({
+          name: entry.name,
+          path: fullPath,
+          type: "folder",
+          children: await this.readDirectoryTree(fullPath)
+        });
+
+      } else {
+
+        nodes.push({
+          name: entry.name,
+          path: fullPath,
+          type: "file"
+        });
+      }
+    }
+
+    return nodes;
+  }
+
+  async readFile(filePath) {
+
+    return fs.readFile(filePath, "utf-8");
+  }
+
+  async isFile(p) {
+
+    const stat = await fs.stat(p);
+
+    return stat.isFile();
+  }
+
+  /* =====================================================
+   Diretórios (Explorer)
+   ===================================================== */
+
+  async getWorkspaceRoot() {
+
+    return await window.fs.openFolderDialog();
+
+  }
+
+  async readDirectoryTree(dir) {
+
+    const entries =
+      await window.fs.readDir(dir);
+
+    const nodes = [];
+
+    for (const entry of entries) {
+
+      if (entry.isDirectory) {
+
+        nodes.push({
+
+          name: entry.name,
+
+          path: entry.path,
+
+          type: "folder",
+
+          children:
+            await this.readDirectoryTree(
+              entry.path
+            )
+
+        });
+
+      }
+      else {
+
+        nodes.push({
+
+          name: entry.name,
+
+          path: entry.path,
+
+          type: "file"
+
+        });
+
+      }
+
+    }
+
+    return nodes;
+
+  }
+
+  async isFile(path) {
+
+    const stat =
+      await window.fs.stat(path);
+
+    return stat.isFile;
+
+  }
+
 }

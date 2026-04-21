@@ -6,3 +6,12 @@ C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.P
 C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.csproj.CopyComplete
 C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.dll
 C:\workspace\others\NotePD\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.pdb
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\bin\Debug\NotePD.Plugins.Abstractions.dll
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\bin\Debug\NotePD.Plugins.Abstractions.pdb
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\bin\Debug\ScintillaNET.dll
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\bin\Debug\ScintillaNET.xml
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.csproj.AssemblyReference.cache
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.csproj.CoreCompileInputs.cache
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.P.BCBB2EA5.Up2Date
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.dll
+C:\workspace\NotepadDaily\NotePD\NotePD.Plugins.Abstractions\obj\Debug\NotePD.Plugins.Abstractions.pdb

@@ -1,56 +1,64 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>_JoaquimPad</title>
-    <link rel="stylesheet" href="./style.css" />
-  </head>
 
-  <body>
-    <!-- Barra superior -->
-    <div class="top-bar">
-      <div class="action-bar">
-        <button id="newTabBtn">⧉</button>
-        <button id="cursorBack" disabled>←</button>
-        <button id="cursorForward" disabled>→</button>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>_JoaquimPad</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
 
-      <div id="tabs" class="tabs-bar"></div>
+<body>
+  <!-- Barra superior -->
+  <div class="top-bar">
+    <div class="action-bar">
+      <button id="newTabBtn">⧉</button>
+      <button id="cursorBack" disabled>←</button>
+      <button id="cursorForward" disabled>→</button>
     </div>
+  </div>
 
-    <!-- Editor -->
-    <div id="editor"></div>
+  <!-- Editor -->
+<div id="layout">
 
-    <!-- Status bar -->
-    <div class="status-bar" id="statusbar"></div>
+  <div id="sidebar"></div>
 
-    <!-- SortableJS -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <div id="main">
 
-    <!-- Monaco AMD loader -->
-    <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+      <div id="tabs"></div>
 
-    <!-- Monaco + App bootstrap -->
-    <script>
-      require.config({
-        paths: {
-          vs: "../node_modules/monaco-editor/min/vs",
-        },
-      });
+      <div id="editor"></div>
 
-      require(["vs/editor/editor.main"], function () {
-        import("./boot.js")
-          .then(() => {
-            if (window.createEditor) {
-              window.createEditor();
-            } else {
-              console.error("createEditor não encontrado em boot.js");
-            }
-          })
-          .catch((err) => {
-            console.error("Erro ao carregar boot.js:", err);
-          });
-      });
-    </script>
-  </body>
+ </div>
+</div>
+
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <!-- Monaco AMD loader -->
+  <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+
+  <!-- Monaco + App bootstrap -->
+  <script>
+    require.config({
+      paths: {
+        vs: "../node_modules/monaco-editor/min/vs",
+      },
+    });
+
+    require(["vs/editor/editor.main"], function () {
+      import("./boot.js")
+        .then(() => {
+          if (window.createEditor) {
+            window.createEditor();
+          } else {
+            console.error("createEditor não encontrado em boot.js");
+          }
+        })
+        .catch((err) => {
+          console.error("Erro ao carregar boot.js:", err);
+        });
+    });
+  </script>
+</body>
+
 </html>
