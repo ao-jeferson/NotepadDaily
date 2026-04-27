@@ -2,37 +2,96 @@ const SESSION_KEY = "editor.session.v1";
 
 export default class SessionManager {
 
+  /* =====================================================
+     SAVE SESSION
+  ===================================================== */
 
-saveSnapshot(snapshot) {
-  const data = {
-    version: 1,
-    tabs: snapshot.tabs ?? [],
-    activeTabId: snapshot.activeTabId ?? null,
-    cursorHistory: snapshot.cursorHistory ?? null,
-  };
+  saveSnapshot(snapshot) {
 
-  localStorage.setItem("editor:session", JSON.stringify(data));
-}
+    const data = {
 
-loadSnapshot() {
-  const raw = localStorage.getItem("editor:session");
-  if (!raw) return null;
+      version: 1,
 
-  try {
-    const data = JSON.parse(raw);
+      tabs:
+        snapshot.tabs ?? [],
 
-    if (!data.tabs || !Array.isArray(data.tabs)) {
-      return { tabs: [] }; // ✅ fallback seguro
+      activeTabId:
+        snapshot.activeTabId ?? null,
+
+      cursorHistory:
+        snapshot.cursorHistory ?? null,
+
+      openedFolder:
+        snapshot.openedFolder ?? null
+
+    };
+
+    try {
+
+      localStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify(data)
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Erro ao salvar sessão:",
+        err
+      );
+
     }
 
-    return data;
-  } catch {
-    return { tabs: [] };
   }
+
+  /* =====================================================
+     LOAD SESSION
+  ===================================================== */
+
+ loadSnapshot() {
+
+  const raw =
+     localStorage.getItem(SESSION_KEY);
+
+  if (!raw)
+    return null;
+
+  try {
+
+    const data = JSON.parse(raw);
+
+    return {
+
+      version: data.version ?? 1,
+      tabs: data.tabs ?? [],
+      activeTabId: data.activeTabId ?? null,
+      cursorHistory:
+        data.cursorHistory ?? null,
+      openedFolder:
+        data.openedFolder ?? null,
+      sidebarWidth:
+        data.sidebarWidth ?? 260
+
+    };
+
+  } catch {
+
+    return null;
+
+  }
+
 }
 
+  /* =====================================================
+     CLEAR SESSION
+  ===================================================== */
 
   clear() {
-    localStorage.removeItem(SESSION_KEY);
+
+    localStorage.removeItem(
+      SESSION_KEY
+    );
+
   }
+
 }

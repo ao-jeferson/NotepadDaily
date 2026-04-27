@@ -20,6 +20,29 @@ export class FileExplorerView {
       this.tree
     );
 
+    this.fileClickCallback = null;
+    this.folderToggleCallback = null;
+    this.selectedPath = null;
+
+    this.tree.addEventListener("click", (e) => {
+      if (e.target.tagName !== "SPAN") return;
+
+      const type = e.target.dataset.type;
+      const path = e.target.dataset.path;
+      const nodeElement = e.target.closest("li");
+
+      if (type === "folder") {
+        nodeElement.classList.toggle("collapsed");
+        this.folderToggleCallback?.(path, nodeElement.classList.contains("collapsed"));
+        return;
+      }
+
+      if (type === "file") {
+        this.selectFile(path);
+        this.fileClickCallback?.(path);
+      }
+    });
+
   }
 
   renderTree(nodes) {
@@ -45,6 +68,10 @@ export class FileExplorerView {
     li.className =
       node.type;
 
+    if (this.selectedPath === node.path) {
+      li.classList.add("selected");
+    }
+
     const label =
       document.createElement("span");
 
@@ -53,6 +80,7 @@ export class FileExplorerView {
 
     label.dataset.path =
       node.path;
+    label.dataset.type = node.type;
 
     li.appendChild(label);
 
@@ -77,25 +105,29 @@ export class FileExplorerView {
 
   }
 
+  selectFile(path) {
+    // Remove previous selection
+    const prevSelected = this.tree.querySelector(".selected");
+    if (prevSelected) {
+      prevSelected.classList.remove("selected");
+    }
+
+    // Add new selection
+    const newSelected = this.tree.querySelector(`[data-path="${path}"]`);
+    if (newSelected) {
+      newSelected.closest("li").classList.add("selected");
+    }
+
+    this.selectedPath = path;
+  }
+
   onFileClick(callback) {
+    this.fileClickCallback = callback;
 
-    this.tree.addEventListener(
-      "click",
-      e => {
+  }
 
-        if (
-          e.target.tagName === "SPAN"
-        ) {
-
-          callback(
-            e.target.dataset.path
-          );
-
-        }
-
-      }
-    );
-
+  onFolderToggle(callback) {
+    this.folderToggleCallback = callback;
   }
 
 }

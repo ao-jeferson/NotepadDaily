@@ -16,11 +16,11 @@ export class FileExplorerController {
 
   }
 
-  async initialize() {
+  async initialize(folderPath = null) {
 
     try {
 
-      const root =
+      const root = folderPath ||
         await this.fileSystem
           .getWorkspaceRoot();
 
@@ -33,6 +33,8 @@ export class FileExplorerController {
         return;
 
       }
+
+      this.currentFolder = root;
 
       const tree =
         await this.fileSystem
@@ -75,6 +77,9 @@ export class FileExplorerController {
         content
 
       });
+
+      // Highlight the selected file
+      this.view.selectFile(path);
 
     }
     catch (err) {

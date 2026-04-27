@@ -36,8 +36,6 @@ export class FileExplorerFeature {
       this.view.element
     );
 
-    this.controller.initialize();
-
   }
 
 }

@@ -4,15 +4,26 @@
 
 :root {
 
+  /* BACKGROUNDS */
+
   --bg-main: #ffffff;
-  --bg-secondary: #f3f3f3;
-  --bg-tab-hover: #eaeaea;
+  --bg-secondary: #f3f6fb;
+  --bg-hover: #e8f1fb;
+  --bg-tab-hover: #e6eefc;
 
-  --border-color: #d0d0d0;
-  --accent: #007acc;
+  /* BORDER */
 
-  --text-primary: #111;
-  --text-secondary: #666;
+  --border-color: #d6dbe4;
+
+  /* ACCENT (AZUL VSCode-like) */
+
+  --accent: #0078d4;
+  --accent-soft: #dbeafe;
+
+  /* TEXT */
+
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
 
 }
 
@@ -29,7 +40,55 @@
   --text-secondary: #9ca3af;
 
 }
+#sidebar {
 
+  width: 260px;
+  min-width: 180px;
+  max-width: 600px;
+
+  flex-shrink: 0;
+
+  background: var(--bg-secondary);
+
+  color: var(--text-primary);
+
+  overflow: auto;
+
+  border-right: 1px solid var(--border-color);
+
+}
+
+#sidebar-resizer {
+
+  width: 4px;
+
+  height: 100%;
+
+  flex-shrink: 0;
+
+  cursor: col-resize;
+
+  background: var(--border-color);
+
+  transition: background 0.1s linear;
+
+}
+
+/* Hover */
+
+#sidebar-resizer:hover {
+
+  background: var(--accent);
+
+}
+
+/* Durante drag */
+
+#sidebar-resizer.active {
+
+  background: var(--accent);
+
+}
 /* =====================================================
    RESET
    ===================================================== */
@@ -58,42 +117,67 @@ body {
 /* =====================================================
    LAYOUT ROOT
    ===================================================== */
-
 #layout {
 
   display: flex;
+
+  flex-direction: row;
 
   height: 100vh;
 
 }
 
 /* =====================================================
-   SIDEBAR (Explorer)
+   SIDEBAR
    ===================================================== */
 
 #sidebar {
 
   width: 260px;
+  min-width: 180px;
 
-  background: #1e1e1e;
-
-  color: white;
-
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   overflow: auto;
 
-  border-right:
-    1px solid
-    var(--border-color);
+  flex-shrink: 0;
+
+  /* REMOVER TRANSITION */
+
+}
+/* =====================================================
+   RESIZER
+   ===================================================== */
+
+#sidebar-resizer {
+
+  width: 5px;
+
+  height: 100%;
+
+  flex-shrink: 0;
+
+  cursor: col-resize;
+
+  background: #333333;
+
+}
+
+#sidebar-resizer:hover {
+
+  background: var(--accent);
 
 }
 
 /* =====================================================
-   MAIN AREA
+   MAIN
    ===================================================== */
 
 #main {
 
   flex: 1;
+
+  min-width: 0;
 
   display: flex;
 
@@ -142,7 +226,7 @@ body {
 
   align-items: stretch;
 
-  height: 26px;
+  height: 35px;
 
   background:
     var(--bg-secondary);
@@ -389,7 +473,7 @@ body {
 
   flex: 1;
 
-  background: #1e1e1e;
+  background: var(--bg-main);
 
 }
 
@@ -426,7 +510,7 @@ body {
 
   list-style: none;
 
-  padding-left: 12px;
+  padding-left: 10px;
 
   font-size: 13px;
 
@@ -436,18 +520,118 @@ body {
 
   cursor: pointer;
 
-  padding: 2px 0;
+  padding: 3px 6px;
 
+  border-radius: 4px;
+
+}
+
+.file-tree li:hover {
+
+  background: var(--bg-hover);
+
+}
+
+.file-tree li.selected {
+  background-color: var(--accent);
+  color: white;
 }
 
 .file-tree li.folder > span::before {
 
-  content: "📁 ";
+  content: "▾ ";
+  color: var(--text-secondary);
+  margin-right: 4px;
 
 }
 
-.file-tree li.file > span::before {
+.file-tree li.folder > span::before {
+  content: "📁";
+  color: var(--text-secondary);
+  margin-right: 6px;
+  font-size: 14px;
+}
 
-  content: "📄 ";
+.file-tree li.folder.collapsed > span::before {
+  content: "📁";
+}
+
+.file-tree li.folder > span::after {
+  content: " ▶";
+  color: var(--text-secondary);
+  margin-left: 4px;
+  transition: transform 0.15s ease;
+}
+
+.file-tree li.folder:not(.collapsed) > span::after {
+  transform: rotate(90deg);
+}
+
+.file-tree li.folder.collapsed > ul {
+  display: none;
+}
+
+.file-tree li.file > span::before {
+  content: "📄";
+  color: var(--text-secondary);
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+/* Nested indentation */
+.file-tree ul {
+  padding-left: 20px;
+  margin: 0;
+}/* =====================================================
+   SIDEBAR LAYOUT
+===================================================== */
+
+#layout {
+
+  display: flex;
+  height: 100vh;
+
+}
+
+#sidebar {
+
+  width: 260px;
+  min-width: 180px;
+
+  background: var(--bg-main);
+  overflow: auto;
+
+  transition: width 0.15s ease;
+
+}
+
+/* RESIZER */
+
+#sidebar-resizer {
+
+  width: 5px;
+
+  height: 100%;
+
+  flex-shrink: 0;
+
+  cursor: col-resize;
+
+  background: transparent;
+
+}
+
+#sidebar-resizer:hover {
+
+  background: var(--accent);
+
+}
+
+#main {
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
 
 }
